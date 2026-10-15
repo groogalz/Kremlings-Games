@@ -158,8 +158,10 @@ h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 400; }
   background: linear-gradient(180deg, rgba(60, 39, 23, .92), rgba(36, 23, 14, .94));
   border: 1px solid var(--oak-line); border-radius: var(--r-m);
   box-shadow: inset 0 1px 0 rgba(255, 220, 160, .07), 0 18px 40px rgba(0, 0, 0, .45);
-  padding: 18px; display: grid; gap: 14px;
+  padding: 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px;
 }
+.seat .btn.ghost.sm { min-height: 34px; width: 30px; padding: 0; flex: none; }
+.seat .chip { flex: none; }
 .sep { display: flex; align-items: center; gap: 12px; color: var(--bone-faint); font-family: var(--f-label); font-size: 14px; }
 .sep::before, .sep::after { content: ""; flex: 1; height: 1px; background: var(--oak-line); }
 .code-input { text-transform: uppercase; letter-spacing: .3em; font-family: var(--f-label); font-weight: 700; text-align: center; }
@@ -168,7 +170,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 400; }
 
 /* ---------- Salon ---------- */
 #lobby, #setup { padding-block: 18px 120px; }
-.page { width: min(720px, 100%); margin: 0 auto; display: grid; gap: 16px; }
+.page { width: min(720px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .page-head h2 { font-family: var(--f-display); font-size: 42px; line-height: 1; }
 .code-box { display: grid; gap: 4px; justify-items: end; }
@@ -179,7 +181,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 400; }
   background: rgba(0, 0, 0, .25); border: 1px solid rgba(90, 59, 34, .7);
 }
 .seat .n { font-family: var(--f-label); color: var(--bone-faint); width: 1.4em; text-align: center; }
-.seat .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; }
+.seat .who { flex: 1 1 40px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; }
 .chip { font-family: var(--f-label); font-size: 13px; letter-spacing: .05em; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--oak-line); color: var(--bone-dim); white-space: nowrap; }
 .chip.host { border-color: var(--brass-deep); color: var(--brass-hi); }
 .chip.off { border-color: #6b1d12; color: #e7826f; }
@@ -462,7 +464,59 @@ h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 400; }
 @keyframes tIn { from { opacity: 0; transform: translateY(-8px); } }
 #netbanner { position: fixed; left: 0; right: 0; top: 0; z-index: 80; background: #6b1d12; color: var(--bone); text-align: center; font-size: 15px; padding: 6px 12px; padding-top: calc(6px + env(safe-area-inset-top, 0px)); }
 
+
+/* ---------- Choix du dé ---------- */
+.seat-die img { width: 28px; height: 28px; display: block; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .5)); }
+.skin-show { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.skin-show img { width: 50px; height: 50px; filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .55)); }
+.skin-show img:nth-child(1) { transform: rotate(-8deg); }
+.skin-show img:nth-child(3) { transform: rotate(7deg); }
+.skin-show .meta { display: grid; gap: 2px; min-width: 0; flex: 1 1 160px; }
+.skin-show .meta b { font-size: 19px; }
+.skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.skin {
+  display: grid; justify-items: center; gap: 4px; padding: 10px 4px 8px; border-radius: var(--r-s);
+  background: rgba(0, 0, 0, .25); border: 1px solid rgba(90, 59, 34, .7); font-family: var(--f-label); font-size: 14px; line-height: 1.15; color: var(--bone-dim);
+}
+.skin img { width: 40px; height: 40px; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .5)); }
+.skin[aria-pressed="true"] { border-color: var(--brass); background: rgba(214, 165, 76, .14); color: var(--bone); box-shadow: 0 0 0 1px var(--brass) inset; }
+.pl .tags .skin-mini { width: 18px; height: 18px; display: block; }
+
+/* ---------- Emotes ---------- */
+.main { position: relative; }
+#emoLayer { position: absolute; inset: 0; pointer-events: none; z-index: 25; }
+.emo-bubble {
+  position: absolute; display: grid; justify-items: center; gap: 2px; transform: translate(-50%, -100%);
+  animation: emoPop 2.8s ease-out both;
+}
+.emo-bubble .m { width: 62px; height: 62px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 40% 35%, #fbf1d8, #f3e5c3 60%, #d9c290); box-shadow: 0 0 0 2px var(--brass), 0 0 0 4px #3a240f, 0 8px 14px rgba(0, 0, 0, .55); }
+.emo-bubble .m svg { width: 52px; height: 52px; }
+.scroll { position: relative; display: inline-block; padding: 2px 14px; color: #2b1a10; font-style: italic; font-weight: 700; font-size: 13.5px; white-space: nowrap; }
+.scroll::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #fbf1d8, #d9c290); clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%, 8px 50%); }
+.scroll span { position: relative; }
+@keyframes emoPop {
+  0% { opacity: 0; transform: translate(-50%, -80%) scale(.5); }
+  8% { opacity: 1; transform: translate(-50%, -100%) scale(1.1); }
+  13% { transform: translate(-50%, -100%) scale(1); }
+  78% { opacity: 1; transform: translate(-50%, -100%); }
+  100% { opacity: 0; transform: translate(-50%, -112%); }
+}
+.emo-btn { flex: none; color: var(--brass-hi); }
+.emo-btn[aria-pressed="true"] { background: rgba(214, 165, 76, .18); border-color: var(--brass); opacity: 1; }
+.emo-pick { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: thin; }
+.emo-pick button { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; background: #f3e5c3; box-shadow: 0 0 0 2px var(--brass-deep); transition: transform .1s; }
+.emo-pick button svg { width: 38px; height: 38px; }
+.emo-pick button:active { transform: scale(.9); }
+.emo-pick button:hover, .emo-pick button:focus-visible { box-shadow: 0 0 0 2px var(--brass-hi), 0 0 12px rgba(241, 207, 124, .5); outline: none; }
+.emo-pick.muted button { filter: grayscale(1) brightness(.55); cursor: not-allowed; }
+.emo-status { font-size: 14.5px; color: var(--bone-dim); font-variant-numeric: tabular-nums; }
+.emo-status.bad { color: #ec8a75; }
+@media (prefers-reduced-motion: reduce) { .emo-bubble { animation: none; } }
+
 @media (max-width: 420px) {
+  .seat .n { display: none; }
+  .seat { gap: 4px; padding: 8px 6px; }
+  .seat .chip { font-size: 12px; padding: 2px 6px; }
   body { font-size: 16px; }
   .turnline .pot .v { font-size: 30px; }
   .pl .sc { font-size: 23px; }
@@ -486,7 +540,6 @@ img{-webkit-user-drag:none}
 <body>
 <div id="home" class="screen wrap hidden"></div>
 <div id="lobby" class="screen wrap hidden"></div>
-<div id="setup" class="screen wrap hidden"></div>
 <div id="game" class="screen hidden">
   <div class="wrap"><main class="main" id="main">
     <header class="topbar" id="topbar"></header>
@@ -505,215 +558,116 @@ img{-webkit-user-drag:none}
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 /* Kostky — moteur de règles (Farkle façon Kingdom Come: Deliverance II).
-   Pur et sans DOM : tourne dans le navigateur (window.KEngine) et sous Node (tests). */
+   Pur et sans DOM : tourne dans le navigateur (window.KEngine) et sous Node (tests).
+   Tous les dés sont équilibrés : les skins ne changent que l'apparence. */
 (function (root) {
 'use strict';
 
-/* ---------- Dés ----------
-   Probabilités des faces 1→6 relevées sur le wiki KCD2 (Dice (KCD2), tableau des dés).
-   v = 0 désigne la tête du diable (face « 1 » du dé du diable) : un joker. */
+/* ---------- Skins de dés (apparence seulement) ----------
+   devilFace : la face 1 porte une tête de diable, mais compte pour 1. */
 const DICE = {
-  ordinary:   { name: 'Dé ordinaire', short: 'Ordinaire', p: [1, 1, 1, 1, 1, 1], max: 6, body: '#e2c48c', pip: '#3a2414', edge: '#a98a52', mat: 'bone', hint: 'Équilibré.' },
-  devil:      { name: 'Dé à tête du diable', short: 'Diable', p: [1, 1, 1, 1, 1, 1], max: 2, joker: true, body: '#2b1e17', pip: '#d0402c', edge: '#140d09', mat: 'wood', hint: 'Le 1 est remplacé par une tête de diable : un joker qui complète une combinaison, sans rien valoir seul.' },
-  weighted:   { name: 'Dé lesté', short: 'Lesté', p: [66.7, 6.7, 6.7, 6.7, 6.7, 6.7], max: 2, body: '#d3a75c', pip: '#3a2210', edge: '#9c7438', mat: 'wood', hint: 'Tombe sur 1 deux fois sur trois.' },
-  favourable: { name: 'Dé favorable', short: 'Favorable', p: [33.3, 0, 5.6, 5.6, 33.3, 22.2], max: 2, body: '#dcb46a', pip: '#4a2610', edge: '#a7823f', mat: 'wood', hint: 'Surtout des 1 et des 5, jamais de 2.' },
-  cautious:   { name: 'Dé du tricheur prudent', short: 'Tricheur prudent', p: [23.8, 14.3, 9.5, 14.3, 23.8, 14.3], max: 2, body: '#e9d3a0', pip: '#2c2a38', edge: '#b39b68', mat: 'bone', hint: 'Un peu plus de 1 et de 5. Discret.' },
-  lucky:      { name: 'Dé chanceux', short: 'Chanceux', p: [27.3, 4.5, 9.1, 13.6, 18.2, 27.3], max: 2, body: '#e6c071', pip: '#5a300c', edge: '#ad8a42', mat: 'bone', hint: 'Favorise le 1 et le 6.' },
-  painted:    { name: 'Dé peint', short: 'Peint', p: [18.7, 6.2, 6.2, 6.2, 43.7, 18.7], max: 2, body: '#b4532e', pip: '#f4e7c9', edge: '#7c3519', mat: 'paint', hint: 'Tombe souvent sur 5.' },
-  odd:        { name: 'Dé impair', short: 'Impair', p: [26.7, 6.7, 26.7, 6.7, 26.7, 6.7], max: 2, body: '#b98a52', pip: '#21140a', edge: '#83602f', mat: 'wood', hint: 'Favorise 1, 3 et 5.' },
-  even:       { name: 'Dé pair', short: 'Pair', p: [6.7, 26.7, 6.7, 26.7, 6.7, 26.7], max: 2, body: '#94673a', pip: '#f0dfb8', edge: '#5f3f1f', mat: 'wood', hint: 'Favorise 2, 4 et 6.' },
-  trinity:    { name: 'Dé de la Sainte Trinité', short: 'Trinité', p: [18.2, 22.7, 45.4, 4.5, 4.5, 4.5], max: 2, body: '#efdfb6', pip: '#a5741f', edge: '#c2aa76', mat: 'bone', hint: 'Tombe sur 3 près d\'une fois sur deux.' },
-  antiochus:  { name: 'Dé de saint Antiochus', short: 'St Antiochus', p: [0, 0, 1, 0, 0, 0], max: 1, body: '#2e3a63', pip: '#e3bb63', edge: '#1a2340', mat: 'paint', hint: 'Tombe toujours sur 3.' },
-  demonic:    { name: 'Dé démoniaque', short: 'Démoniaque', p: [13, 13, 13, 13, 13, 34.8], max: 2, body: '#6b2a1c', pip: '#eedcb8', edge: '#3e140c', mat: 'wood', hint: 'Favorise le 6 (comme les dés Lu, Ci et Fer).' },
-  king:       { name: 'Dé du roi', short: 'Roi', p: [12.5, 18.7, 21.9, 25, 12.5, 9.4], max: 2, body: '#4b2c58', pip: '#e6c063', edge: '#2e1838', mat: 'paint', hint: 'Favorise 2, 3 et 4. Pas un cadeau.' },
-  misfortune: { name: 'Dé de la malchance', short: 'Malchance', p: [4.5, 27.7, 27.7, 27.7, 27.7, 4.5], max: 2, body: '#8b8680', pip: '#1e1e1e', edge: '#5f5a55', mat: 'paint', hint: 'Presque jamais de 1. À offrir à un ennemi.' },
+  ordinary:   { name: 'Os jauni', body: '#e2c48c', pip: '#3a2414', edge: '#a98a52', mat: 'bone', hint: 'Le dé des tavernes.' },
+  cautious:   { name: 'Ivoire', body: '#e9d3a0', pip: '#2c2a38', edge: '#b39b68', mat: 'bone', hint: 'Os poli, points d\'encre.' },
+  trinity:    { name: 'Reliquaire', body: '#efdfb6', pip: '#a5741f', edge: '#c2aa76', mat: 'bone', hint: 'Os clair, points dorés.' },
+  lucky:      { name: 'Ambre', body: '#e6c071', pip: '#5a300c', edge: '#ad8a42', mat: 'bone', hint: 'Os teinté au safran.' },
+  weighted:   { name: 'Buis', body: '#d3a75c', pip: '#3a2210', edge: '#9c7438', mat: 'wood', hint: 'Bois de buis veiné.' },
+  favourable: { name: 'Miel', body: '#dcb46a', pip: '#4a2610', edge: '#a7823f', mat: 'wood', hint: 'Bois blond.' },
+  odd:        { name: 'Chêne', body: '#b98a52', pip: '#21140a', edge: '#83602f', mat: 'wood', hint: 'Chêne ciré.' },
+  even:       { name: 'Noyer', body: '#94673a', pip: '#f0dfb8', edge: '#5f3f1f', mat: 'wood', hint: 'Noyer sombre, points d\'os.' },
+  demonic:    { name: 'Sang-de-bœuf', body: '#6b2a1c', pip: '#eedcb8', edge: '#3e140c', mat: 'wood', hint: 'Bois teint en rouge.' },
+  devil:      { name: 'Diable', body: '#2b1e17', pip: '#d0402c', edge: '#140d09', mat: 'wood', devilFace: true, hint: 'Une tête de diable à la place du 1 (elle compte pour 1).' },
+  painted:    { name: 'Vermillon', body: '#b4532e', pip: '#f4e7c9', edge: '#7c3519', mat: 'paint', hint: 'Peint au vermillon.' },
+  antiochus:  { name: 'Lapis', body: '#2e3a63', pip: '#e3bb63', edge: '#1a2340', mat: 'paint', hint: 'Bleu lapis, points d\'or.' },
+  king:       { name: 'Pourpre', body: '#4b2c58', pip: '#e6c063', edge: '#2e1838', mat: 'paint', hint: 'La couleur des rois.' },
+  misfortune: { name: 'Pierre', body: '#8b8680', pip: '#1e1e1e', edge: '#5f5a55', mat: 'paint', hint: 'Taillé dans la pierre.' },
 };
 const DICE_ORDER = Object.keys(DICE);
 
-/* ---------- Insignes ----------
-   Effets et nombre d'utilisations relevés sur le wiki KCD2. Les valeurs non publiées
-   (avances, points du Gibet et de l'Œil) sont des choix de cette adaptation. */
-const TIERS = { 1: 'étain', 2: 'argent', 3: 'or' };
-const BADGES = {
-  tin_sosie:         { tier: 1, name: 'Sosie', kind: 'double', uses: 1, desc: 'Double les points d\'un lot que tu mets de côté. 1 fois par partie.' },
-  tin_avance:        { tier: 1, name: 'Avance', kind: 'headstart', val: 250, desc: 'Tu commences la partie avec 250 points.' },
-  tin_defense:       { tier: 1, name: 'Défense', kind: 'defense', desc: 'Annule les insignes d\'étain de tes adversaires.' },
-  tin_fortune:       { tier: 1, name: 'Fortune', kind: 'reroll', n: 1, uses: 1, desc: 'Après un lancer, relance 1 dé de ton choix. 1 fois par partie.' },
-  tin_puissance:     { tier: 1, name: 'Puissance', kind: 'might', uses: 1, desc: 'Ajoute un dé ordinaire à ton prochain lancer. 1 fois par partie.' },
-  tin_transmutation: { tier: 1, name: 'Transmutation', kind: 'transmute', to: 3, uses: 1, desc: 'Après un lancer, change un dé en 3. 1 fois par partie.' },
-  tin_charpentier:   { tier: 1, name: 'Charpentier', kind: 'form', form: 'cut', desc: 'Nouvelle combinaison, l\'Entaille : 3 + 5 = 200 points. Sans limite.' },
-  tin_seigneur:      { tier: 1, name: 'Seigneur de guerre', kind: 'warlord', mult: 0.25, uses: 1, desc: '+25 % sur les points de ce tour. 1 fois par partie.' },
-  tin_resurrection:  { tier: 1, name: 'Résurrection', kind: 'resurrect', uses: 1, desc: 'Après un lancer bredouille, relance les mêmes dés. 1 fois par partie.' },
-
-  silver_sosie:         { tier: 2, name: 'Sosie', kind: 'double', uses: 2, desc: 'Double les points d\'un lot que tu mets de côté. 2 fois par partie.' },
-  silver_avance:        { tier: 2, name: 'Avance', kind: 'headstart', val: 500, desc: 'Tu commences la partie avec 500 points.' },
-  silver_defense:       { tier: 2, name: 'Défense', kind: 'defense', desc: 'Annule les insignes d\'argent de tes adversaires.' },
-  silver_echange:       { tier: 2, name: 'Échange', kind: 'reroll', n: 1, uses: 1, desc: 'Après un lancer, relance 1 dé de ton choix. 1 fois par partie.' },
-  silver_fortune:       { tier: 2, name: 'Fortune', kind: 'reroll', n: 2, uses: 1, desc: 'Après un lancer, relance jusqu\'à 2 dés. 1 fois par partie.' },
-  silver_puissance:     { tier: 2, name: 'Puissance', kind: 'might', uses: 2, desc: 'Ajoute un dé ordinaire à ton prochain lancer. 2 fois par partie.' },
-  silver_transmutation: { tier: 2, name: 'Transmutation', kind: 'transmute', to: 5, uses: 1, desc: 'Après un lancer, change un dé en 5. 1 fois par partie.' },
-  silver_bourreau:      { tier: 2, name: 'Bourreau', kind: 'form', form: 'gallows', desc: 'Nouvelle combinaison, le Gibet : 4 + 5 + 6 = 400 points. Sans limite.' },
-  silver_seigneur:      { tier: 2, name: 'Seigneur de guerre', kind: 'warlord', mult: 0.5, uses: 1, desc: '+50 % sur les points de ce tour. 1 fois par partie.' },
-  silver_resurrection:  { tier: 2, name: 'Résurrection', kind: 'resurrect', uses: 2, desc: 'Après un lancer bredouille, relance les mêmes dés. 2 fois par partie.' },
-
-  gold_sosie:         { tier: 3, name: 'Sosie', kind: 'double', uses: 3, desc: 'Double les points d\'un lot que tu mets de côté. 3 fois par partie.' },
-  gold_avance:        { tier: 3, name: 'Avance', kind: 'headstart', val: 750, desc: 'Tu commences la partie avec 750 points.' },
-  gold_defense:       { tier: 3, name: 'Défense', kind: 'defense', desc: 'Annule les insignes d\'or de tes adversaires.' },
-  gold_echange:       { tier: 3, name: 'Échange', kind: 'pair', uses: 1, desc: 'Après un lancer, relance deux dés de même valeur. 1 fois par partie.' },
-  gold_fortune:       { tier: 3, name: 'Fortune', kind: 'reroll', n: 3, uses: 1, desc: 'Après un lancer, relance jusqu\'à 3 dés. 1 fois par partie.' },
-  gold_puissance:     { tier: 3, name: 'Puissance', kind: 'might', uses: 3, desc: 'Ajoute un dé ordinaire à ton prochain lancer. 3 fois par partie.' },
-  gold_transmutation: { tier: 3, name: 'Transmutation', kind: 'transmute', to: 1, uses: 1, desc: 'Après un lancer, change un dé en 1. 1 fois par partie.' },
-  gold_pretre:        { tier: 3, name: 'Prêtre', kind: 'form', form: 'eye', desc: 'Nouvelle combinaison, l\'Œil : 1 + 3 + 5 = 600 points. Sans limite.' },
-  gold_seigneur:      { tier: 3, name: 'Seigneur de guerre', kind: 'warlord', mult: 1, uses: 1, desc: 'Double les points de ce tour. 1 fois par partie.' },
-  gold_resurrection:  { tier: 3, name: 'Résurrection', kind: 'resurrect', uses: 3, desc: 'Après un lancer bredouille, relance les mêmes dés. 3 fois par partie.' },
-  gold_empereur:      { tier: 3, name: 'Empereur', kind: 'emperor', desc: 'Triple les points du brelan de 1 (3 000 au lieu de 1 000). Sans limite.' },
-};
-const BADGE_ORDER = Object.keys(BADGES);
-
-/* ---------- Combinaisons ---------- */
+/* ---------- Combinaisons (didacticiel de Kingdom Come: Deliverance) ---------- */
 const STRAIGHTS = [
-  { key: 'full', f: [1, 2, 3, 4, 5, 6], pts: 1500, name: 'Suite complète' },
-  { key: 'high', f: [2, 3, 4, 5, 6], pts: 750, name: 'Grande suite' },
-  { key: 'low', f: [1, 2, 3, 4, 5], pts: 500, name: 'Petite suite' },
+  { f: [1, 2, 3, 4, 5, 6], pts: 1500, name: 'Suite complète' },
+  { f: [2, 3, 4, 5, 6], pts: 750, name: 'Grande suite' },
+  { f: [1, 2, 3, 4, 5], pts: 500, name: 'Petite suite' },
 ];
-const FORMS = {
-  cut: { key: 'cut', f: [3, 5], pts: 200, name: 'Entaille' },
-  gallows: { key: 'gallows', f: [4, 5, 6], pts: 400, name: 'Gibet' },
-  eye: { key: 'eye', f: [1, 3, 5], pts: 600, name: 'Œil' },
-};
-const KIND_NAME = { 3: 'Brelan', 4: 'Carré', 5: 'Cinq', 6: 'Six', 7: 'Sept' };
-
+const KIND_NAME = { 5: 'Cinq', 6: 'Six' };
 function setName(n, v) {
   if (n === 3) return 'Brelan de ' + v;
   if (n === 4) return 'Carré de ' + v;
-  return (KIND_NAME[n] || n) + ' × ' + v;
+  return KIND_NAME[n] + ' × ' + v;
 }
 
-/* Meilleur score en utilisant TOUS les dés (counts[0] = jokers). null si impossible. */
-function bestCounts(c, ctx, memo) {
+/* Meilleur score en utilisant TOUS les dés comptés (c[1..6]). null si impossible. */
+function bestCounts(c, memo) {
   const key = c.join('');
   if (memo.has(key)) return memo.get(key);
   let v = 1;
   while (v <= 6 && !c[v]) v++;
   let res = null;
-  if (v > 6) {
-    res = c[0] ? null : { pts: 0, combos: [] };
-  } else {
+  if (v > 6) res = { pts: 0, combos: [] };
+  else {
     const consider = (pts, name, used) => {
       const nc = c.slice();
-      for (let i = 0; i < 7; i++) nc[i] -= used[i];
-      const sub = bestCounts(nc, ctx, memo);
-      if (sub && (!res || pts + sub.pts > res.pts)) res = { pts: pts + sub.pts, combos: [{ name, pts, used }].concat(sub.combos) };
+      for (let i = 1; i <= 6; i++) nc[i] -= used[i];
+      const sub = bestCounts(nc, memo);
+      if (sub && (!res || pts + sub.pts > res.pts)) res = { pts: pts + sub.pts, combos: [{ name, pts }].concat(sub.combos) };
     };
     const U = () => [0, 0, 0, 0, 0, 0, 0];
     if (v === 1) { const u = U(); u[1] = 1; consider(100, 'Un', u); }
     if (v === 5) { const u = U(); u[5] = 1; consider(50, 'Cinq', u); }
-    for (let r = 1; r <= c[v]; r++) {
-      for (let j = 0; j <= c[0]; j++) {
-        const n = r + j;
-        if (n < 3) continue;
-        const base = v === 1 ? 1000 : v * 100;
-        let pts = base * Math.pow(2, n - 3);
-        let name = setName(n, v);
-        if (ctx && ctx.emperor && v === 1 && n === 3) { pts *= 3; name += ' (Empereur)'; }
-        const u = U(); u[v] = r; u[0] = j;
-        consider(pts, name, u);
-      }
+    for (let n = 3; n <= c[v]; n++) {
+      const u = U(); u[v] = n;
+      consider((v === 1 ? 1000 : v * 100) * Math.pow(2, n - 3), setName(n, v), u);
     }
-    const shapes = STRAIGHTS.slice();
-    if (ctx) for (const k of ['cut', 'gallows', 'eye']) if (ctx[k]) shapes.push(FORMS[k]);
-    for (const S of shapes) {
-      if (S.f.indexOf(v) < 0) continue;
-      const others = S.f.filter(x => x !== v);
-      const m = others.length;
-      for (let mask = 0; mask < (1 << m); mask++) {
-        const u = U(); u[v] = 1;
-        let ok = true;
-        for (let i = 0; i < m; i++) {
-          if (mask & (1 << i)) u[0]++;
-          else { if (c[others[i]] < 1) { ok = false; break; } u[others[i]]++; }
-        }
-        if (!ok || u[0] > c[0]) continue;
-        consider(S.pts, S.name, u);
-      }
+    for (const S of STRAIGHTS) {
+      if (S.f.indexOf(v) < 0 || S.f.some(x => !c[x])) continue;
+      const u = U(); S.f.forEach(x => { u[x] = 1; });
+      consider(S.pts, S.name, u);
     }
   }
   memo.set(key, res);
   return res;
 }
-
-function countsOf(vals) {
-  const c = [0, 0, 0, 0, 0, 0, 0];
-  for (const v of vals) c[v]++;
-  return c;
-}
-/* Score d'une sélection : toutes les valeurs doivent compter. */
-function scoreVals(vals, ctx) {
-  if (!vals.length) return null;
-  return bestCounts(countsOf(vals), ctx || {}, new Map());
-}
-/* Toutes les sous-sélections qui comptent (indices) avec leur score. */
-function scoringSubsets(vals, ctx) {
+function countsOf(vals) { const c = [0, 0, 0, 0, 0, 0, 0]; for (const v of vals) c[v]++; return c; }
+/* Score d'une sélection : chaque dé doit faire partie d'une combinaison. */
+function scoreVals(vals) { return vals.length ? bestCounts(countsOf(vals), new Map()) : null; }
+function scoringSubsets(vals) {
   const n = vals.length, out = [], memo = new Map();
   for (let mask = 1; mask < (1 << n); mask++) {
     const sel = [];
     for (let i = 0; i < n; i++) if (mask & (1 << i)) sel.push(i);
-    const r = bestCounts(countsOf(sel.map(i => vals[i])), ctx || {}, memo);
+    const r = bestCounts(countsOf(sel.map(i => vals[i])), memo);
     if (r) out.push({ sel, pts: r.pts, combos: r.combos });
   }
   return out;
 }
-function hasScore(vals, ctx) {
-  if (!vals.length) return false;
-  const memo = new Map(), n = vals.length;
-  for (let mask = 1; mask < (1 << n); mask++) {
-    const sv = [];
-    for (let i = 0; i < n; i++) if (mask & (1 << i)) sv.push(vals[i]);
-    if (bestCounts(countsOf(sv), ctx || {}, memo)) return true;
-  }
-  return false;
+// Un lancer compte s'il contient un 1, un 5 ou un brelan (toute suite contient un 1 ou un 5).
+function hasScore(vals) {
+  const c = countsOf(vals);
+  return c[1] > 0 || c[5] > 0 || c.some((x, i) => i > 0 && x >= 3);
 }
-/* Dés qui peuvent faire partie d'une combinaison (aide visuelle). */
-function scoringMask(vals, ctx) {
+function scoringMask(vals) {
   const m = vals.map(() => false);
-  for (const s of scoringSubsets(vals, ctx)) for (const i of s.sel) m[i] = true;
+  for (const s of scoringSubsets(vals)) for (const i of s.sel) m[i] = true;
   return m;
 }
 
 /* ---------- Hasard ---------- */
 function rnd() {
-  if (root.crypto && root.crypto.getRandomValues) {
-    const a = new Uint32Array(1); root.crypto.getRandomValues(a); return a[0] / 4294967296;
-  }
+  if (root.crypto && root.crypto.getRandomValues) { const a = new Uint32Array(1); root.crypto.getRandomValues(a); return a[0] / 4294967296; }
   return Math.random();
 }
-function rollFace(type, R) {
-  const d = DICE[type] || DICE.ordinary;
-  const tot = d.p.reduce((a, b) => a + b, 0);
-  let x = (R || rnd)() * tot;
-  let f = 6;
-  for (let i = 0; i < 6; i++) { if (x < d.p[i]) { f = i + 1; break; } x -= d.p[i]; }
-  if (d.p[f - 1] === 0) { // garde-fou (arrondi)
-    f = d.p.findIndex(p => p > 0) + 1;
-  }
-  return (d.joker && f === 1) ? 0 : f;
-}
-function shuffle(a, R) {
-  a = a.slice();
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor((R || rnd)() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
-}
+const rollFace = R => 1 + Math.floor((R || rnd)() * 6);
 
 /* ---------- Partie ---------- */
 const MIN_PLAYERS = 2, MAX_PLAYERS = 6;
 const TARGETS = [2000, 3000, 4000, 5000, 8000];
-const DEFAULT_OPTS = { target: 4000, dice: 'plain', badges: 0, finalRound: false, hints: true };
+const DEFAULT_OPTS = { target: 4000, finalRound: false, hints: true };
 
 function newGame(code) {
   return {
-    v: 1, code: code || '', phase: 'lobby', opts: Object.assign({}, DEFAULT_OPTS),
+    v: 2, code: code || '', phase: 'lobby', opts: Object.assign({}, DEFAULT_OPTS),
     hostId: null, players: [], order: [], cur: 0, T: null, final: null, winner: null,
-    log: [], seq: 0, rollSeq: 0, flash: null, round: 0, gameNo: 0,
+    log: [], seq: 0, rollSeq: 0, flash: null, round: 0, gameNo: 0, emotes: [],
   };
 }
 const P = (S, id) => S.players.find(p => p.id === id);
@@ -722,127 +676,51 @@ function log(S, s, k, pid) {
   if (S.log.length > 120) S.log.splice(0, S.log.length - 120);
 }
 function flash(S, k, pid, extra) { S.flash = Object.assign({ id: ++S.seq, k, pid }, extra || {}); }
-
+function blankStats() { return { turns: 0, busts: 0, best: 0, hot: 0, banked: 0 }; }
 function addPlayer(S, o) {
   const p = {
     id: o.id, name: o.name, bot: !!o.bot, token: o.token || null, local: !!o.local,
     connected: o.bot ? true : (o.connected !== false), autopilot: false,
-    bag: ['ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary'], badge: null, ready: false,
-    score: 0, uses: 0, badgeOff: false, stats: blankStats(),
+    skin: DICE[o.skin] ? o.skin : 'ordinary', ready: !!o.bot, score: 0, stats: blankStats(),
   };
   S.players.push(p);
   return p;
 }
-function blankStats() { return { turns: 0, busts: 0, best: 0, hot: 0, banked: 0 }; }
-
-function badgeOf(S, p) {
-  if (!p || !p.badge || !BADGES[p.badge] || p.badgeOff || !S.opts.badges) return null;
-  return BADGES[p.badge];
-}
-function ctxFor(S, p) {
-  const b = badgeOf(S, p), ctx = {};
-  if (b && b.kind === 'form') ctx[b.form] = true;
-  if (b && b.kind === 'emperor') ctx.emperor = true;
-  return ctx;
-}
-
-function validBag(bag, opts) {
-  if (!Array.isArray(bag) || bag.length !== 6) return 'La bourse doit contenir 6 dés.';
-  const n = {};
-  for (const t of bag) {
-    if (!DICE[t]) return 'Dé inconnu.';
-    if (opts.dice !== 'loaded' && t !== 'ordinary') return 'Les dés pipés sont interdits dans cette partie.';
-    n[t] = (n[t] || 0) + 1;
-    if (n[t] > DICE[t].max) return `Au plus ${DICE[t].max} « ${DICE[t].short} » par bourse.`;
-  }
-  return null;
-}
-function validBadge(id, opts) {
-  if (id == null) return null;
-  const b = BADGES[id];
-  if (!b) return 'Insigne inconnu.';
-  if (!opts.badges) return 'Les insignes sont interdits dans cette partie.';
-  if (b.tier > opts.badges) return 'Cet insigne dépasse le métal autorisé.';
-  return null;
-}
-const needsSetup = S => S.opts.dice === 'loaded' || S.opts.badges > 0;
+const allReady = S => S.players.length >= MIN_PLAYERS && S.players.every(p => p.bot || p.ready);
 
 function startGame(S, R) {
   S.gameNo++;
   S.final = null; S.winner = null; S.round = 1; S.flash = null;
   S.order = S.players.map(p => p.id);
-  for (const p of S.players) {
-    p.score = 0; p.stats = blankStats(); p.ready = false;
-    if (S.opts.dice !== 'loaded') p.bag = p.bag.map(() => 'ordinary');
-    if (!S.opts.badges || (p.badge && BADGES[p.badge] && BADGES[p.badge].tier > S.opts.badges)) p.badge = null;
-    const b = p.badge && BADGES[p.badge];
-    p.uses = b && b.uses ? b.uses : 0;
-    p.badgeOff = false;
-  }
-  // Défense : annule les insignes adverses du même métal.
-  for (const p of S.players) {
-    const b = p.badge && BADGES[p.badge];
-    if (!b) continue;
-    if (S.players.some(q => q !== p && q.badge && BADGES[q.badge] && BADGES[q.badge].kind === 'defense' && BADGES[q.badge].tier === b.tier)) p.badgeOff = true;
-  }
-  for (const p of S.players) {
-    const b = badgeOf(S, p);
-    if (b && b.kind === 'headstart') { p.score = b.val; }
-  }
+  for (const p of S.players) { p.score = 0; p.stats = blankStats(); }
   S.cur = Math.floor((R || rnd)() * S.order.length);
   S.phase = 'play';
   log(S, `Nouvelle partie en ${S.opts.target} points.`, 'sys');
-  for (const p of S.players) {
-    const b = p.badge && BADGES[p.badge];
-    if (b) log(S, `${p.name} porte l'insigne ${b.name} (${TIERS[b.tier]})${p.badgeOff ? ', annulé par une Défense' : ''}.`, 'badge', p.id);
-    if (badgeOf(S, p) && badgeOf(S, p).kind === 'headstart') log(S, `${p.name} part avec ${p.score} points d'avance.`, 'badge', p.id);
-  }
   beginTurn(S);
 }
-
 function beginTurn(S) {
   const pid = S.order[S.cur];
-  S.T = { pid, pts: 0, avail: [0, 1, 2, 3, 4, 5], extra: 0, dice: [], kept: [], phase: 'start', warlord: 0, rollId: 0, n: 0, preview: [], wasHot: false };
+  S.T = { pid, pts: 0, avail: [0, 1, 2, 3, 4, 5], dice: [], kept: [], phase: 'start', rollId: 0, n: 0, preview: [], wasHot: false };
   const p = P(S, pid);
   if (p) p.stats.turns++;
   log(S, `Au tour de ${p ? p.name : '?'}.`, 'turn', pid);
 }
-
 function doRoll(S, R) {
   const T = S.T, p = P(S, T.pid);
-  const dice = T.avail.map(s => ({ s, t: p.bag[s] || 'ordinary', v: 0 }));
-  if (T.extra) { dice.push({ s: -1, t: 'ordinary', v: 0 }); T.extra = 0; }
-  for (const d of dice) d.v = rollFace(d.t, R);
-  T.dice = dice; T.n++; T.rollId = ++S.rollSeq; T.preview = [];
-  evaluateThrow(S);
+  T.dice = T.avail.map(s => ({ s, t: p.skin, v: rollFace(R) }));
+  T.n++; T.rollId = ++S.rollSeq; T.preview = [];
+  if (hasScore(T.dice.map(d => d.v))) T.phase = 'pick';
+  else { T.phase = 'bust'; log(S, `${p.name} lance ${fmtVals(T.dice.map(d => d.v))} : rien ne compte.`, 'bust', p.id); }
 }
-function evaluateThrow(S) {
-  const T = S.T, p = P(S, T.pid);
-  const vals = T.dice.map(d => d.v);
-  if (hasScore(vals, ctxFor(S, p))) { T.phase = 'pick'; }
-  else {
-    T.phase = 'bust';
-    log(S, `${p.name} lance ${fmtVals(vals)} : rien ne compte.`, 'bust', p.id);
-  }
-}
-function fmtVals(vals) { return vals.map(v => v === 0 ? '☠' : v).join(' '); }
-
-/* Ce que le joueur peut encore faire pendant un lancer bredouille. */
-function rescueKinds(S, p) {
-  const b = badgeOf(S, p);
-  if (!b || p.uses <= 0) return [];
-  if (['resurrect', 'reroll', 'transmute', 'pair'].indexOf(b.kind) >= 0) return [b.kind];
-  return [];
-}
+const fmtVals = vals => vals.join(' ');
 
 function endTurn(S, banked) {
   const T = S.T, p = P(S, T.pid);
   if (banked) {
-    let pts = T.pts;
-    if (T.warlord) pts = Math.round(pts * (1 + T.warlord) / 5) * 5;
+    const pts = T.pts;
     p.score += pts; p.stats.banked += pts;
     if (pts > p.stats.best) p.stats.best = pts;
-    log(S, `${p.name} inscrit ${pts} points${T.warlord ? ' (Seigneur de guerre)' : ''} : ${p.score}.`, 'bank', p.id);
+    log(S, `${p.name} inscrit ${pts} points : ${p.score}.`, 'bank', p.id);
     flash(S, 'bank', p.id, { pts, total: p.score });
     if (p.score >= S.opts.target) {
       if (!S.opts.finalRound) return finish(S, p.id);
@@ -880,14 +758,10 @@ function finish(S, pid) {
   if (S.T) S.T.phase = 'done';
   return null;
 }
-
 function cleanSel(sel, n) {
   if (!Array.isArray(sel)) return null;
   const out = [];
-  for (const x of sel) {
-    if (!Number.isInteger(x) || x < 0 || x >= n || out.indexOf(x) >= 0) return null;
-    out.push(x);
-  }
+  for (const x of sel) { if (!Number.isInteger(x) || x < 0 || x >= n || out.indexOf(x) >= 0) return null; out.push(x); }
   return out.sort((a, b) => a - b);
 }
 
@@ -903,11 +777,21 @@ function act(S, pid, a, R) {
       if (!host || S.phase !== 'lobby') return 'Réservé à l\'hôte, dans le salon.';
       const k = a.key, v = a.val;
       if (k === 'target' && TARGETS.indexOf(v) >= 0) S.opts.target = v;
-      else if (k === 'dice' && (v === 'plain' || v === 'loaded')) S.opts.dice = v;
-      else if (k === 'badges' && [0, 1, 2, 3].indexOf(v) >= 0) S.opts.badges = v;
       else if (k === 'finalRound') S.opts.finalRound = !!v;
       else if (k === 'hints') S.opts.hints = !!v;
       else return 'Option inconnue.';
+      return null;
+    }
+    case 'skin': {
+      if (S.phase !== 'lobby' && S.phase !== 'over') return 'Le dé se choisit dans le salon.';
+      const q = a.target && host ? P(S, a.target) : p;
+      if (!q || !DICE[a.skin]) return 'Dé inconnu.';
+      q.skin = a.skin; return null;
+    }
+    case 'ready': {
+      if (S.phase !== 'lobby') return 'Pas de salon en cours.';
+      p.ready = !!a.on;
+      if (allReady(S)) startGame(S, R);
       return null;
     }
     case 'kick': {
@@ -916,6 +800,7 @@ function act(S, pid, a, R) {
       if (!q || q.id === S.hostId) return 'Joueur introuvable.';
       S.players = S.players.filter(x => x.id !== q.id);
       log(S, `${q.name} quitte la table.`, 'sys');
+      if (allReady(S) && S.players.some(x => !x.bot)) startGame(S, R);
       return null;
     }
     case 'move': {
@@ -925,88 +810,49 @@ function act(S, pid, a, R) {
       [S.players[i], S.players[j]] = [S.players[j], S.players[i]];
       return null;
     }
-    case 'start': {
+    case 'start': // l'hôte lance sans attendre (ou partie sur un seul appareil)
       if (!host || S.phase !== 'lobby') return 'Réservé à l\'hôte, dans le salon.';
       if (S.players.length < MIN_PLAYERS) return 'Il faut au moins 2 joueurs (ajoute un robot pour jouer seul).';
-      if (S.players.length > MAX_PLAYERS) return 'Six joueurs au plus autour de la table.';
-      if (needsSetup(S)) {
-        S.phase = 'setup';
-        for (const q of S.players) {
-          q.ready = false;
-          if (S.opts.dice !== 'loaded') q.bag = q.bag.map(() => 'ordinary');
-          if (validBag(q.bag, S.opts)) q.bag = q.bag.map(() => 'ordinary');
-          if (validBadge(q.badge, S.opts)) q.badge = null;
-        }
-        log(S, 'Chacun prépare sa bourse.', 'sys');
-      } else startGame(S, R);
-      return null;
-    }
-    case 'loadout': {
-      if (S.phase !== 'setup') return 'Pas de préparation en cours.';
-      const e1 = validBag(a.bag, S.opts); if (e1) return e1;
-      const e2 = validBadge(a.badge == null ? null : a.badge, S.opts); if (e2) return e2;
-      p.bag = a.bag.slice(); p.badge = a.badge == null ? null : a.badge;
-      if (a.ready != null) p.ready = !!a.ready;
-      if (S.players.every(q => q.ready)) startGame(S, R);
-      return null;
-    }
-    case 'forceStart': {
-      if (!host || S.phase !== 'setup') return 'Réservé à l\'hôte, pendant la préparation.';
       startGame(S, R); return null;
-    }
-    case 'rematch': {
+    case 'rematch':
       if (!host || S.phase !== 'over') return 'Réservé à l\'hôte, en fin de partie.';
-      S.phase = 'lobby';
-      return act(S, pid, { type: 'start' }, R);
-    }
-    case 'toLobby': {
+      startGame(S, R); return null;
+    case 'toLobby':
       if (!host) return 'Réservé à l\'hôte.';
       S.phase = 'lobby'; S.T = null; S.final = null; S.winner = null; S.flash = null;
-      for (const q of S.players) { q.ready = false; q.autopilot = false; q.score = 0; }
+      for (const q of S.players) { q.ready = q.bot; q.autopilot = false; q.score = 0; }
       log(S, 'Retour au salon.', 'sys');
       return null;
-    }
   }
 
   // --- Actions de jeu ---
   if (S.phase !== 'play' || !S.T) return 'Aucune partie en cours.';
   const T = S.T;
-  if (a.type === 'accept' && pid === 'sys') {
-    if (T.phase !== 'bust') return 'Rien à valider.';
-    return endTurn(S, false);
-  }
+  if (a.type === 'accept' && pid === 'sys') return T.phase === 'bust' ? endTurn(S, false) : 'Rien à valider.';
   if (pid !== T.pid) return 'Ce n\'est pas ton tour.';
-  const ctx = ctxFor(S, p), b = badgeOf(S, p);
-
   switch (a.type) {
     case 'roll':
       if (T.phase !== 'start') return 'Les dés sont déjà lancés.';
       doRoll(S, R);
-      log(S, `${p.name} lance ${fmtVals(T.dice.map(d => d.v))}.`, 'roll', p.id);
+      if (T.phase === 'pick') log(S, `${p.name} lance ${fmtVals(T.dice.map(d => d.v))}.`, 'roll', p.id);
       return null;
     case 'preview': {
       if (T.phase !== 'pick') return null;
       const sel = cleanSel(a.sel || [], T.dice.length);
-      if (!sel) return null;
-      T.preview = sel; return null;
+      if (sel) T.preview = sel;
+      return null;
     }
     case 'take': {
       if (T.phase !== 'pick') return 'Il faut d\'abord lancer les dés.';
       const sel = cleanSel(a.sel, T.dice.length);
       if (!sel || !sel.length) return 'Choisis au moins un dé qui compte.';
-      const r = scoreVals(sel.map(i => T.dice[i].v), ctx);
+      const r = scoreVals(sel.map(i => T.dice[i].v));
       if (!r) return 'Chaque dé mis de côté doit faire partie d\'une combinaison.';
-      let pts = r.pts, dbl = false;
-      if (a.dbl) {
-        if (!b || b.kind !== 'double' || p.uses <= 0) return 'Pas d\'insigne du Sosie disponible.';
-        p.uses--; pts *= 2; dbl = true;
-      }
-      T.pts += pts;
-      T.kept.push({ dice: sel.map(i => ({ t: T.dice[i].t, v: T.dice[i].v })), pts, names: r.combos.map(c => c.name), dbl });
+      T.pts += r.pts;
+      T.kept.push({ dice: sel.map(i => ({ t: T.dice[i].t, v: T.dice[i].v })), pts: r.pts, names: r.combos.map(c => c.name) });
       const keptSlots = sel.map(i => T.dice[i].s);
-      const nextAvail = T.dice.map(d => d.s).filter(s => s >= 0 && keptSlots.indexOf(s) < 0);
-      const names = r.combos.map(c => c.name).join(' + ');
-      log(S, `${p.name} garde ${fmtVals(sel.map(i => T.dice[i].v))} (${names}${dbl ? ', doublé' : ''}) : +${pts}, ${T.pts} ce tour.`, 'take', p.id);
+      const nextAvail = T.dice.map(d => d.s).filter(s => keptSlots.indexOf(s) < 0);
+      log(S, `${p.name} garde ${fmtVals(sel.map(i => T.dice[i].v))} (${r.combos.map(c => c.name).join(' + ')}) : +${r.pts}, ${T.pts} ce tour.`, 'take', p.id);
       T.preview = [];
       if (!nextAvail.length) {
         T.avail = [0, 1, 2, 3, 4, 5]; T.wasHot = true; p.stats.hot++;
@@ -1015,74 +861,15 @@ function act(S, pid, a, R) {
       } else { T.avail = nextAvail; T.wasHot = false; }
       if (a.go === 'bank') return endTurn(S, true);
       doRoll(S, R);
-      log(S, `${p.name} relance ${fmtVals(T.dice.map(d => d.v))}.`, 'roll', p.id);
+      if (T.phase === 'pick') log(S, `${p.name} relance ${fmtVals(T.dice.map(d => d.v))}.`, 'roll', p.id);
       return null;
     }
-    case 'bank': // passer sans rien garder : interdit (il faut mettre un dé de côté)
-      return 'Mets au moins un dé de côté avant de passer.';
     case 'accept':
-      if (T.phase !== 'bust') return 'Rien à valider.';
-      return endTurn(S, false);
-    case 'badge': {
-      if (!b) return 'Tu n\'as pas d\'insigne actif.';
-      if (b.uses && p.uses <= 0) return 'Ton insigne est épuisé.';
-      switch (b.kind) {
-        case 'might':
-          if (T.extra) return 'Le dé supplémentaire est déjà prêt.';
-          if (T.phase === 'bust' && rescueKinds(S, p).indexOf('resurrect') < 0) return 'Trop tard pour ce lancer.';
-          if (T.phase !== 'start' && T.phase !== 'pick') return 'Pas maintenant.';
-          p.uses--; T.extra = 1;
-          log(S, `${p.name} brandit l'insigne de Puissance : un dé de plus au prochain lancer.`, 'badge', p.id);
-          return null;
-        case 'warlord':
-          if (T.warlord) return 'Déjà actif pour ce tour.';
-          if (T.phase !== 'start' && T.phase !== 'pick') return 'Pas maintenant.';
-          p.uses--; T.warlord = b.mult;
-          log(S, `${p.name} brandit l'insigne du Seigneur de guerre : +${Math.round(b.mult * 100)} % ce tour.`, 'badge', p.id);
-          return null;
-        case 'resurrect':
-          if (T.phase !== 'bust') return 'Seulement après un lancer bredouille.';
-          p.uses--;
-          T.avail = T.dice.map(d => d.s).filter(s => s >= 0);
-          if (!T.avail.length) T.avail = [0, 1, 2, 3, 4, 5];
-          doRoll(S, R);
-          log(S, `${p.name} ressuscite son lancer : ${fmtVals(T.dice.map(d => d.v))}.`, 'badge', p.id);
-          return null;
-        case 'reroll': case 'pair': {
-          if (T.phase !== 'pick' && T.phase !== 'bust') return 'Seulement juste après un lancer.';
-          const sel = cleanSel(a.sel, T.dice.length);
-          if (!sel || !sel.length) return 'Choisis les dés à relancer.';
-          if (b.kind === 'reroll' && sel.length > b.n) return `Au plus ${b.n} dé${b.n > 1 ? 's' : ''}.`;
-          if (b.kind === 'pair' && (sel.length !== 2 || T.dice[sel[0]].v !== T.dice[sel[1]].v)) return 'Choisis deux dés de même valeur.';
-          p.uses--;
-          const before = fmtVals(sel.map(i => T.dice[i].v));
-          for (const i of sel) T.dice[i].v = rollFace(T.dice[i].t, R);
-          T.rerollId = ++S.rollSeq; T.rerolled = sel; T.preview = [];
-          log(S, `${p.name} brandit l'insigne ${b.name} : ${before} → ${fmtVals(sel.map(i => T.dice[i].v))}.`, 'badge', p.id);
-          evaluateThrow(S);
-          return null;
-        }
-        case 'transmute': {
-          if (T.phase !== 'pick' && T.phase !== 'bust') return 'Seulement juste après un lancer.';
-          const sel = cleanSel(a.sel, T.dice.length);
-          if (!sel || sel.length !== 1) return 'Choisis un dé à transformer.';
-          p.uses--;
-          const i = sel[0], before = T.dice[i].v;
-          T.dice[i].v = b.to;
-          T.rerollId = ++S.rollSeq; T.rerolled = [i]; T.preview = [];
-          log(S, `${p.name} transmute un ${before === 0 ? '☠' : before} en ${b.to}.`, 'badge', p.id);
-          evaluateThrow(S);
-          return null;
-        }
-        default:
-          return 'Cet insigne agit tout seul.';
-      }
-    }
+      return T.phase === 'bust' ? endTurn(S, false) : 'Rien à valider.';
   }
   return 'Action inconnue.';
 }
 
-/* Vue publique : pas de jetons de reconnexion. */
 function view(S) {
   const V = JSON.parse(JSON.stringify(S));
   for (const p of V.players) delete p.token;
@@ -1090,9 +877,9 @@ function view(S) {
 }
 
 const api = {
-  DICE, DICE_ORDER, BADGES, BADGE_ORDER, TIERS, STRAIGHTS, FORMS, TARGETS, MIN_PLAYERS, MAX_PLAYERS,
-  newGame, addPlayer, act, view, scoreVals, scoringSubsets, scoringMask, hasScore, rollFace, shuffle, rnd,
-  badgeOf, ctxFor, rescueKinds, needsSetup, validBag, validBadge, fmtVals, P, log,
+  DICE, DICE_ORDER, STRAIGHTS, TARGETS, MIN_PLAYERS, MAX_PLAYERS,
+  newGame, addPlayer, act, view, scoreVals, scoringSubsets, scoringMask, hasScore, rollFace, rnd,
+  fmtVals, P, log, allReady,
 };
 root.KEngine = api;
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
@@ -1310,138 +1097,410 @@ root.KTex = { load, face, TRAY_RIM };
 
 </script>
 <script>
-/* Kostky — robots. Une stratégie simple : garder peu de dés quand ça vaut le coup,
+/* Kostky — robots. Garder peu de dés quand ça vaut le coup,
    passer quand le risque de repartir bredouille devient trop grand. */
 (function (root) {
 'use strict';
 const E = root.KEngine;
 // Valeur approximative d'avoir n dés à relancer (n = 6 : dés brûlants).
 const W = [0, 30, 60, 110, 190, 300, 450];
-// Seuil de points du tour au-delà duquel on passe, selon les dés qui resteraient.
+// Points du tour au-delà desquels on passe, selon les dés qui resteraient.
 const BANK = [0, 300, 300, 450, 1000, 2000, 1e9];
 
-function situation(S, p) {
-  const others = S.order.filter(id => id !== p.id).map(id => E.P(S, id));
-  const lead = Math.max.apply(null, others.map(q => q.score));
-  return { lead, others };
-}
-
 function planTake(S, p) {
-  const T = S.T, ctx = E.ctxFor(S, p), b = E.badgeOf(S, p);
-  const vals = T.dice.map(d => d.v);
-  const regular = T.dice.filter(d => d.s >= 0).length;
-  const subs = E.scoringSubsets(vals, ctx);
+  const T = S.T, vals = T.dice.map(d => d.v);
+  const subs = E.scoringSubsets(vals);
   if (!subs.length) return null;
   let best = null;
   for (const s of subs) {
-    const keptRegular = s.sel.filter(i => T.dice[i].s >= 0).length;
-    let rem = regular - keptRegular;
+    let rem = T.dice.length - s.sel.length;
     if (rem <= 0) rem = 6;
     const val = s.pts + W[rem];
     if (!best || val > best.val || (val === best.val && s.pts > best.s.pts)) best = { s, rem, val };
   }
-  const s = best.s, rem = best.rem;
-  const dbl = !!(b && b.kind === 'double' && p.uses > 0 && s.pts >= 300);
-  const gain = s.pts * (dbl ? 2 : 1);
-  const mult = 1 + (T.warlord || 0);
-  const turn = T.pts + gain;
-  const { lead } = situation(S, p);
+  const s = best.s, rem = best.rem, turn = T.pts + s.pts;
+  const lead = Math.max.apply(null, S.order.filter(id => id !== p.id).map(id => E.P(S, id).score));
   let go = 'roll';
-  const reach = p.score + Math.round(turn * mult) >= S.opts.target;
   let thr = BANK[rem];
   if (lead >= S.opts.target - 600 && lead > p.score + turn) thr *= 1.8; // l'adversaire va gagner : on force
   if (S.final && S.final.by !== p.id) {
-    // dernier tour : il faut dépasser le meneur
     const top = Math.max.apply(null, S.order.map(id => E.P(S, id).score));
-    go = (p.score + Math.round(turn * mult) > top) ? 'bank' : 'roll';
-  } else if (reach || turn >= thr) go = 'bank';
-  return { sel: s.sel, go, dbl, turn };
+    go = p.score + turn > top ? 'bank' : 'roll';
+  } else if (p.score + turn >= S.opts.target || turn >= thr) go = 'bank';
+  return { sel: s.sel, go, turn };
 }
 
 function decide(S, pid) {
   const p = E.P(S, pid), T = S.T;
   if (!p || !T || S.phase !== 'play' || T.pid !== pid) return null;
-  const b = E.badgeOf(S, p);
-  const canBadge = b && (!b.uses || p.uses > 0);
-  if (T.phase === 'start') {
-    if (canBadge && b.kind === 'might' && b.uses && !T.extra && Math.random() < 0.45) return { type: 'badge' };
-    return { type: 'roll' };
-  }
-  if (T.phase === 'bust') {
-    if (canBadge && b.uses) {
-      if (b.kind === 'resurrect') return { type: 'badge' };
-      if (b.kind === 'reroll') {
-        const idx = T.dice.map((d, i) => i).slice(0, b.n);
-        return { type: 'badge', sel: idx };
-      }
-      if (b.kind === 'pair') {
-        for (let i = 0; i < T.dice.length; i++) for (let j = i + 1; j < T.dice.length; j++)
-          if (T.dice[i].v === T.dice[j].v) return { type: 'badge', sel: [i, j] };
-      }
-      if (b.kind === 'transmute') {
-        const i = bestTransmute(S, p);
-        if (i >= 0) return { type: 'badge', sel: [i] };
-      }
-    }
-    return { type: 'accept' };
-  }
+  if (T.phase === 'start') return { type: 'roll' };
+  if (T.phase === 'bust') return { type: 'accept' };
   if (T.phase === 'pick') {
-    if (canBadge && b.kind === 'transmute' && p.uses > 0) {
-      const ctx = E.ctxFor(S, p), vals = T.dice.map(d => d.v);
-      const now = maxScore(vals, ctx);
-      const i = bestTransmute(S, p);
-      if (i >= 0) {
-        const v2 = vals.slice(); v2[i] = b.to;
-        if (maxScore(v2, ctx) - now >= 250) return { type: 'badge', sel: [i] };
-      }
-    }
     const plan = planTake(S, p);
-    if (!plan) return { type: 'accept' };
-    if (canBadge && b.kind === 'warlord' && p.uses > 0 && !T.warlord && plan.go === 'bank' && plan.turn >= 450) return { type: 'badge' };
-    return { type: 'take', sel: plan.sel, go: plan.go, dbl: plan.dbl };
+    return plan ? { type: 'take', sel: plan.sel, go: plan.go } : { type: 'accept' };
   }
   return null;
 }
-function maxScore(vals, ctx) {
-  let m = 0;
-  for (const s of E.scoringSubsets(vals, ctx)) if (s.pts > m) m = s.pts;
-  return m;
-}
-function bestTransmute(S, p) {
-  const b = E.badgeOf(S, p), ctx = E.ctxFor(S, p), T = S.T;
-  const vals = T.dice.map(d => d.v);
-  let bi = -1, bv = -1;
-  for (let i = 0; i < vals.length; i++) {
-    if (vals[i] === b.to) continue;
-    const v2 = vals.slice(); v2[i] = b.to;
-    const m = maxScore(v2, ctx);
-    if (m > bv) { bv = m; bi = i; }
-  }
-  return bv > 0 ? bi : -1;
-}
-
-const BAGS = [
-  ['weighted', 'weighted', 'favourable', 'favourable', 'cautious', 'cautious'],
-  ['lucky', 'lucky', 'odd', 'odd', 'cautious', 'ordinary'],
-  ['demonic', 'demonic', 'devil', 'painted', 'painted', 'ordinary'],
-  ['trinity', 'trinity', 'antiochus', 'cautious', 'cautious', 'ordinary'],
-  ['favourable', 'favourable', 'painted', 'painted', 'lucky', 'lucky'],
-  ['ordinary', 'ordinary', 'ordinary', 'ordinary', 'devil', 'devil'],
-];
-function loadout(S) {
-  let bag = ['ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary'];
-  if (S.opts.dice === 'loaded') bag = BAGS[Math.floor(Math.random() * BAGS.length)].slice();
-  let badge = null;
-  if (S.opts.badges) {
-    const pool = E.BADGE_ORDER.filter(id => E.BADGES[id].tier <= S.opts.badges && E.BADGES[id].tier >= Math.max(1, S.opts.badges - 1));
-    badge = pool[Math.floor(Math.random() * pool.length)];
-  }
-  return { bag, badge };
-}
+function skin() { const L = E.DICE_ORDER; return L[Math.floor(Math.random() * L.length)]; }
 
 const NAMES = ['Kunhuta', 'Ondřej', 'Bětka', 'Zbyněk', 'Václav', 'Johanka', 'Radovan', 'Dorota', 'Prokop', 'Markéta', 'Vojtěch', 'Ludmila'];
-root.KBots = { decide, loadout, NAMES, planTake };
+root.KBots = { decide, skin, NAMES, planTake };
 if (typeof module !== 'undefined' && module.exports) module.exports = root.KBots;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Kostky — emotes dessinées à la main, façon enluminure : trait d'encre épais, aplats de vermillon,
+   lapis, vert-de-gris, ocre et feuille d'or. viewBox 0 0 120 120. */
+(function (root) {
+'use strict';
+const K = '#2b1a10';
+const S = `stroke="${K}" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"`;
+const C = {
+  red: '#c8442c', redD: '#8e2a1a', blue: '#3c62a8', green: '#4f8059', gold: '#e0a93a', goldD: '#a8761f',
+  flesh: '#efc9a0', fleshD: '#d9a77c', bone: '#ecdcb3', cream: '#f6ecd3', wood: '#a9703a', woodD: '#7a4c22', orange: '#d9712b',
+};
+
+const ART = {
+  rage: `
+    <g fill="none" stroke="${K}" stroke-width="3.2" stroke-linecap="round">
+      <path d="M22 34c-7-4-5-12 2-12c-2-8 8-12 13-6c3-6 13-4 12 3" fill="#e9e2d2"/>
+      <path d="M98 34c7-4 5-12-2-12c2-8-8-12-13-6c-3-6-13-4-12 3" fill="#e9e2d2"/>
+    </g>
+    <circle cx="60" cy="68" r="36" fill="${C.red}" ${S}/>
+    <path d="M36 82q4 8 10 10M84 82q-4 8-10 10" fill="none" stroke="${C.redD}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M33 50l21 9M87 50l-21 9" stroke="${K}" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="46" cy="64" r="5.5" fill="#fff8e6" ${S}/><circle cx="74" cy="64" r="5.5" fill="#fff8e6" ${S}/>
+    <circle cx="47.5" cy="65" r="2.2" fill="${K}"/><circle cx="72.5" cy="65" r="2.2" fill="${K}"/>
+    <rect x="41" y="77" width="38" height="15" rx="4" fill="#fff8e6" ${S}/>
+    <path d="M41 84.5h38M50.5 77v15M60 77v15M69.5 77v15" stroke="${K}" stroke-width="2.2"/>`,
+
+  rire: `
+    <path d="M32 60C26 42 18 30 8 24c16-2 32 8 42 20z" fill="${C.red}" ${S}/>
+    <path d="M88 60c6-18 14-30 24-36c-16-2-32 8-42 20z" fill="${C.green}" ${S}/>
+    <circle cx="8" cy="24" r="6" fill="${C.gold}" ${S}/><circle cx="112" cy="24" r="6" fill="${C.gold}" ${S}/>
+    <circle cx="60" cy="74" r="29" fill="${C.flesh}" ${S}/>
+    <path d="M31 62c0-20 13-30 29-30v24c-12 0-22 2-29 6z" fill="${C.red}" ${S}/>
+    <path d="M89 62c0-20-13-30-29-30v24c12 0 22 2 29 6z" fill="${C.green}" ${S}/>
+    <path d="M31 62c8-5 18-7 29-7s21 2 29 7" fill="none" stroke="${C.gold}" stroke-width="5"/>
+    <path d="M31 62c8-5 18-7 29-7s21 2 29 7" fill="none" stroke="${K}" stroke-width="1.6" transform="translate(0 3)"/>
+    <path d="M43 72q5-7 10 0M67 72q5-7 10 0" fill="none" stroke="${K}" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M44 82q16 24 32 0z" fill="${C.redD}" ${S}/>
+    <path d="M52 92q8-6 16 0q-8 6-16 0z" fill="#e88a78"/>
+    <path d="M38 76q-3 5 0 8q3-3 0-8zM82 76q-3 5 0 8q3-3 0-8z" fill="#8fb4e6" stroke="${K}" stroke-width="1.8"/>`,
+
+  helas: `
+    <circle cx="60" cy="62" r="36" fill="${C.bone}" ${S}/>
+    <path d="M35 50l17-7M85 50l-17-7" stroke="${K}" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M39 60q7 6 14 0M67 60q7 6 14 0" fill="none" stroke="${K}" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M42 64c-2 12 2 22-3 40h10c-3-16 2-28-1-40z" fill="${C.blue}" stroke="${K}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M78 64c2 12-2 22 3 40h-10c3-16-2-28 1-40z" fill="${C.blue}" stroke="${K}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M47 86q6-7 13-3q7-4 13 3" fill="none" stroke="${K}" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M36 106h48" stroke="${C.blue}" stroke-width="5" stroke-linecap="round" opacity=".55"/>`,
+
+  figue: `
+    <rect x="36" y="94" width="48" height="22" rx="3" fill="${C.red}" ${S}/>
+    <path d="M36 101h48" stroke="${C.gold}" stroke-width="3.5"/>
+    <path d="M56 26c-6 0-9 5-9 11c0 5 2 9 4 12h10c2-3 4-7 4-12c0-6-3-11-9-11z" fill="#e7a28c" ${S}/>
+    <path d="M52 32q4-3 8 0" fill="none" stroke="#fbe1d6" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M30 50c0-6 4-10 9-10h44c6 0 9 4 9 10v30c0 10-8 16-18 16h-28c-10 0-16-6-16-16z" fill="${C.flesh}" ${S}/>
+    <path d="M49 46v20M64 46v20M78 40v26" stroke="${K}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M49 46c0-4 3-6 7-6s8 2 8 6" fill="#e7a28c" stroke="${K}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M32 66h58" stroke="${K}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M34 66q7 6 14 0M49 66q7 6 14 0M64 66q7 6 14 0" fill="none" stroke="${C.fleshD}" stroke-width="2.4"/>`,
+
+  fortune: `
+    <circle cx="60" cy="62" r="44" fill="${C.goldD}" ${S}/>
+    <circle cx="60" cy="62" r="38" fill="${C.gold}" ${S}/>
+    <circle cx="60" cy="62" r="31" fill="${C.wood}" ${S}/>
+    <g stroke="${K}" stroke-width="8" stroke-linecap="round">
+      <path d="M60 33v58M31 62h58M39.5 41.5l41 41M80.5 41.5l-41 41"/>
+    </g>
+    <g stroke="${C.gold}" stroke-width="3.6" stroke-linecap="round">
+      <path d="M60 33v58M31 62h58M39.5 41.5l41 41M80.5 41.5l-41 41"/>
+    </g>
+    <circle cx="60" cy="62" r="10" fill="${C.gold}" ${S}/>
+    <circle cx="60" cy="62" r="3.5" fill="${K}"/>
+    <circle cx="60" cy="21" r="4" fill="${C.red}" stroke="${K}" stroke-width="2.2"/>
+    <circle cx="101" cy="62" r="4" fill="${C.blue}" stroke="${K}" stroke-width="2.2"/>
+    <circle cx="60" cy="103" r="4" fill="${C.red}" stroke="${K}" stroke-width="2.2"/>
+    <circle cx="19" cy="62" r="4" fill="${C.blue}" stroke="${K}" stroke-width="2.2"/>
+    <path d="M100 22q8 6 6 16M14 100q-6-8-2-16" fill="none" stroke="${K}" stroke-width="3" stroke-linecap="round"/>`,
+
+  sante: `
+    <path d="M84 50c22 0 22 38 0 38" fill="none" stroke="${K}" stroke-width="11" stroke-linecap="round"/>
+    <path d="M84 50c22 0 22 38 0 38" fill="none" stroke="${C.wood}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M28 40l5 66q27 7 54 0l5-66z" fill="${C.wood}" ${S}/>
+    <path d="M45 46l1.5 62M60 46v64M75 46l-1.5 62" stroke="${C.woodD}" stroke-width="2.4"/>
+    <path d="M29.5 58q30.5 7 61 0M31.5 92q28.5 7 57 0" fill="none" stroke="${K}" stroke-width="6"/>
+    <path d="M29.5 58q30.5 7 61 0M31.5 92q28.5 7 57 0" fill="none" stroke="#7f8a90" stroke-width="2.6"/>
+    <g fill="${K}">
+      <circle cx="30" cy="38" r="12"/><circle cx="47" cy="29" r="14"/><circle cx="66" cy="27" r="14"/><circle cx="84" cy="33" r="13"/><circle cx="93" cy="44" r="9"/>
+      <path d="M30 46c-2 10 2 14 6 12c4-2 2-8 4-12z"/>
+    </g>
+    <g fill="${C.cream}">
+      <circle cx="30" cy="38" r="9"/><circle cx="47" cy="29" r="11"/><circle cx="66" cy="27" r="11"/><circle cx="84" cy="33" r="10"/><circle cx="93" cy="44" r="6"/>
+      <path d="M26 40h70v6h-70z"/><path d="M31.6 46c-1.5 7 1 10 3.6 8.6c2.6-1.4 1.4-5 2.6-8.6z"/>
+    </g>
+    <path d="M40 30q4-6 10-6M62 23q5-3 10 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>`,
+
+  gloire: `
+    <g stroke="${C.gold}" stroke-width="3.4" stroke-linecap="round">
+      <path d="M60 6v8M30 14l4 7M90 14l-4 7M10 34l7 4M110 34l-7 4"/>
+    </g>
+    <path d="M24 78l-4-40 21 18 19-28 19 28 21-18-4 40z" fill="${C.gold}" ${S}/>
+    <path d="M41 56l-5 22M79 56l5 22M60 28v50" stroke="${C.goldD}" stroke-width="2.4"/>
+    <circle cx="20" cy="36" r="5.5" fill="${C.gold}" ${S}/><circle cx="60" cy="26" r="6.5" fill="${C.gold}" ${S}/><circle cx="100" cy="36" r="5.5" fill="${C.gold}" ${S}/>
+    <rect x="22" y="76" width="76" height="20" rx="3" fill="${C.gold}" ${S}/>
+    <circle cx="40" cy="86" r="5" fill="${C.red}" stroke="${K}" stroke-width="2.4"/>
+    <rect x="54" y="80" width="12" height="12" rx="2" transform="rotate(45 60 86)" fill="${C.blue}" stroke="${K}" stroke-width="2.4"/>
+    <circle cx="80" cy="86" r="5" fill="${C.red}" stroke="${K}" stroke-width="2.4"/>
+    <path d="M28 60q4-6 10-4" fill="none" stroke="#fff6d2" stroke-width="3" stroke-linecap="round"/>`,
+
+  lent: `
+    <path d="M4 104h22" stroke="#b7c6a0" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 7"/>
+    <path d="M14 100q2-12 18-12h44c12 0 16-8 18-18c1-6 6-9 11-7c6 2 7 9 5 16c-3 16-14 26-34 27h-56c-4 0-7-2-6-6z" fill="#a9b98c" ${S}/>
+    <path d="M100 66l-6-20M108 66l4-20" stroke="${K}" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="94" cy="44" r="4.5" fill="${K}"/><circle cx="112" cy="44" r="4.5" fill="${K}"/>
+    <path d="M100 80q4 3 8 0" fill="none" stroke="${K}" stroke-width="2.6" stroke-linecap="round"/>
+    <circle cx="50" cy="62" r="28" fill="#c9873e" ${S}/>
+    <path d="M50.9 64.3 L50.7 64.5 L50.5 64.7 L50.3 64.9 L50.0 65.1 L49.7 65.2 L49.4 65.3 L49.1 65.4 L48.8 65.4 L48.4 65.4 L48.0 65.4 L47.6 65.3 L47.3 65.2 L46.9 65.0 L46.5 64.8 L46.2 64.5 L45.8 64.3 L45.5 63.9 L45.2 63.6 L45.0 63.2 L44.7 62.7 L44.6 62.2 L44.4 61.7 L44.3 61.2 L44.3 60.7 L44.3 60.1 L44.4 59.6 L44.5 59.0 L44.7 58.4 L44.9 57.9 L45.2 57.3 L45.5 56.8 L45.9 56.3 L46.4 55.9 L46.9 55.4 L47.5 55.1 L48.1 54.7 L48.7 54.4 L49.4 54.2 L50.1 54.0 L50.8 53.9 L51.6 53.9 L52.3 53.9 L53.1 54.1 L53.9 54.2 L54.6 54.5 L55.4 54.8 L56.1 55.3 L56.8 55.7 L57.4 56.3 L58.0 56.9 L58.6 57.6 L59.1 58.3 L59.5 59.1 L59.8 59.9 L60.1 60.8 L60.3 61.7 L60.5 62.7 L60.5 63.6 L60.4 64.6 L60.3 65.6 L60.1 66.6 L59.7 67.5 L59.3 68.5 L58.8 69.4 L58.2 70.2 L57.5 71.0 L56.7 71.8 L55.9 72.5 L55.0 73.1 L54.0 73.6 L53.0 74.1 L51.9 74.4 L50.8 74.7 L49.6 74.9 L48.4 74.9 L47.3 74.9 L46.1 74.7 L44.9 74.4 L43.7 74.0 L42.6 73.5 L41.5 72.9 L40.4 72.2 L39.5 71.4 L38.5 70.5 L37.7 69.5 L37.0 68.4 L36.3 67.3 L35.7 66.0 L35.3 64.8 L35.0 63.4 L34.8 62.1 L34.7 60.7 L34.7 59.3 L34.9 57.9 L35.2 56.5 L35.6 55.1 L36.2 53.8 L36.9 52.5 L37.7 51.2 L38.6 50.1 L39.6 49.0 L40.8 48.0 L42.0 47.1 L43.3 46.3 L44.7 45.6 L46.2 45.1 L47.7 44.7 L49.3 44.4 L50.9 44.3 L52.5 44.3 L54.1 44.4 L55.7 44.7 L57.3 45.2 L58.9 45.8 L60.4 46.6 L61.8 47.4 L63.2 48.5 L64.4 49.6 L65.6 50.9 L66.7 52.3 L67.6 53.8 L68.4 55.3 L69.1 57.0 L69.6 58.7 L69.9 60.5 L70.1 62.3 L70.2 64.1 L70.0 66.0 L69.7 67.8 L69.3 69.6 L68.6 71.4 L67.8 73.1 L66.9 74.7 L65.7 76.3 L64.5 77.7 L63.1 79.1 L61.6 80.3 L59.9 81.4 L58.2 82.4 L56.4 83.2 L54.5 83.8 L52.5 84.2 L50.5 84.5 L48.4 84.6 L46.4 84.5 L44.3 84.2 L42.3 83.8 L40.3 83.1 L38.4 82.3 L36.5 81.2 L34.7 80.1 L33.1 78.7 L31.5 77.2 L30.1 75.6 L28.9 73.8 L27.8 71.9 L26.8 69.9 L26.1 67.8 L25.5 65.6 L25.1 63.4" fill="none" stroke="${K}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M30 44q8-10 20-10" fill="none" stroke="#efc27c" stroke-width="3" stroke-linecap="round"/>
+    <g fill="none" stroke="${K}" stroke-width="2.6" stroke-linecap="round" opacity=".75">
+      <path d="M34 22h-12M36 14h-18M38 30h-10"/>
+    </g>`,
+
+  crane: `
+    <path d="M60 18c-26 0-38 18-36 38c1 12 6 18 12 22v16q24 8 48 0v-16c6-4 11-10 12-22c2-20-10-38-36-38z" fill="${C.bone}" ${S}/>
+    <path d="M60 20l-4 10 6 6-3 8" fill="none" stroke="${K}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M35 58c0-8 6-12 12-12s11 5 10 12c-1 7-6 10-11 10s-11-3-11-10z" fill="${K}"/>
+    <path d="M85 58c0-8-6-12-12-12s-11 5-10 12c1 7 6 10 11 10s11-3 11-10z" fill="${K}"/>
+    <path d="M60 68l-6 11h12z" fill="${K}"/>
+    <path d="M38 88q22 6 44 0" fill="none" stroke="${K}" stroke-width="2.6"/>
+    <path d="M45 84v13M52 86v12M60 86v13M68 86v12M75 84v13" stroke="${K}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M30 44q4-12 16-18" fill="none" stroke="#fff6dc" stroke-width="3" stroke-linecap="round"/>`,
+
+  pitie: `
+    <g stroke="${C.gold}" stroke-width="3" stroke-linecap="round" opacity=".9">
+      <path d="M60 2v8M38 8l4 7M82 8l-4 7M22 22l6 5M98 22l-6 5"/>
+    </g>
+    <path d="M60 16c-9 2-16 24-19 48c-2 14 0 24 5 30h14z" fill="${C.flesh}" ${S}/>
+    <path d="M60 16c9 2 16 24 19 48c2 14 0 24-5 30h-14z" fill="${C.flesh}" ${S}/>
+    <path d="M53 30c-3 10-6 22-7 34M67 30c3 10 6 22 7 34" fill="none" stroke="${C.fleshD}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M44 72c4-6 12-4 14 6M76 72c-4-6-12-4-14 6" fill="none" stroke="${K}" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M30 116l8-26 22 4v22z" fill="${C.blue}" ${S}/>
+    <path d="M90 116l-8-26-22 4v22z" fill="${C.blue}" ${S}/>
+    <path d="M38 90l22 4 22-4" fill="none" stroke="${C.gold}" stroke-width="3.5"/>`,
+
+  renart: `
+    <path d="M31 47L23 9q17 6 28 22z" fill="${C.orange}" ${S}/>
+    <path d="M89 47l8-38q-17 6-28 22z" fill="${C.orange}" ${S}/>
+    <path d="M32 40l-4-21q9 5 15 13zM88 40l4-21q-9 5-15 13z" fill="${C.cream}"/>
+    <path d="M23 9l3 12 8-7zM97 9l-3 12-8-7z" fill="${K}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M60 29c18 0 31 8 36 22l9 8-9 2 6 8-11 1c-8 13-17 22-25 29q-6 4-12 0c-8-7-17-16-25-29l-11-1 6-8-9-2 9-8c5-14 18-22 36-22z" fill="${C.orange}" ${S}/>
+    <path d="M60 99c-8-6-16-15-22-25c7 3 14 2 19-2q3-2 6 0c5 4 12 5 19 2c-6 10-14 19-22 25z" fill="${C.cream}" stroke="${K}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M60 31v14M53 33l2 10M67 33l-2 10" stroke="#a8501c" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M37 57q8-8 17 0q-8 5-17 0z" fill="#f4cf4a" stroke="${K}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M45.5 52.5v8.5" stroke="${K}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M35 55q10-7 20 1" fill="none" stroke="${K}" stroke-width="4" stroke-linecap="round"/>
+    <path d="M34 46q9-6 20 0" fill="none" stroke="${K}" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M66 58q8 5 17-2" fill="none" stroke="${K}" stroke-width="3.6" stroke-linecap="round"/>
+    <path d="M82 56l4-3M79 59l3 3" stroke="${K}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M66 50q8-2 17 2" fill="none" stroke="${K}" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M60 96q-5 0-7 3M60 96q6 1 9-2q4-3 6-9" fill="none" stroke="${K}" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M68.5 94.6l1.2 4.4 2.4-5.8" fill="#fff" stroke="${K}" stroke-width="1.5" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="91" rx="6.5" ry="4.6" fill="${K}"/>
+    <path d="M57.5 89.6q2-1.4 4 0" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+    <g fill="${K}"><circle cx="49" cy="85" r="1.4"/><circle cx="46" cy="81.5" r="1.4"/><circle cx="51" cy="80.5" r="1.4"/><circle cx="71" cy="80.5" r="1.4"/><circle cx="74" cy="81.5" r="1.4"/></g>
+    <g transform="rotate(-16 99 98)">
+      <rect x="89" y="88" width="20" height="20" rx="4" fill="${C.bone}" ${S}/>
+      <circle cx="94.5" cy="93.5" r="2" fill="${K}"/><circle cx="99" cy="98" r="2" fill="${K}"/><circle cx="103.5" cy="102.5" r="2" fill="${K}"/>
+    </g>
+    <path d="M112 80l1.6 4.4 4.4 1.6-4.4 1.6-1.6 4.4-1.6-4.4-4.4-1.6 4.4-1.6z" fill="${C.gold}" stroke="${K}" stroke-width="1.6" stroke-linejoin="round"/>`,
+
+  couard: `
+    <path d="M56 98v14M70 98v14M50 112h10M64 112h10" stroke="${C.goldD}" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="64" cy="74" rx="34" ry="28" fill="${C.cream}" ${S}/>
+    <path d="M98 64q10-10 14-2q-2 12-14 14" fill="${C.cream}" ${S}/>
+    <path d="M58 72q18-14 32 2q-14 12-32-2z" fill="#e3d4ae" ${S}/>
+    <circle cx="44" cy="44" r="18" fill="${C.cream}" ${S}/>
+    <path d="M34 30q0-12 8-8q4-10 10-2q8-4 8 6z" fill="${C.red}" ${S}/>
+    <path d="M27 42l-12 4 12 5z" fill="${C.gold}" ${S}/>
+    <path d="M30 54q-4 10 3 11q4-2 2-11z" fill="${C.red}" stroke="${K}" stroke-width="2.4" stroke-linejoin="round"/>
+    <circle cx="41" cy="41" r="5" fill="#fff"/><circle cx="40" cy="42" r="3" fill="${K}"/>
+    <path d="M35 33l10 2" stroke="${K}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M60 30q-3 6 0 9q3-3 0-9z" fill="#8fb4e6" stroke="${K}" stroke-width="1.8"/>
+    <g fill="none" stroke="${K}" stroke-width="2.6" stroke-linecap="round">
+      <path d="M104 86q4 4 0 8M110 82q5 6 0 12M20 70q-4 4 0 8M14 66q-5 6 0 12"/>
+    </g>`,
+};
+
+const LIST = [
+  { id: 'rage', name: 'Rage', say: 'Morbleu !', use: 'Après une bredouille qui fait mal.' },
+  { id: 'rire', name: 'Bouffon', say: 'Ha ha ha !', use: 'Pour rire de la bredouille d\'un autre.' },
+  { id: 'helas', name: 'Hélas', say: 'Hélas…', use: 'Quand on perd un gros tour.' },
+  { id: 'figue', name: 'La figue', say: 'Tiens, voilà pour toi !', use: 'L\'insulte du geste : pouce entre deux doigts.' },
+  { id: 'fortune', name: 'Roue de Fortune', say: 'Fortune tourne !', use: 'Un lancer chanceux, ou un retournement.' },
+  { id: 'sante', name: 'Santé', say: 'À ta santé !', use: 'Bien joué, sans arrière-pensée (ou presque).' },
+  { id: 'gloire', name: 'Gloire', say: 'Inclinez-vous !', use: 'Pour fanfaronner en tête.' },
+  { id: 'lent', name: 'Escargot', say: 'Plus vite !', use: 'Pour presser un joueur qui traîne.' },
+  { id: 'crane', name: 'Memento mori', say: 'Mort et enterré.', use: 'Quand un joueur est hors course.' },
+  { id: 'pitie', name: 'Pitié', say: 'Pitié, Seigneur…', use: 'Avant un lancer risqué.' },
+  { id: 'renart', name: 'Renart', say: 'Tricheur !', use: 'Accuser (pour rire) un joueur trop chanceux.' },
+  { id: 'couard', name: 'Couard', say: 'Poule mouillée !', use: 'Contre celui qui passe avec trois sous.' },
+];
+
+/* ---------- Bruitages : tout est synthétisé (Web Audio), aucun fichier son. ---------- */
+let AC = null, OUT = null;
+function ctx(ext) {
+  if (ext && ext.ctx) return ext;
+  if (!AC) {
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    const comp = AC.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
+    const g = AC.createGain(); g.gain.value = .8; comp.connect(g); g.connect(AC.destination); OUT = comp;
+  }
+  if (AC.state === 'suspended') AC.resume().catch(() => { });
+  return { ctx: AC, out: OUT };
+}
+function noiseBuf(c, sec) {
+  const len = Math.floor(c.sampleRate * sec), b = c.createBuffer(1, len, c.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+// Note simple avec enveloppe.
+function tone(A, t, f, dur, o) {
+  o = o || {};
+  const c = A.ctx, osc = c.createOscillator(), g = c.createGain();
+  osc.type = o.type || 'sine';
+  osc.frequency.setValueAtTime(f, t);
+  if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + (o.glide || dur));
+  if (o.vib) { const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = o.vib; lg.gain.value = o.vibAmt || f * .02; l.connect(lg); lg.connect(osc.frequency); l.start(t); l.stop(t + dur + .05); }
+  const vol = o.vol == null ? .2 : o.vol, at = o.attack || .008;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + at);
+  if (o.hold) g.gain.setValueAtTime(vol, t + o.hold);
+  g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+  let node = osc;
+  if (o.lp) { const f2 = c.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = o.lp; f2.Q.value = o.q || .7; osc.connect(f2); node = f2; }
+  node.connect(g); g.connect(A.out); osc.start(t); osc.stop(t + dur + .05);
+  return osc;
+}
+function noise(A, t, dur, o) {
+  o = o || {};
+  const c = A.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = noiseBuf(c, dur + .05); f.type = o.type || 'bandpass'; f.frequency.value = o.f || 1000; f.Q.value = o.q || 1;
+  const vol = o.vol == null ? .2 : o.vol;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + (o.attack || .005)); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+  s.connect(f); f.connect(g); g.connect(A.out); s.start(t); s.stop(t + dur + .05);
+}
+// Corde pincée (luth) : une note brève qui s'éteint vite.
+function pluck(A, t, f, vol) {
+  tone(A, t, f, .35, { type: 'triangle', vol: vol || .22, attack: .003, lp: f * 4 });
+  tone(A, t, f * 2, .18, { type: 'sine', vol: (vol || .22) * .35, attack: .003 });
+}
+const N = n => 440 * Math.pow(2, (n - 69) / 12); // numéro MIDI → Hz
+const SOUNDS = {
+  // Grognement rageur : dent de scie grave, tremblée, étouffée.
+  rage(A, t) {
+    tone(A, t, 85, .55, { type: 'sawtooth', to: 65, vol: .32, lp: 520, q: 3, vib: 22, vibAmt: 14, attack: .03, hold: .3 });
+    tone(A, t + .02, 128, .5, { type: 'sawtooth', to: 96, vol: .14, lp: 700, vib: 19, vibAmt: 10, attack: .03, hold: .25 });
+    noise(A, t, .4, { f: 300, q: .8, vol: .12, attack: .03 });
+  },
+  // Grelots du bouffon.
+  rire(A, t) {
+    for (let i = 0; i < 9; i++) {
+      const at = t + i * .055 + Math.random() * .02, f = 2300 + Math.random() * 1400;
+      tone(A, at, f, .22, { vol: .13, attack: .002 }); tone(A, at, f * 1.51, .14, { vol: .07, attack: .002 });
+    }
+  },
+  // Plainte qui descend.
+  helas(A, t) {
+    [N(67), N(66), N(65), N(62)].forEach((f, i) => tone(A, t + i * .26, f, i === 3 ? .8 : .3, { type: 'triangle', vol: .2, lp: 1400, vib: 5.5, vibAmt: 4, attack: .03, to: i === 3 ? f * .94 : null, glide: .7 }));
+  },
+  // Pfffrt : une langue tirée.
+  figue(A, t) {
+    const o = tone(A, t, 120, .42, { type: 'sawtooth', to: 90, vol: .3, lp: 900, q: 2, attack: .02, hold: .3 });
+    const c = A.ctx, l = c.createOscillator(), lg = c.createGain();
+    l.frequency.value = 34; lg.gain.value = 40; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + .45);
+    noise(A, t, .38, { f: 900, q: .6, vol: .1 });
+  },
+  // Cliquet de la roue qui tourne, puis un tintement.
+  fortune(A, t) {
+    let at = t;
+    for (let i = 0; i < 14; i++) { noise(A, at, .03, { f: 2600, q: 6, vol: .35 }); at += .035 + i * i * .0009; }
+    tone(A, at + .02, N(84), .7, { vol: .14 }); tone(A, at + .02, N(91), .55, { vol: .07 });
+  },
+  // Deux chopes de bois qui se cognent, la bière qui clapote.
+  sante(A, t) {
+    noise(A, t, .09, { f: 420, q: 5, vol: .8 }); tone(A, t, 160, .1, { to: 90, vol: .25 });
+    noise(A, t + .02, .07, { f: 650, q: 5, vol: .4 });
+    for (let i = 0; i < 6; i++) tone(A, t + .12 + i * .05 + Math.random() * .02, 500 + Math.random() * 400, .06, { to: 900 + Math.random() * 400, vol: .07, glide: .05 });
+  },
+  // Petite fanfare de cors.
+  gloire(A, t) {
+    [[N(60), 0, .14], [N(64), .13, .14], [N(67), .26, .14], [N(72), .39, .6]].forEach(([f, d, du]) => {
+      tone(A, t + d, f, du, { type: 'sawtooth', vol: .16, lp: 1800, q: 1.2, attack: .02, hold: du * .6 });
+      tone(A, t + d, f / 2, du, { type: 'square', vol: .05, lp: 900, attack: .02 });
+    });
+  },
+  // Glissade lente et paresseuse.
+  lent(A, t) {
+    tone(A, t, 420, 1.1, { type: 'triangle', to: 180, glide: 1, vol: .2, lp: 1200, vib: 3.5, vibAmt: 18, attack: .08, hold: .6 });
+  },
+  // Os qui s'entrechoquent, en descendant.
+  crane(A, t) {
+    [N(79), N(76), N(72), N(67), N(64)].forEach((f, i) => {
+      const at = t + i * .085;
+      tone(A, at, f, .14, { vol: .2, attack: .002 }); tone(A, at, f * 3.9, .05, { vol: .06, attack: .001 });
+      noise(A, at, .03, { f: 3500, q: 3, vol: .15 });
+    });
+  },
+  // Chœur céleste : un accord tenu, voix douces.
+  pitie(A, t) {
+    [N(60), N(64), N(67), N(72)].forEach((f, i) => tone(A, t + i * .03, f, 1.4, { type: 'sine', vol: .07, attack: .35, hold: .8, vib: 5, vibAmt: 3 }));
+    noise(A, t, 1.2, { f: 1200, q: 4, vol: .02, attack: .4 });
+  },
+  // Pas de loup au luth : notes pincées, en catimini.
+  renart(A, t) {
+    [N(57), N(60), N(57), N(63), N(62)].forEach((f, i) => pluck(A, t + i * .13 + (i === 4 ? .08 : 0), f, i === 4 ? .26 : .18));
+  },
+  // Cot, cot, cot… codêêt !
+  couard(A, t) {
+    [0, .14, .27].forEach(d => { tone(A, t + d, 700, .07, { type: 'square', to: 480, glide: .06, vol: .15, lp: 1500 }); });
+    tone(A, t + .45, 620, .32, { type: 'square', to: 1050, glide: .1, vol: .17, lp: 1800, vib: 24, vibAmt: 40, hold: .15 });
+  },
+};
+function play(id, ext) {
+  const A = ctx(ext); if (!A || !SOUNDS[id]) return;
+  try { SOUNDS[id](A, A.ctx.currentTime + .02); } catch (e) { }
+}
+
+/* ---------- Anti-abus ----------
+   Une emote par seconde au plus ; dix emotes en quinze secondes = vingt secondes de silence. */
+const RULE = { gap: 1000, burst: 10, window: 15000, mute: 20000 };
+function limiter(opts) {
+  const R = Object.assign({}, RULE, opts || {});
+  let sent = [], muteUntil = 0;
+  return {
+    // Renvoie { ok: true } ou { ok: false, wait: ms, muted: bool }.
+    try(now) {
+      now = now == null ? Date.now() : now;
+      if (now < muteUntil) return { ok: false, wait: muteUntil - now, muted: true };
+      const last = sent[sent.length - 1] || -1e12;
+      if (now - last < R.gap) return { ok: false, wait: R.gap - (now - last), muted: false };
+      sent = sent.filter(x => now - x < R.window);
+      sent.push(now);
+      if (sent.length >= R.burst) { muteUntil = now + R.mute; sent = []; return { ok: true, mutedNow: true, wait: R.mute }; }
+      return { ok: true };
+    },
+    state(now) { now = now == null ? Date.now() : now; return { muteLeft: Math.max(0, muteUntil - now) }; },
+  };
+}
+
+function svg(id, size) {
+  return `<svg viewBox="0 0 120 120" width="${size || 96}" height="${size || 96}" aria-hidden="true">${ART[id] || ''}</svg>`;
+}
+root.KEmotes = { LIST, svg, ART, play, limiter, RULE };
+if (typeof module !== 'undefined' && module.exports) module.exports = root.KEmotes;
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
@@ -1457,7 +1516,7 @@ const fmt = n => Number(n || 0).toLocaleString('fr-FR');
 const Q = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })();
 const TIME = Math.max(0.05, +(Q.get('speed') || 1));
 const ROLL_MS = 950;
-const PREFIX = 'kostky-v1-';
+const PREFIX = 'kostky-v2-';
 const LS = store(() => window.localStorage), SS = store(() => window.sessionStorage);
 function store(get) {
   return {
@@ -1494,9 +1553,10 @@ function devilHead(fill, eye) {
 }
 const FACE_CACHE = new Map();
 function faceURL(type, v, flat) {
+  const d = E.DICE[type] || E.DICE.ordinary;
+  if (d.devilFace && v === 1) v = 0; // la tête du diable, qui compte pour 1
   const key = type + v + (flat ? 'f' : 'c');
   if (FACE_CACHE.has(key)) return FACE_CACHE.get(key);
-  const d = E.DICE[type] || E.DICE.ordinary;
   let url = null;
   try { if (window.KTex) url = window.KTex.face(d, type, v, flat); } catch (e) { url = null; }
   if (!url) url = svgFace(d, v, flat);
@@ -1517,47 +1577,14 @@ function svgFace(d, v, flat) {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='34%' cy='28%' r='85%'><stop offset='0' stop-color='${hi}'/><stop offset='.55' stop-color='${d.body}'/><stop offset='1' stop-color='${lo}'/></radialGradient><radialGradient id='p' cx='60%' cy='65%' r='70%'><stop offset='0' stop-color='${pipHi}'/><stop offset='1' stop-color='${pipLo}'/></radialGradient></defs>${shape}${inner}</svg>`;
   return 'data:image/svg+xml,' + svg.replace(/</g, '%3C').replace(/>/g, '%3E').replace(/#(?=[0-9a-f]{6})/gi, '%23');
 }
-function favFace(type) {
-  const d = E.DICE[type] || E.DICE.ordinary;
-  if (d.joker) return 0;
-  let m = 0;
-  d.p.forEach((p, i) => { if (p > d.p[m]) m = i; });
-  return d.p.every(p => p === d.p[0]) ? 5 : m + 1;
-}
-const dieImg = (t, v, cls) => `<img src="${faceURL(t, v, true)}" alt="${v === 0 ? 'tête du diable' : v}" class="${cls || ''}" draggable="false">`;
-
-const ICON = {
-  double: '<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>',
-  headstart: '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>',
-  defense: '<path d="M12 3l7 3v6c0 4.6-3 7.6-7 9-4-1.4-7-4.4-7-9V6z"/>',
-  reroll: '<path d="M19.5 13a7.5 7.5 0 1 1-2.2-6.3"/><path d="M19.5 4v5h-5"/>',
-  pair: '<path d="M19.5 13a7.5 7.5 0 1 1-2.2-6.3"/><path d="M19.5 4v5h-5"/><path d="M10 12h4"/>',
-  might: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/>',
-  transmute: '<path d="M12 4l8.5 15h-17z"/><path d="M7.2 14h9.6"/>',
-  cut: '<path d="M5 20l9-9"/><path d="M12.5 4.5c3.5-.5 7 2.5 7 6.5l-4.5-1.5-3-3z"/>',
-  gallows: '<path d="M4 21h10M7 21V4h10v3M7 9l5-5"/><circle cx="17" cy="10" r="2"/>',
-  eye: '<path d="M2 12s4-6.5 10-6.5S22 12 22 12s-4 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-  warlord: '<path d="M14.5 3.5H20.5V9.5L9.5 20.5L3.5 14.5Z"/><path d="M6 12l6 6"/>',
-  resurrect: '<path d="M12 3v18M7 8h10"/>',
-  emperor: '<path d="M3 18h18l-1.5-10-4.5 4-3-6.5L9 12 4.5 8z"/><path d="M4 21h16"/>',
-};
-function badgeIconKey(b) {
-  if (b.kind === 'form') return b.form;
-  return b.kind;
-}
-function medal(id, o) {
-  o = o || {};
-  if (!id) return `<span class="medal none" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6"/></svg></span>`;
-  const b = E.BADGES[id];
-  const uses = o.uses != null && b.uses ? `<span class="uses">${o.uses}</span>` : '';
-  return `<span class="medal t${b.tier}${o.off ? ' off' : ''}" title="${esc(b.name)} (${E.TIERS[b.tier]})" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[badgeIconKey(b)] || ''}</svg>${uses}</span>`;
-}
+const dieImg = (t, v, cls) => `<img src="${faceURL(t, v, true)}" alt="${v}" class="${cls || ''}" draggable="false">`;
 const I = {
   log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>',
   rules: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.6V14"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>',
   sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>',
   menu: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
   flame: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-3 2-4 2-7 1.5 1 2 2.5 2 4 1.5-2 1.7-5 1-8z"/></svg>',
+  emote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 4h16v11H11l-5 4.5V15H4z"/><path d="M9 11.5q3 2.2 6 0"/><circle cx="9.3" cy="8.3" r=".6" fill="currentColor"/><circle cx="14.7" cy="8.3" r=".6" fill="currentColor"/></svg>',
   close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   crown: '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 18h18l-1.5-10-4.5 4-3-6.5L9 12 4.5 8z"/><path d="M4 21h16"/></svg>',
 };
@@ -1659,10 +1686,10 @@ function sTick() { if (!SND.on || !audio()) return; woodHit(SND.ctx.currentTime 
 
 /* ================= État ================= */
 let S = null, MODE = null, ME = null;
+const KEM = window.KEmotes;
 const UI = {
-  sel: [], bsel: [], badgeMode: null, dbl: false, selKey: '', screen: null,
-  overHidden: false, lastFlash: null, drafts: {}, setupFor: null, confirm: null,
-  sheet: null, rulesOpen: false, seenGame: false, prevTimer: null, netState: '',
+  sel: [], selKey: '', screen: null, overHidden: false, lastFlash: null, skinFor: null,
+  sheet: null, seenGame: false, netState: '', emoOpen: false, lastEmote: null, emoLim: KEM.limiter(), emoTimer: null, emoMsg: '',
 };
 const P = id => S && S.players.find(p => p.id === id);
 const isHost = () => MODE === 'host' || MODE === 'local';
@@ -1688,6 +1715,8 @@ function uniqueName(n) {
   while (S.players.some(p => p.name.toLowerCase() === name.toLowerCase())) name = base + ' ' + (k++);
   return name;
 }
+// L'hôte applique aussi la règle anti-abus des emotes (avec un peu de marge pour le réseau).
+const HOST_LIM = {};
 function hostApply(pid, a) {
   if (!S || !a) return 'Action invalide.';
   let err = null;
@@ -1697,7 +1726,7 @@ function hostApply(pid, a) {
       if (!host || S.phase !== 'lobby') { err = 'Réservé à l\'hôte, dans le salon.'; break; }
       if (S.players.length >= E.MAX_PLAYERS) { err = 'Six joueurs au plus autour de la table.'; break; }
       const free = BOTS.NAMES.filter(n => !S.players.some(p => p.name === n));
-      const p = E.addPlayer(S, { id: 'b_' + rid(), name: free[Math.floor(E.rnd() * free.length)] || uniqueName('Robot'), bot: true });
+      const p = E.addPlayer(S, { id: 'b_' + rid(), name: free[Math.floor(E.rnd() * free.length)] || uniqueName('Robot'), bot: true, skin: BOTS.skin() });
       hlog(`${p.name} (robot) s'assoit à la table.`);
       break;
     }
@@ -1706,6 +1735,7 @@ function hostApply(pid, a) {
       if (S.players.length >= E.MAX_PLAYERS) { err = 'Six joueurs au plus autour de la table.'; break; }
       const p = E.addPlayer(S, { id: 'l_' + rid(), name: uniqueName(a.name), local: true });
       hlog(`${p.name} s'assoit à la table.`);
+      UI.skinFor = p.id;
       break;
     }
     case 'autopilot': {
@@ -1716,6 +1746,16 @@ function hostApply(pid, a) {
       hlog(q.autopilot ? `Un robot joue à la place de ${q.name}.` : `${q.name} reprend la main.`);
       break;
     }
+    case 'emote': {
+      if (S.phase !== 'play' && S.phase !== 'over') { err = 'Pas de partie en cours.'; break; }
+      if (!P(pid)) { err = 'Joueur inconnu.'; break; }
+      if (!KEM.LIST.some(e => e.id === a.id)) { err = 'Emote inconnue.'; break; }
+      const L = HOST_LIM[pid] || (HOST_LIM[pid] = KEM.limiter({ gap: 750 }));
+      const r = L.try();
+      if (!r.ok) { err = r.muted ? `Trop d'emotes : silence encore ${Math.ceil(r.wait / 1000)} s.` : 'Une seconde entre deux emotes.'; break; }
+      S.emotes = (S.emotes || []).concat([{ k: ++S.seq, pid, id: a.id }]).slice(-12);
+      break;
+    }
     default:
       err = E.act(S, pid, a);
   }
@@ -1724,29 +1764,50 @@ function hostApply(pid, a) {
 }
 function afterChange(a) {
   if (!S) return;
-  if (!a || a.type !== 'preview') saveHost();
+  if (!a || (a.type !== 'preview' && a.type !== 'emote')) saveHost();
   broadcast();
   render();
   scheduleAuto();
+  botReact();
 }
 function saveHost() {
   if (!isHost() || !S) return;
   LS.set('kostky-save', JSON.stringify({ mode: MODE, me: ME, code: S.code, S, t: Date.now() }));
 }
 
+// Les robots réagissent parfois avec une emote.
+const REACT = { last: null };
+function botReact() {
+  if (!S || !isHost() || !S.flash) return;
+  const f = S.flash;
+  if (REACT.last === null) { REACT.last = f.id; return; }
+  if (f.id === REACT.last) return;
+  REACT.last = f.id;
+  const bots = S.players.filter(p => p.bot), who = P(f.pid);
+  if (!bots.length || !who) return;
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const other = () => { const o = bots.filter(b => b.id !== f.pid); return o.length ? pick(o) : null; };
+  const R = Math.random();
+  let b = null, id = null;
+  if (f.k === 'bust') {
+    if (who.bot && f.pts >= 300 && R < .55) { b = who; id = pick(['rage', 'helas']); }
+    else if (f.pts >= 500 && R < .4) { b = other(); id = pick(['rire', 'crane']); }
+  } else if (f.k === 'bank') {
+    if (who.bot && f.pts >= 1500 && R < .45) { b = who; id = pick(['gloire', 'sante']); }
+    else if (f.pts <= 250 && R < .25) { b = other(); id = 'couard'; }
+  } else if (f.k === 'hot') {
+    if (who.bot && R < .35) { b = who; id = 'fortune'; }
+  } else if (f.k === 'win') {
+    if (who.bot && R < .7) { b = who; id = 'gloire'; }
+    else if (!who.bot && R < .6) { b = other(); id = pick(['helas', 'sante']); }
+  }
+  if (b && id) { const bid = b.id; setTimeout(() => { if (S && P(bid)) hostApply(bid, { type: 'emote', id }); }, (700 + Math.random() * 700) * TIME); }
+}
+
 const AUTO = { t: null, previewFor: '', guard: 0, guardKey: '' };
 function scheduleAuto() {
   clearTimeout(AUTO.t);
-  if (!S || !isHost()) return;
-  if (S.phase === 'setup') {
-    const bot = S.players.find(p => p.bot && !p.ready);
-    if (bot) AUTO.t = setTimeout(() => {
-      const lo = BOTS.loadout(S);
-      hostApply(bot.id, { type: 'loadout', bag: lo.bag, badge: lo.badge, ready: true });
-    }, 450 * TIME);
-    return;
-  }
-  if (S.phase !== 'play' || !S.T) return;
+  if (!S || !isHost() || S.phase !== 'play' || !S.T) return;
   const T = S.T, p = P(T.pid);
   if (!p) return;
   if (p.bot || p.autopilot) {
@@ -1757,7 +1818,7 @@ function scheduleAuto() {
     AUTO.t = setTimeout(botStep, d * TIME);
     return;
   }
-  if (T.phase === 'bust' && !E.rescueKinds(S, p).length) {
+  if (T.phase === 'bust') {
     AUTO.t = setTimeout(() => hostApply('sys', { type: 'accept' }), (ROLL_MS + 1700) * TIME);
     return;
   }
@@ -1770,7 +1831,7 @@ function scheduleAuto() {
     }, 25000 * TIME);
   }
 }
-const pickKey = T => T.rollId + ':' + (T.rerollId || 0);
+const pickKey = T => String(T.rollId);
 function botStep() {
   if (!S || S.phase !== 'play' || !S.T) return;
   const T = S.T, pid = T.pid;
@@ -1790,7 +1851,7 @@ function botStep() {
     console.warn('robot :', err, a);
     if (T.phase === 'bust') hostApply('sys', { type: 'accept' });
     else if (T.phase === 'pick') {
-      const subs = E.scoringSubsets(T.dice.map(d => d.v), E.ctxFor(S, P(pid)));
+      const subs = E.scoringSubsets(T.dice.map(d => d.v));
       if (subs.length) hostApply(pid, { type: 'take', sel: subs[0].sel, go: 'bank' });
     } else if (T.phase === 'start') hostApply(pid, { type: 'roll' });
   }
@@ -1885,7 +1946,7 @@ function onHostData(conn, d) {
   NET.seen[pid] = Date.now();
   if (d.t === 'act') {
     const err = hostApply(pid, d.a);
-    if (err && d.a && d.a.type !== 'preview') safeSend(conn, { t: 'err', msg: err });
+    if (err && d.a && d.a.type !== 'preview' && d.a.type !== 'emote') safeSend(conn, { t: 'err', msg: err });
   } else if (d.t === 'bye') {
     const p = P(pid);
     NET.conns.delete(pid);
@@ -1991,7 +2052,7 @@ function leave(silent) {
   if (isHost()) LS.del('kostky-save');
   SS.del('kostky-guest'); SS.del('kostky-live');
   if (MODE === 'guest') LS.del('kostky-rejoin');
-  S = null; MODE = null; ME = null; UI.joining = null;
+  S = null; MODE = null; ME = null; UI.joining = null; UI.lastEmote = null; UI.lastFlash = null; UI.emoOpen = false; REACT.last = null;
   netBanner('');
   closeOverlay(); closeSheet();
   render();
@@ -2005,7 +2066,7 @@ function doAct(a) {
     const pid = a.as || actor();
     delete a.as;
     const err = hostApply(pid, a);
-    if (err && a.type !== 'preview') toast(err, true);
+    if (err && a.type !== 'preview' && a.type !== 'emote') toast(err, true);
   } else if (MODE === 'guest') {
     if (!NET.conn || !NET.conn.open) { if (a.type !== 'preview') toast('Pas de connexion à l\'hôte pour le moment.', true); return; }
     delete a.as;
@@ -2020,7 +2081,7 @@ function sendPreview() {
 /* ================= Affichage ================= */
 function setHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
 function show(id) {
-  for (const s of ['home', 'lobby', 'setup', 'game']) $('#' + s).classList.toggle('hidden', s !== id);
+  for (const s of ['home', 'lobby', 'game']) $('#' + s).classList.toggle('hidden', s !== id);
   if (UI.screen !== id) { UI.screen = id; window.scrollTo(0, 0); }
 }
 function render() {
@@ -2029,7 +2090,6 @@ function render() {
     show('home'); renderHome(); return;
   }
   if (S.phase === 'lobby') { show('lobby'); keepInputs($('#lobby'), renderLobby); }
-  else if (S.phase === 'setup') { show('setup'); keepInputs($('#setup'), renderSetup); }
   else { show('game'); renderGame(); }
   if (UI.sheet) renderSheet();
   if (UI.ovKind) renderOverlay();
@@ -2050,7 +2110,7 @@ function renderHome() {
   const save = LS.json('kostky-save');
   const rejoin = LS.json('kostky-rejoin');
   let resume = '';
-  if (save && save.S && Date.now() - save.t < 864e5 && save.S.phase !== 'over') {
+  if (save && save.S && save.S.v === 2 && Date.now() - save.t < 864e5 && save.S.phase !== 'over') {
     resume += `<div class="resume"><div class="hint">${save.mode === 'host' ? `Ta table en ligne <b>${esc(save.code)}</b> est restée ouverte.` : 'Ta partie sur cet appareil n\'est pas finie.'}</div>
       <div class="row"><button class="btn gold grow" data-act="resume">Reprendre la partie</button><button class="btn ghost" data-act="dropSave">Oublier</button></div></div>`;
   }
@@ -2062,7 +2122,7 @@ function renderHome() {
   $('#home').innerHTML = `
   <div class="home-card">
     <div class="brand">
-      <div class="home-dice">${dieImg('ordinary', 1)}${dieImg('devil', 0)}${dieImg('ordinary', 5)}</div>
+      <div class="home-dice">${dieImg('ordinary', 1)}${dieImg('devil', 1)}${dieImg('ordinary', 5)}</div>
       <h1>Kostky</h1>
       <div class="tag">les dés des tavernes de Bohême</div>
     </div>
@@ -2089,23 +2149,52 @@ function renderJoining() {
     <button class="btn full" data-act="leave">Annuler</button></div></div>`;
 }
 
-/* ---------- Salon ---------- */
+/* ---------- Salon : chacun choisit son dé, la partie part quand tout le monde est prêt ---------- */
 function optSeg(key, vals, cur, labels, can) {
   return `<div class="seg" role="group">${vals.map((v, i) => `<button ${can ? '' : 'disabled'} aria-pressed="${v === cur}" data-act="opt" data-k="${key}" data-v="${esc(JSON.stringify(v))}">${labels[i]}</button>`).join('')}</div>`;
 }
+function skinPlayers() { return MODE === 'local' ? S.players.filter(p => !p.bot) : S.players.filter(p => p.id === ME); }
 function renderLobby() {
-  const host = isHost(), online = MODE !== 'local';
-  const me = P(ME);
-  const seats = S.players.map((p, i) => `<li class="seat">
-      <span class="n">${i + 1}</span><span class="who">${esc(p.name)}</span>
-      ${p.id === S.hostId && online ? '<span class="chip host">hôte</span>' : ''}${p.bot ? '<span class="chip">robot</span>' : ''}${p.id === ME && MODE === 'guest' ? '<span class="chip ok">toi</span>' : ''}${online && !p.bot && !p.connected ? '<span class="chip off">absent</span>' : ''}
+  const host = isHost(), online = MODE !== 'local', me = P(ME);
+  const mine = skinPlayers();
+  if (!UI.skinFor || !mine.some(p => p.id === UI.skinFor)) UI.skinFor = (mine[0] || {}).id;
+  const sp = P(UI.skinFor);
+  const seats = S.players.map((p, i) => {
+    let st = '';
+    if (p.bot) st = '<span class="chip">robot</span>';
+    else if (online && !p.connected) st = '<span class="chip off">absent</span>';
+    else if (online) st = p.ready ? '<span class="chip ok">prêt</span>' : '<span class="chip">pas prêt</span>';
+    return `<li class="seat">
+      <span class="n">${i + 1}</span><span class="seat-die" title="${esc(E.DICE[p.skin].name)}">${dieImg(p.skin, 5)}</span><span class="who">${esc(p.name)}</span>
+      ${p.id === S.hostId && online ? '<span class="chip host">hôte</span>' : ''}${p.id === ME && MODE === 'guest' ? '<span class="chip host">toi</span>' : ''}${st}
       ${host ? `<button class="btn ghost sm" data-act="move" data-t="${p.id}" data-d="-1" aria-label="Monter" ${i ? '' : 'disabled'}>↑</button><button class="btn ghost sm" data-act="move" data-t="${p.id}" data-d="1" aria-label="Descendre" ${i < S.players.length - 1 ? '' : 'disabled'}>↓</button>${p.id !== S.hostId ? `<button class="btn ghost sm" data-act="kick" data-t="${p.id}" aria-label="Retirer ${esc(p.name)}">✕</button>` : ''}` : ''}
-    </li>`).join('');
-  const o = S.opts, full = S.players.length >= E.MAX_PLAYERS;
-  const link = shareLink();
+    </li>`;
+  }).join('');
+  const o = S.opts, full = S.players.length >= E.MAX_PLAYERS, link = shareLink();
+  const waiting = S.players.filter(p => !p.bot && !p.ready).map(p => p.name);
+  const tabs = mine.length > 1 ? `<div class="tabs">${mine.map(q => `<button class="btn sm ${q.id === UI.skinFor ? 'gold' : ''}" data-act="skinFor" data-t="${q.id}">${esc(q.name)}</button>`).join('')}</div>` : '';
+  const d = sp && E.DICE[sp.skin];
+  const skinPanel = sp ? `<div class="panel">
+      <span class="label">${mine.length > 1 ? 'le dé de ' + esc(sp.name) : 'ton dé'}</span>
+      ${tabs}
+      <div class="skin-show">${[1, 5, 6].map(v => dieImg(sp.skin, v)).join('')}<div class="meta"><b>${esc(d.name)}</b><span class="hint">${esc(d.hint)}</span></div></div>
+      <div class="skin-grid">${E.DICE_ORDER.map(t => `<button class="skin" data-act="skin" data-s="${t}" aria-pressed="${sp.skin === t}">${dieImg(t, 5)}<span>${esc(E.DICE[t].name)}</span></button>`).join('')}</div>
+      <div class="opt-note">Seule l'apparence change : tous les dés sont équilibrés.</div>
+    </div>` : '';
+  let foot;
+  if (!online) foot = `<button class="btn gold big" data-act="start" ${S.players.length < 2 ? 'disabled' : ''}>${S.players.length < 2 ? 'Ajoute au moins un joueur' : 'Commencer la partie'}</button>`;
+  else {
+    foot = me && me.ready ? `<button class="btn big" data-act="ready" data-on="">Je ne suis plus prêt</button>` : `<button class="btn gold big" data-act="ready" data-on="1">Je suis prêt</button>`;
+    if (host && me && me.ready && S.players.length >= 2 && waiting.length) foot += `<button class="btn big" data-act="start">Lancer sans attendre</button>`;
+  }
+  let status = '';
+  if (online) {
+    if (S.players.length < 2) status = 'Il faut au moins deux joueurs. Ajoute un robot pour jouer seul.';
+    else if (waiting.length) status = `La partie démarre quand tout le monde est prêt. En attente : ${waiting.map(esc).join(', ')}.`;
+  }
   setHTML($('#lobby'), `<div class="page">
     <div class="page-head">
-      <div><h2>La table</h2><div class="hint">${online ? (host ? 'Donne le code à tes amis : ils l\'entrent sur l\'écran d\'accueil.' : 'L\'hôte lancera la partie.') : 'Partie sur cet appareil.'}</div></div>
+      <div><h2>La table</h2><div class="hint">${online ? (host ? 'Donne le code à tes amis : ils l\'entrent sur l\'écran d\'accueil.' : 'Choisis ton dé, puis annonce que tu es prêt.') : 'Partie sur cet appareil.'}</div></div>
       ${online ? `<div class="code-box"><span class="label">code de la table</span><span class="code num">${esc(S.code)}</span><button class="btn sm" data-act="copy">Copier ${link ? 'le lien' : 'le code'}</button></div>` : ''}
     </div>
     <div class="panel">
@@ -2115,22 +2204,19 @@ function renderLobby() {
         ${MODE === 'local' ? `<input id="localName" class="txt grow" maxlength="18" placeholder="Nom d'un autre joueur" ${full ? 'disabled' : ''}><button class="btn" data-act="addLocal" ${full ? 'disabled' : ''}>Ajouter</button>` : ''}
         <button class="btn" data-act="addBot" ${full ? 'disabled' : ''}>Ajouter un robot</button>
       </div>` : ''}
+      ${status ? `<div class="hint">${status}</div>` : ''}
       <div class="opt-note">L'ordre de la liste est l'ordre de passage. Le premier joueur est tiré au sort.</div>
     </div>
+    ${skinPanel}
     <div class="panel">
+      ${host ? '' : '<span class="opt-note">Seul l\'hôte règle la partie.</span>'}
       <div class="opt"><span class="label">objectif</span>${optSeg('target', E.TARGETS, o.target, E.TARGETS.map(fmt), host)}</div>
-      <div class="opt"><span class="label">dés</span>${optSeg('dice', ['plain', 'loaded'], o.dice, ['Six dés ordinaires', 'Dés pipés au choix'], host)}
-        <span class="opt-note">Avec les dés pipés, chacun compose sa bourse de six dés (probabilités du jeu vidéo).</span></div>
-      <div class="opt"><span class="label">insignes</span>${optSeg('badges', [0, 1, 2, 3], o.badges, ['Aucun', 'Étain', 'Jusqu\'à l\'argent', 'Jusqu\'à l\'or'], host)}
-        <span class="opt-note">Chaque joueur choisit un insigne avant la partie.</span></div>
       <div class="opt"><span class="label">fin de partie</span>${optSeg('finalRound', [false, true], o.finalRound, ['Le premier arrivé gagne', 'Un dernier tour pour les autres'], host)}</div>
       <div class="opt"><span class="label">aide</span>${optSeg('hints', [true, false], o.hints, ['Assombrir les dés qui ne comptent pas', 'Sans aide'], host)}</div>
     </div>
     <div class="row"><button class="btn ghost" data-act="rules">Règles du jeu</button><span class="grow"></span><button class="btn ghost" data-act="askLeave">${host && online ? 'Fermer la table' : 'Quitter'}</button></div>
   </div>
-  <div class="sticky-foot"><div class="inner">${host
-    ? `<button class="btn gold big" data-act="start" ${S.players.length < 2 ? 'disabled' : ''}>${S.players.length < 2 ? 'Ajoute au moins un joueur' : (E.needsSetup(S) ? 'Préparer les bourses' : 'Commencer la partie')}</button>`
-    : `<div class="hint" style="text-align:center;align-self:center">En attente de l'hôte…</div>`}</div></div>`);
+  <div class="sticky-foot"><div class="inner">${foot}</div></div>`);
 }
 function shareLink() {
   if (!/^https?:/.test(location.protocol)) return '';
@@ -2138,78 +2224,16 @@ function shareLink() {
   return location.origin + location.pathname + '?join=' + S.code;
 }
 
-/* ---------- Préparation (bourse et insigne) ---------- */
-function setupPlayers() {
-  if (MODE === 'local') return S.players.filter(p => !p.bot);
-  return S.players.filter(p => p.id === ME);
-}
-function draftFor(p) {
-  if (!UI.drafts[p.id]) UI.drafts[p.id] = { bag: p.bag.slice(), badge: p.badge };
-  const d = UI.drafts[p.id];
-  if (E.validBag(d.bag, S.opts)) d.bag = ['ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary'];
-  if (E.validBadge(d.badge, S.opts)) d.badge = null;
-  return d;
-}
-function renderSetup() {
-  const mine = setupPlayers();
-  if (!UI.setupFor || !mine.some(p => p.id === UI.setupFor)) UI.setupFor = (mine.find(p => !p.ready) || mine[0] || {}).id;
-  const p = P(UI.setupFor);
-  const status = S.players.map(q => `<span class="chip ${q.ready ? 'ok' : ''}">${esc(q.name)}${q.ready ? ' · prêt' : ''}</span>`).join(' ');
-  let body = '';
-  if (p) {
-    const dr = draftFor(p);
-    const ready = p.ready;
-    if (S.opts.dice === 'loaded') {
-      const cnt = {}; dr.bag.forEach(t => { cnt[t] = (cnt[t] || 0) + 1; });
-      const rows = E.DICE_ORDER.map(t => {
-        const d = E.DICE[t], n = cnt[t] || 0, mx = Math.max.apply(null, d.p);
-        const bars = d.p.map((x, i) => `<span style="height:${Math.max(2, Math.round(22 * x / mx))}px" title="${i + 1} : ${Math.round(x * 100 / d.p.reduce((a, b) => a + b, 0))} %"><i>${d.joker && i === 0 ? '☠' : i + 1}</i></span>`).join('');
-        const step = t === 'ordinary' ? `<b class="num" aria-label="${n} dés ordinaires">${n}</b>` :
-          `<div class="stepper"><button data-act="bag" data-t="${t}" data-d="-1" ${n && !ready ? '' : 'disabled'} aria-label="Retirer un ${esc(d.short)}">−</button><b class="num">${n}</b><button data-act="bag" data-t="${t}" data-d="1" ${n < d.max && (cnt.ordinary || 0) > 0 && !ready ? '' : 'disabled'} aria-label="Ajouter un ${esc(d.short)}">+</button></div>`;
-        return `<div class="die-row">${dieImg(t, favFace(t))}<div class="meta"><span class="nm">${esc(d.name)}</span><span class="ds">${esc(d.hint)}${t !== 'ordinary' ? ` · ${d.max} max.` : ''}</span><div class="probs-wrap"><div class="probs">${bars}</div></div></div>${step}</div>`;
-      }).join('');
-      body += `<div class="panel"><div class="row" style="justify-content:space-between"><span class="label">ta bourse</span><span class="bag-count num">6 dés</span></div>
-        <div class="bag-slots">${dr.bag.slice().sort((a, b) => E.DICE_ORDER.indexOf(b) - E.DICE_ORDER.indexOf(a)).map(t => dieImg(t, favFace(t))).join('')}</div>
-        <div class="opt-note">Les dés non choisis sont des dés ordinaires. Les barres montrent la chance de chaque face.</div>
-        <div class="die-list">${rows}</div></div>`;
-    }
-    if (S.opts.badges) {
-      const ids = E.BADGE_ORDER.filter(id => E.BADGES[id].tier <= S.opts.badges);
-      const cards = [`<button class="badge-card" lang="fr" data-act="pickBadge" data-b="" aria-pressed="${!dr.badge}" ${ready ? 'disabled' : ''}>${medal(null)}<span><span class="bn">Aucun</span><br><span class="bt">sans insigne</span></span></button>`]
-        .concat(ids.map(id => { const b = E.BADGES[id]; return `<button class="badge-card" lang="fr" data-act="pickBadge" data-b="${id}" aria-pressed="${dr.badge === id}" ${ready ? 'disabled' : ''}>${medal(id)}<span><span class="bn">${esc(b.name)}</span><br><span class="bt">${E.TIERS[b.tier]}</span></span></button>`; }));
-      const sb = dr.badge && E.BADGES[dr.badge];
-      body += `<div class="panel"><span class="label">ton insigne</span>
-        <div class="badge-detail">${sb ? `<b>${esc(sb.name)} (${E.TIERS[sb.tier]}).</b> ${esc(sb.desc)}` : 'Choisis un insigne pour pimenter la partie, ou joue sans.'}</div>
-        <div class="badge-grid">${cards.join('')}</div></div>`;
-    }
-  }
-  const tabs = MODE === 'local' && mine.length > 1 ? `<div class="tabs">${mine.map(q => `<button class="btn sm ${q.id === UI.setupFor ? 'gold' : ''}" data-act="setupFor" data-t="${q.id}">${esc(q.name)}${q.ready ? ' ✓' : ''}</button>`).join('')}</div>` : '';
-  const host = isHost();
-  setHTML($('#setup'), `<div class="page">
-    <div class="page-head"><div><h2>${p ? (MODE === 'local' && mine.length > 1 ? 'Bourse de ' + esc(p.name) : 'Ta bourse') : 'Préparation'}</h2><div class="hint">Objectif ${fmt(S.opts.target)} points.</div></div></div>
-    ${tabs}
-    <div class="row">${status}</div>
-    ${body}
-  </div>
-  <div class="sticky-foot"><div class="inner">
-    ${p ? (p.ready ? `<button class="btn big" data-act="unready">Modifier</button>` : `<button class="btn gold big" data-act="ready">${MODE === 'local' && mine.filter(q => !q.ready).length > 1 ? 'Valider et passer au suivant' : 'Je suis prêt'}</button>`) : ''}
-    ${MODE === 'host' && S.players.some(q => !q.ready && !q.bot && q.id !== ME) ? `<button class="btn big" data-act="forceStart">Lancer sans attendre</button>` : ''}
-  </div></div>`);
-}
-
 /* ---------- Jeu ---------- */
 function renderGame() {
   if (!UI.seenGame) { UI.seenGame = true; Tray.key = null; requestWake(); }
   const T = S.T;
-  // remise à zéro de la sélection à chaque nouveau lancer
   const k = T ? T.pid + ':' + pickKey(T) + ':' + T.phase : '';
-  if (k !== UI.selKey) {
-    UI.selKey = k; UI.sel = []; UI.bsel = []; UI.badgeMode = null;
-    if (!T || T.phase !== 'pick') UI.dbl = false;
-  }
+  if (k !== UI.selKey) { UI.selKey = k; UI.sel = []; }
   renderTop(); renderSlate(); renderTurnline(); Tray.update(); renderKept(); renderDock(); renderSide();
   handleFlash();
-  if (S.phase === 'over' && !UI.overHidden && !UI.ovKind && !UI.overT) UI.overT = setTimeout(() => { UI.overT = null; if (S && S.phase === 'over' && !UI.overHidden && !UI.ovKind) openOverlay('over'); }, 1600);
+  handleEmotes();
+  if (S.phase === 'over' && !UI.overHidden && !UI.ovKind && !UI.overT) UI.overT = setTimeout(() => { UI.overT = null; if (S && S.phase === 'over' && !UI.overHidden && !UI.ovKind) openOverlay('over'); }, 2200);
   if (S.phase !== 'over') UI.overHidden = false;
 }
 function renderTop() {
@@ -2228,7 +2252,7 @@ function renderSlate() {
     const away = MODE !== 'local' && !p.bot && !p.connected;
     const doneFinal = S.final && S.final.left.indexOf(id) < 0 && S.final.by !== id;
     return `<button class="pl ${id === cur ? 'cur' : ''} ${away ? 'away' : ''} ${doneFinal ? 'done-final' : ''}" data-act="who" data-t="${id}" style="text-align:left;background:${id === cur ? '' : 'transparent'}">
-      <span class="nm">${id === cur ? `<span class="flame">${I.flame}</span>` : ''}<span class="t">${esc(p.name)}</span>${p.badge && S.opts.badges ? `<span class="tags">${medal(p.badge, { off: p.badgeOff })}</span>` : ''}</span>
+      <span class="nm">${id === cur ? `<span class="flame">${I.flame}</span>` : ''}<span class="t">${esc(p.name)}</span><span class="tags">${dieImg(p.skin, 5, 'skin-mini')}</span></span>
       <span class="sc num">${fmt(p.score)}</span>
       <span class="bar"><i style="width:${pct}%"></i></span>
       ${p.bot || p.autopilot ? `<span class="tag-t">${p.bot ? 'robot' : 'robot à sa place'}</span>` : ''}
@@ -2239,44 +2263,36 @@ function renderTurnline() {
   const T = S.T;
   if (!T) { setHTML($('#turnline'), ''); return; }
   const p = P(T.pid);
-  const mine = myTurn();
-  let who = mine ? (MODE === 'local' ? `au tour de<b>${esc(p.name)}</b>` : `à toi de jouer<b>${esc(p.name)}</b>`) : `au tour de<b>${esc(p.name)}</b>`;
+  let who = myTurn() && MODE !== 'local' ? `à toi de jouer<b>${esc(p.name)}</b>` : `au tour de<b>${esc(p.name)}</b>`;
   if (S.phase === 'over') who = `partie terminée<b>${esc(P(S.winner).name)} l'emporte</b>`;
-  const extra = [];
-  if (T.warlord) extra.push(`+${Math.round(T.warlord * 100)} %`);
-  if (T.extra) extra.push('+1 dé');
   setHTML($('#turnline'), `<div class="who">${who}</div>
-    <div class="pot"><span class="label">ce tour</span><span class="v num">${fmt(T.pts)}${extra.length ? `<small>${extra.join(' · ')}</small>` : ''}</span></div>`);
+    <div class="pot"><span class="label">ce tour</span><span class="v num">${fmt(T.pts)}</span></div>`);
 }
 function renderKept() {
   const T = S.T;
   if (!T || !T.kept.length) { setHTML($('#kept'), `<span class="empty">${T && T.phase !== 'start' ? 'Aucun dé mis de côté pour l\'instant.' : ''}</span>`); return; }
   const el = $('#kept');
-  const h = T.kept.map(g => `<div class="grp ${g.dbl ? 'dbl' : ''}" title="${esc(g.names.join(' + '))}"><span class="dd">${g.dice.map(d => dieImg(d.t, d.v)).join('')}</span><span class="pt num">+${fmt(g.pts / (g.dbl ? 2 : 1))}</span></div>`).join('');
+  const h = T.kept.map(g => `<div class="grp" title="${esc(g.names.join(' + '))}"><span class="dd">${g.dice.map(d => dieImg(d.t, d.v)).join('')}</span><span class="pt num">+${fmt(g.pts)}</span></div>`).join('');
   if (el._h !== h) { setHTML(el, h); el.scrollLeft = el.scrollWidth; }
 }
 function selInfo() {
-  const T = S.T, p = P(T.pid), ctx = E.ctxFor(S, p), b = E.badgeOf(S, p);
+  const T = S.T;
   const sel = UI.sel.filter(i => i < T.dice.length);
   if (!sel.length) return { state: 'empty' };
-  const r = E.scoreVals(sel.map(i => T.dice[i].v), ctx);
+  const r = E.scoreVals(sel.map(i => T.dice[i].v));
   if (!r) return { state: 'bad' };
-  const dbl = !!(UI.dbl && b && b.kind === 'double' && p.uses > 0);
-  const pts = r.pts * (dbl ? 2 : 1);
-  const regular = T.dice.filter(d => d.s >= 0).length;
-  const keptReg = sel.filter(i => T.dice[i].s >= 0).length;
-  let rem = regular - keptReg; const hot = rem <= 0; if (hot) rem = 6;
-  let total = T.pts + pts;
-  if (T.warlord) total = Math.round(total * (1 + T.warlord) / 5) * 5;
-  return { state: 'ok', r, pts, rem, hot, total, dbl };
+  let rem = T.dice.length - sel.length; const hot = rem <= 0; if (hot) rem = 6;
+  return { state: 'ok', r, pts: r.pts, rem, hot, total: T.pts + r.pts };
+}
+function emoteBar() {
+  const left = UI.emoLim.state().muteLeft;
+  const msg = left > 0 ? `Trop d'emotes d'affilée : silence encore ${Math.ceil(left / 1000)} s.` : UI.emoMsg;
+  return `<div class="emo-pick ${left > 0 ? 'muted' : ''}" role="group" aria-label="Emotes">${KEM.LIST.map(e => `<button type="button" data-act="emote" data-id="${e.id}" aria-label="${esc(e.name)} : ${esc(e.say)}" title="${esc(e.say)}">${KEM.svg(e.id, 34)}</button>`).join('')}</div>${msg ? `<div class="emo-status ${left > 0 ? 'bad' : ''}">${esc(msg)}</div>` : ''}`;
 }
 function renderDock() {
   const T = S.T, dock = $('#dock');
   let info = '', acts = '', one = false;
   const p = T && P(T.pid);
-  const meP = MODE === 'local' ? (T && p && !p.bot ? p : null) : P(ME);
-  const myBadge = meP && E.badgeOf(S, meP);
-  const medalBtn = meP && meP.badge && S.opts.badges ? `<button class="medal-btn" data-act="badgeSheet" aria-label="Mon insigne">${medal(meP.badge, { uses: meP.uses, off: meP.badgeOff })}</button>` : '';
   if (S.phase === 'over') {
     info = `<div class="txt"><b>${esc(P(S.winner).name)}</b> remporte la partie avec ${fmt(P(S.winner).score)} points.</div>`;
     acts = `<button class="btn gold" data-act="results">Voir les résultats</button>`; one = true;
@@ -2284,49 +2300,74 @@ function renderDock() {
     info = '<div class="txt">…</div>';
   } else if (myTurn()) {
     if (T.phase === 'start') {
-      const n = T.avail.length + (T.extra ? 1 : 0);
-      info = `${medalBtn}<div class="txt">${T.wasHot ? '<b>Dés brûlants !</b> ' : ''}Lance tes dés. Tu peux aussi toucher le plateau.</div>`;
+      const n = T.avail.length;
+      info = `<div class="txt">${T.wasHot ? '<b>Dés brûlants !</b> ' : ''}Lance tes dés. Tu peux aussi toucher le plateau.</div>`;
       acts = `<button class="btn gold big" data-act="roll">Lancer ${n} dé${n > 1 ? 's' : ''}</button>`; one = true;
-    } else if ((T.phase === 'pick' || T.phase === 'bust') && UI.badgeMode) {
-      const bm = UI.badgeMode, b = myBadge;
-      const n = UI.bsel.length;
-      let txt = '', ok = false, lbl = '';
-      if (bm === 'reroll') { txt = `<b>${esc(b.name)}</b> : touche jusqu'à ${b.n} dé${b.n > 1 ? 's' : ''} à relancer.`; ok = n >= 1 && n <= b.n; lbl = `Relancer ${n || ''}`; }
-      if (bm === 'pair') { txt = `<b>${esc(b.name)}</b> : touche deux dés de même valeur.`; ok = n === 2 && T.dice[UI.bsel[0]].v === T.dice[UI.bsel[1]].v; lbl = 'Relancer la paire'; }
-      if (bm === 'transmute') { txt = `<b>${esc(b.name)}</b> : touche le dé à changer en ${b.to}.`; ok = n === 1; lbl = `Changer en ${b.to}`; }
-      info = `${medalBtn}<div class="txt">${txt}</div>`;
-      acts = `<button class="btn" data-act="cancelBadge">Annuler</button><button class="btn gold" data-act="useBadgeSel" ${ok ? '' : 'disabled'}>${lbl}</button>`;
     } else if (T.phase === 'pick') {
       const si = selInfo();
       let txt;
       if (si.state === 'empty') txt = `Touche les dés à mettre de côté. <button class="chipbtn" data-act="selAll">Tout ce qui compte</button>`;
       else if (si.state === 'bad') txt = `<span class="bad">Chaque dé gardé doit faire partie d'une combinaison.</span>`;
-      else txt = `${esc(si.r.combos.map(c => c.name).join(' + '))} · <b class="num">+${fmt(si.pts)}</b>${si.dbl ? ' <span class="good">(Sosie ×2)</span>' : ''}`;
-      const dblChip = myBadge && myBadge.kind === 'double' && meP.uses > 0 ? `<button class="chipbtn" data-act="toggleDbl" aria-pressed="${UI.dbl}">Sosie ×2</button>` : '';
-      info = `${medalBtn}<div class="txt">${txt}</div>${dblChip}`;
+      else txt = `${esc(si.r.combos.map(c => c.name).join(' + '))} · <b class="num">+${fmt(si.pts)}</b>`;
+      info = `<div class="txt">${txt}</div>`;
       const ok = si.state === 'ok';
       acts = `<button class="btn" data-act="take" data-go="roll" ${ok ? '' : 'disabled'}>${ok ? (si.hot ? 'Garder et relancer les 6' : `Garder et relancer ${si.rem}`) : 'Garder et relancer'}</button>
         <button class="btn gold" data-act="take" data-go="bank" ${ok ? '' : 'disabled'}>${ok ? `Passer · +${fmt(si.total)}` : 'Garder et passer'}</button>`;
     } else if (T.phase === 'bust') {
-      const rk = E.rescueKinds(S, p);
-      info = `${medalBtn}<div class="txt"><span class="bad">Bredouille !</span> ${T.pts ? `Les ${fmt(T.pts)} points de ce tour sont perdus.` : 'Aucun dé ne compte.'}</div>`;
-      if (rk.length) {
-        const b = myBadge;
-        const lbl = rk[0] === 'resurrect' ? `${b.name} : relancer` : (rk[0] === 'transmute' ? `${b.name} : changer un dé` : `${b.name} : relancer des dés`);
-        acts = `<button class="btn" data-act="accept">Accepter</button><button class="btn gold" data-act="rescue">${esc(lbl)}</button>`;
-      } else { acts = ''; }
+      info = `<div class="txt"><span class="bad">Bredouille !</span> ${T.pts ? `Les ${fmt(T.pts)} points de ce tour sont perdus.` : 'Aucun dé ne compte.'}</div>`;
     }
   } else {
     const nm = p ? esc(p.name) : '';
     if (T.phase === 'start') info = `<div class="txt">${nm} ${p && p.bot ? 'secoue le cornet' : 'va lancer'}…</div>`;
     else if (T.phase === 'pick') info = `<div class="txt">${nm} choisit ses dés…</div>`;
     else if (T.phase === 'bust') info = `<div class="txt"><span class="bad">${nm} repart bredouille</span>${T.pts ? ` et perd ${fmt(T.pts)} points` : ''}.</div>`;
-    if (medalBtn) info = medalBtn + info;
     if (isHost() && p && !p.bot && MODE === 'host' && !p.connected && !p.autopilot) acts = `<button class="btn" data-act="autopilot" data-t="${p.id}" data-on="1">Faire jouer un robot à sa place</button>`, one = true;
   }
-  setHTML(dock, `<div class="inner"><div class="info">${info}</div>${acts ? `<div class="acts ${one ? 'one' : ''}">${acts}</div>` : ''}</div>`);
+  const emoBtn = `<button class="icon-btn emo-btn" data-act="emoToggle" aria-label="Emotes" aria-pressed="${UI.emoOpen}">${I.emote}</button>`;
+  setHTML(dock, `<div class="inner">${UI.emoOpen ? emoteBar() : ''}<div class="info">${info}${emoBtn}</div>${acts ? `<div class="acts ${one ? 'one' : ''}">${acts}</div>` : ''}</div>`);
   const h = dock.offsetHeight;
   if (h) document.documentElement.style.setProperty('--dock-h', h + 'px');
+}
+// Emotes reçues : bulle au-dessus de la case du joueur, et son bruitage.
+function handleEmotes() {
+  const list = S.emotes || [];
+  const max = list.length ? list[list.length - 1].k : 0;
+  if (UI.lastEmote === null) { UI.lastEmote = max; return; }
+  for (const e of list) if (e.k > UI.lastEmote) showEmote(e);
+  UI.lastEmote = Math.max(UI.lastEmote, max);
+}
+function showEmote(e) {
+  const def = KEM.LIST.find(x => x.id === e.id), main = $('#main');
+  const tile = $(`#slate .pl[data-t="${e.pid}"]`);
+  if (!def || !tile) return;
+  let layer = $('#emoLayer');
+  if (!layer) { layer = document.createElement('div'); layer.id = 'emoLayer'; main.appendChild(layer); }
+  const r = tile.getBoundingClientRect(), m = main.getBoundingClientRect();
+  $$(`.emo-bubble[data-pid="${e.pid}"]`, layer).forEach(x => x.remove());
+  const b = document.createElement('div');
+  b.className = 'emo-bubble'; b.dataset.pid = e.pid;
+  b.style.left = (r.left - m.left + r.width / 2) + 'px';
+  b.style.top = (r.top - m.top + r.height * .45) + 'px';
+  b.innerHTML = `<div class="m">${KEM.svg(e.id, 52)}</div><span class="scroll"><span>${esc(def.say)}</span></span>`;
+  layer.appendChild(b);
+  setTimeout(() => b.remove(), 2800);
+  if (SND.on && audio()) KEM.play(e.id, { ctx: SND.ctx, out: SND.out });
+}
+function sendEmote(id) {
+  const r = UI.emoLim.try();
+  if (!r.ok) {
+    if (!r.muted) { UI.emoMsg = 'Une seconde entre deux emotes.'; clearTimeout(UI.emoMsgT); UI.emoMsgT = setTimeout(() => { UI.emoMsg = ''; if (S && UI.screen === 'game') renderDock(); }, 1200); }
+    renderDock(); return;
+  }
+  doAct({ type: 'emote', id });
+  if (r.mutedNow) {
+    clearInterval(UI.emoTimer);
+    UI.emoTimer = setInterval(() => {
+      if (UI.emoLim.state().muteLeft <= 0) clearInterval(UI.emoTimer);
+      if (S && UI.screen === 'game') renderDock();
+    }, 500);
+    renderDock();
+  }
 }
 function logHTML() {
   return `<ol class="loglist">${S.log.slice(-80).reverse().map(l => `<li class="${l.k}">${esc(l.s)}</li>`).join('')}</ol>`;
@@ -2374,18 +2415,15 @@ const Tray = {
     else if ((T.rerollId || 0) !== this.rkey) { this.reroll(T); this.rkey = T.rerollId || 0; fresh = true; }
     // états
     const mine = myTurn() && T.phase === 'pick';
-    const mineB = myTurn() && (T.phase === 'pick' || T.phase === 'bust');
     const vals = T.dice.map(d => d.v);
-    const mask = S.opts.hints && T.phase === 'pick' ? E.scoringMask(vals, E.ctxFor(S, P(T.pid))) : null;
+    const mask = S.opts.hints && T.phase === 'pick' ? E.scoringMask(vals) : null;
     $$('.die-pos', tray).forEach(el => {
       const i = +el.dataset.i;
-      el.classList.toggle('sel', mine && !UI.badgeMode && UI.sel.indexOf(i) >= 0);
-      el.classList.toggle('bsel', mineB && !!UI.badgeMode && UI.bsel.indexOf(i) >= 0);
+      el.classList.toggle('sel', mine && UI.sel.indexOf(i) >= 0);
       el.classList.toggle('peek', !mine && T.phase === 'pick' && (T.preview || []).indexOf(i) >= 0);
-      el.classList.toggle('dim', !!(mask && !mask[i]) && !UI.badgeMode);
-      el.setAttribute('aria-pressed', el.classList.contains('sel') || el.classList.contains('bsel'));
+      el.classList.toggle('dim', !!(mask && !mask[i]));
+      el.setAttribute('aria-pressed', el.classList.contains('sel'));
     });
-    tray.classList.toggle('picking', !!UI.badgeMode);
     if (T.phase === 'bust') {
       const id = key + ':' + (T.rerollId || 0);
       if (this.bustShown !== id) {
@@ -2408,9 +2446,9 @@ const Tray = {
       const [x0, y0] = order[i];
       const x = x0 + (R() - .5) * .05, y = y0 + (R() - .5) * .05, rz = Math.round((R() * 2 - 1) * 30);
       const el = document.createElement('div');
-      el.className = 'die-pos' + (d.s < 0 ? ' extra' : '');
+      el.className = 'die-pos';
       el.dataset.i = i; el.setAttribute('role', 'button'); el.tabIndex = 0;
-      el.setAttribute('aria-label', `Dé ${d.v === 0 ? 'tête du diable' : d.v}${d.s < 0 ? ' (supplémentaire)' : ''}`);
+      el.setAttribute('aria-label', `Dé ${d.v}`);
       el.style.left = `calc(${(x * 100).toFixed(2)}% - var(--ds) / 2)`;
       el.style.top = `calc(${(y * 100).toFixed(2)}% - var(--ds) / 2)`;
       el.innerHTML = `<div class="shadow" style="transform:translate3d(10%,12%,calc(var(--ds) / -2 + 1px))"></div><div class="ring" style="transform:translateZ(calc(var(--ds) / -2 + 2px))"></div><div class="cube">${[1, 2, 3, 4, 5, 6].map(f => `<div class="f" data-f="${f}" style="transform:${FACE_T[f]}"></div>`).join('')}</div>`;
@@ -2441,11 +2479,7 @@ const Tray = {
     this.landT = setTimeout(() => this.sideShade(), anim ? ROLL_MS + 200 : 0);
   },
   paint(el, d) {
-    const jk = (E.DICE[d.t] || {}).joker;
-    $$('.f', el).forEach(f => {
-      const n = +f.dataset.f;
-      f.style.backgroundImage = `url("${faceURL(d.t, (jk && n === 1 && d.v !== 1) ? 0 : n, false)}")`;
-    });
+    $$('.f', el).forEach(f => { f.style.backgroundImage = `url("${faceURL(d.t, +f.dataset.f, false)}")`; });
     el._v = d.v;
   },
   sideShade() {
@@ -2528,25 +2562,12 @@ function renderSheet() {
   if (!k || !S) { closeSheet(); return; }
   let body = '';
   if (k === 'log') body = `<h3>Journal</h3>${logHTML()}`;
-  else if (k === 'who' || k === 'badge') {
-    const p = P(k === 'badge' ? (MODE === 'local' ? (S.T && P(S.T.pid) && !P(S.T.pid).bot ? S.T.pid : S.hostId) : ME) : UI.sheetData);
+  else if (k === 'who') {
+    const p = P(UI.sheetData);
     if (!p) { closeSheet(); return; }
-    const b = p.badge && E.BADGES[p.badge];
-    let acts = '';
-    if (k === 'badge' && b && !p.badgeOff && myTurn() && S.T.pid === p.id) {
-      const T = S.T, left = !b.uses || p.uses > 0;
-      if (left) {
-        if (b.kind === 'might' && (T.phase === 'start' || T.phase === 'pick') && !T.extra) acts = `<button class="btn gold" data-act="useBadge">Ajouter un dé au prochain lancer</button>`;
-        if (b.kind === 'warlord' && (T.phase === 'start' || T.phase === 'pick') && !T.warlord) acts = `<button class="btn gold" data-act="useBadge">Activer pour ce tour</button>`;
-        if (b.kind === 'double' && T.phase === 'pick') acts = `<button class="btn gold" data-act="toggleDbl">${UI.dbl ? 'Ne pas doubler' : 'Doubler le lot que je garde'}</button>`;
-        if ((b.kind === 'reroll' || b.kind === 'pair' || b.kind === 'transmute') && (T.phase === 'pick' || T.phase === 'bust')) acts = `<button class="btn gold" data-act="badgeMode">Choisir ${b.kind === 'transmute' ? 'le dé' : 'les dés'}</button>`;
-        if (b.kind === 'resurrect' && T.phase === 'bust') acts = `<button class="btn gold" data-act="useBadge">Relancer les mêmes dés</button>`;
-      }
-    }
-    const bag = S.opts.dice === 'loaded' ? `<div><span class="label">bourse</span><div class="bag-slots" style="margin-top:6px">${p.bag.slice().sort((a, c) => E.DICE_ORDER.indexOf(c) - E.DICE_ORDER.indexOf(a)).map(t => `<span title="${esc(E.DICE[t].name)}">${dieImg(t, favFace(t))}</span>`).join('')}</div><div class="hint" style="margin-top:6px">${esc(bagSummary(p.bag))}</div></div>` : '';
-    const badgeTxt = b ? `<div class="row" style="flex-wrap:nowrap;align-items:flex-start">${medal(p.badge, { uses: b.uses ? p.uses : null, off: p.badgeOff })}<div><b>${esc(b.name)} (${E.TIERS[b.tier]})</b><br><span class="hint">${esc(b.desc)}${p.badgeOff ? ' Annulé par une Défense adverse.' : ''}${b.uses ? ` Reste : ${p.uses}.` : ''}</span></div></div>` : (S.opts.badges ? '<div class="hint">Sans insigne.</div>' : '');
-    const st = p.stats || {};
-    body = `<h3>${esc(p.name)}</h3><div class="hint num">${fmt(p.score)} points · meilleur tour ${fmt(st.best)} · ${st.busts || 0} bredouille${st.busts > 1 ? 's' : ''}</div>${badgeTxt}${acts ? `<div class="row">${acts}</div>` : ''}${bag}`;
+    const st = p.stats || {}, d = E.DICE[p.skin];
+    body = `<h3>${esc(p.name)}</h3><div class="hint num">${fmt(p.score)} points · meilleur tour ${fmt(st.best)} · ${st.busts || 0} bredouille${st.busts > 1 ? 's' : ''} · ${st.hot || 0} fois les dés brûlants</div>
+      <div class="skin-show">${[1, 5, 6].map(v => dieImg(p.skin, v)).join('')}<div class="meta"><b>${esc(d.name)}</b><span class="hint">${esc(d.hint)}</span></div></div>`;
   } else if (k === 'menu') {
     const host = isHost();
     const autos = host && MODE === 'host' ? S.players.filter(p => !p.bot && p.id !== S.hostId).map(p => `<div class="row"><span class="grow">${esc(p.name)}${p.connected ? '' : ' <span class="chip off">absent</span>'}</span><button class="btn sm" data-act="autopilot" data-t="${p.id}" data-on="${p.autopilot ? '' : '1'}">${p.autopilot ? 'Rendre la main' : 'Faire jouer un robot'}</button></div>`).join('') : '';
@@ -2560,15 +2581,8 @@ function renderSheet() {
   setHTML(s, `<div class="sheet-bg" data-act="closeSheet"></div><div class="sheet" role="dialog"><div class="inner">${body}</div></div>`);
   s.classList.remove('hidden');
 }
-function bagSummary(bag) {
-  const c = {}; bag.forEach(t => { c[t] = (c[t] || 0) + 1; });
-  return Object.keys(c).sort((a, b) => E.DICE_ORDER.indexOf(a) - E.DICE_ORDER.indexOf(b)).map(t => `${c[t]} × ${E.DICE[t].short.toLowerCase()}`).join(', ');
-}
-
 function rulesHTML() {
-  const row = (vals, txt, pts) => `<tr><td><span class="mini">${vals.map(v => dieImg(v === 0 ? 'devil' : 'ordinary', v)).join('')}</span></td><td>${txt}</td><td class="pts num">${pts}</td></tr>`;
-  const diceRows = E.DICE_ORDER.filter(t => t !== 'ordinary').map(t => { const d = E.DICE[t], tot = d.p.reduce((a, b) => a + b, 0); return `<tr><td>${dieImg(t, favFace(t))}</td><td><b>${esc(d.name)}</b><br><span class="muted">${d.p.map((x, i) => `${d.joker && !i ? '☠' : i + 1} : ${Math.round(100 * x / tot)} %`).join(' · ')}</span></td></tr>`; }).join('');
-  const badges = [1, 2, 3].map(t => `<h3>Insignes ${t === 1 ? 'd\'étain' : t === 2 ? 'd\'argent' : 'd\'or'}</h3><ul>${E.BADGE_ORDER.filter(id => E.BADGES[id].tier === t).map(id => `<li><b>${esc(E.BADGES[id].name)}</b> : ${esc(E.BADGES[id].desc)}</li>`).join('')}</ul>`).join('');
+  const row = (vals, txt, pts) => `<tr><td><span class="mini">${vals.map(v => dieImg('ordinary', v)).join('')}</span></td><td>${txt}</td><td class="pts num">${pts}</td></tr>`;
   return `<button class="icon-btn close-x" data-act="closeOv" aria-label="Fermer">${I.close}</button>
   <h2>Règles</h2>
   <p>Le premier à atteindre l'objectif (4 000 points par défaut) gagne. À ton tour, tu lances les six dés, puis tu mets de côté au moins un dé qui compte. Ensuite, deux choix : <b>passer</b> pour inscrire les points du tour, ou <b>relancer</b> les dés restants pour en gagner davantage.</p>
@@ -2581,26 +2595,27 @@ function rulesHTML() {
     ${row([1, 1, 1], 'Brelan de 1', '1 000')}${row([4, 4, 4], 'Brelan d\'un autre chiffre : 100 × le chiffre', '400')}
     ${row([4, 4, 4, 4], 'Chaque dé de plus double le brelan', '800')}${row([4, 4, 4, 4, 4], 'Cinq 4', '1 600')}
     ${row([1, 2, 3, 4, 5], 'Petite suite', '500')}${row([2, 3, 4, 5, 6], 'Grande suite', '750')}${row([1, 2, 3, 4, 5, 6], 'Suite complète', '1 500')}
-    ${row([0, 6, 6], 'La tête du diable remplace n\'importe quel chiffre dans une combinaison, mais ne vaut rien seule', '600')}
   </tbody></table></div>
-  <h3>Les dés pipés</h3>
-  <p class="hint">Si l'hôte les autorise, chacun compose une bourse de six dés. Les chances de chaque face viennent du tableau des dés du wiki de <i>Kingdom Come: Deliverance II</i>. Pour garder la partie disputée, une bourse contient au plus deux dés de chaque sorte, et un seul dé de saint Antiochus.</p>
-  <div class="tbl-wrap"><table><tbody>${diceRows}</tbody></table></div>
-  ${badges}
-  <p class="hint">Un insigne de Défense annule les insignes du même métal chez tous les adversaires.</p>
+  <h3>Les dés</h3>
+  <p>Dans le salon, chacun choisit l'apparence de ses dés. Tous sont équilibrés : chaque face a une chance sur six. Sur le dé « Diable », la tête de diable remplace le point du 1 et compte simplement pour 1.</p>
+  <h3>Les emotes</h3>
+  <p>Pendant la partie, le bouton en forme de bulle ouvre douze emotes, chacune avec son bruitage. Toute la table les voit et les entend. Il faut une seconde entre deux emotes, et dix emotes en quinze secondes valent vingt secondes de silence.</p>
+  <p class="hint">Trois emotes reprennent des motifs médiévaux. La figue est un geste obscène ancien, que Dante fait faire à Vanni Fucci contre Dieu (<i>Enfer</i>, chant XXV). L'escargot renvoie aux chevaliers qui combattent des escargots dans les marges des manuscrits gothiques. Renart est le goupil rusé du <i>Roman de Renart</i>.</p>
   <h3>D'où vient ce jeu ?</h3>
   <p>Le jeu de dés de <i>Kingdom Come</i> est le <b>Farkle</b>, un jeu populaire aux nombreux noms (Dix mille, Zilch, Hot Dice, Greed…). Son origine est inconnue : il est attesté au moins depuis le milieu des années 1980 et commercialisé depuis 1996 sous le nom de Pocket Farkel. Les jeux de dés étaient bien répandus dans la Bohême de 1403 où se déroule le jeu vidéo, mais le Farkle lui-même y est un anachronisme, ce que le wiki du jeu relève aussi. Les règles varient beaucoup d'une famille à l'autre ; celles-ci suivent le didacticiel du jeu vidéo.</p>
   <h3>Choix de cette adaptation</h3>
   <ul>
-    <li>Les points de l'Entaille (200), du Gibet (400) et de l'Œil (600), et les avances de l'insigne d'Avance (250, 500, 750), ne sont pas publiés de façon fiable : ce sont des valeurs choisies ici.</li>
+    <li>Les dés pipés, le joker de la tête du diable et les insignes du jeu vidéo ne sont pas repris.</li>
     <li>On peut jouer de 2 à 6 joueurs ; le jeu vidéo se joue à deux.</li>
     <li>Option « dernier tour » : variante courante du Farkle, absente du jeu vidéo.</li>
   </ul>
   <h3>Sources</h3>
   <ul>
-    <li><a href="https://kingdom-come-deliverance.fandom.com/wiki/Dice_(KCD)" target="_blank" rel="noopener">Kingdom Come: Deliverance Wiki, « Dice (KCD) »</a> (didacticiel du jeu, combinaisons, tête du diable)</li>
-    <li><a href="https://kingdom-come-deliverance.fandom.com/wiki/Dice_(KCD2)" target="_blank" rel="noopener">Kingdom Come: Deliverance Wiki, « Dice (KCD2) »</a> (dés pipés, insignes)</li>
+    <li><a href="https://kingdom-come-deliverance.fandom.com/wiki/Dice_(KCD)" target="_blank" rel="noopener">Kingdom Come: Deliverance Wiki, « Dice (KCD) »</a> (didacticiel du jeu et combinaisons)</li>
+    <li><a href="https://kingdom-come-deliverance.fandom.com/wiki/Dice_(KCD2)" target="_blank" rel="noopener">Kingdom Come: Deliverance Wiki, « Dice (KCD2) »</a> (règles reprises telles quelles dans le second jeu)</li>
     <li><a href="https://en.wikipedia.org/wiki/Farkle" target="_blank" rel="noopener">Wikipédia (en), « Farkle »</a> (histoire et variantes)</li>
+    <li><a href="https://it.wikisource.org/wiki/Divina_Commedia/Inferno/Canto_XXV" target="_blank" rel="noopener">Dante, <i>Enfer</i>, chant XXV, v. 1-3</a> (la figue)</li>
+    <li>Lilian M. C. Randall, « The Snail in Gothic Marginal Warfare », <i>Speculum</i>, 37-3, 1962, p. 358-367 (<a href="https://www.jstor.org/stable/2852357" target="_blank" rel="noopener">JSTOR</a>)</li>
   </ul>`;
 }
 
@@ -2622,20 +2637,7 @@ function nameIn() {
   return v;
 }
 function onDieTap(i) {
-  if (!S || !S.T || !myTurn()) return;
-  const T = S.T;
-  if (UI.badgeMode && (T.phase === 'pick' || T.phase === 'bust')) {
-    const b = E.badgeOf(S, P(T.pid)); if (!b) return;
-    const j = UI.bsel.indexOf(i);
-    if (j >= 0) UI.bsel.splice(j, 1);
-    else {
-      const max = UI.badgeMode === 'reroll' ? b.n : (UI.badgeMode === 'pair' ? 2 : 1);
-      if (UI.bsel.length >= max) UI.bsel.shift();
-      UI.bsel.push(i);
-    }
-    Tray.update(); renderDock(); return;
-  }
-  if (T.phase !== 'pick') return;
+  if (!S || !S.T || !myTurn() || S.T.phase !== 'pick') return;
   const j = UI.sel.indexOf(i);
   if (j >= 0) UI.sel.splice(j, 1); else UI.sel.push(i);
   sTick();
@@ -2703,57 +2705,25 @@ document.addEventListener('click', ev => {
       break;
     }
     case 'start': doAct({ type: 'start', as: S.hostId }); break;
-    case 'setupFor': UI.setupFor = btn.dataset.t; renderSetup(); break;
-    case 'bag': {
-      const p = P(UI.setupFor); if (!p) return;
-      const dr = draftFor(p), t = btn.dataset.t;
-      if (+btn.dataset.d > 0) { const i = dr.bag.indexOf('ordinary'); if (i >= 0) dr.bag[i] = t; }
-      else { const i = dr.bag.lastIndexOf(t); if (i >= 0) dr.bag[i] = 'ordinary'; }
-      keepInputs($('#setup'), renderSetup);
-      break;
-    }
-    case 'pickBadge': { const p = P(UI.setupFor); if (!p) return; draftFor(p).badge = btn.dataset.b || null; keepInputs($('#setup'), renderSetup); break; }
-    case 'ready': {
-      const p = P(UI.setupFor); if (!p) return;
-      const dr = draftFor(p);
-      doAct({ type: 'loadout', bag: dr.bag, badge: dr.badge, ready: true, as: p.id });
-      if (MODE === 'local') { const nxt = setupPlayers().find(q => !q.ready && q.id !== p.id); if (nxt) { UI.setupFor = nxt.id; if (S.phase === 'setup') renderSetup(); window.scrollTo(0, 0); } }
-      break;
-    }
-    case 'unready': { const p = P(UI.setupFor); if (!p) return; const dr = draftFor(p); doAct({ type: 'loadout', bag: dr.bag, badge: dr.badge, ready: false, as: p.id }); break; }
-    case 'forceStart': doAct({ type: 'forceStart', as: S.hostId }); break;
+    case 'skinFor': UI.skinFor = btn.dataset.t; keepInputs($('#lobby'), renderLobby); break;
+    case 'skin': doAct({ type: 'skin', skin: btn.dataset.s, as: MODE === 'local' ? UI.skinFor : undefined }); break;
+    case 'ready': doAct({ type: 'ready', on: !!btn.dataset.on }); break;
     case 'roll': doAct({ type: 'roll' }); break;
     case 'selAll': {
       const T = S.T; if (!T || !myTurn()) return;
-      const subs = E.scoringSubsets(T.dice.map(d => d.v), E.ctxFor(S, P(T.pid)));
+      const subs = E.scoringSubsets(T.dice.map(d => d.v));
       let best = null; for (const s of subs) if (!best || s.pts > best.pts || (s.pts === best.pts && s.sel.length > best.sel.length)) best = s;
       if (best) { UI.sel = best.sel.slice(); Tray.update(); renderDock(); sendPreview(); }
       break;
     }
     case 'take': {
       const si = selInfo(); if (si.state !== 'ok') return;
-      doAct({ type: 'take', sel: UI.sel.slice(), go: btn.dataset.go, dbl: si.dbl });
-      UI.dbl = false;
+      doAct({ type: 'take', sel: UI.sel.slice(), go: btn.dataset.go });
       break;
     }
-    case 'toggleDbl': UI.dbl = !UI.dbl; renderDock(); if (UI.sheet) closeSheet(); break;
     case 'accept': doAct({ type: 'accept' }); break;
-    case 'rescue': {
-      const T = S.T, b = E.badgeOf(S, P(T.pid)); if (!b) return;
-      if (b.kind === 'resurrect') doAct({ type: 'badge' });
-      else { UI.badgeMode = b.kind; UI.bsel = []; renderBustPick(); }
-      break;
-    }
-    case 'badgeSheet': openSheet('badge'); break;
-    case 'badgeMode': {
-      const b = E.badgeOf(S, P(S.T.pid)); if (!b) return;
-      UI.badgeMode = b.kind; UI.bsel = []; closeSheet();
-      if (S.T.phase === 'bust') renderBustPick(); else { Tray.update(); renderDock(); }
-      break;
-    }
-    case 'cancelBadge': case 'cancelBust': UI.badgeMode = null; UI.bsel = []; Tray.update(); renderDock(); break;
-    case 'useBadgeSel': doAct({ type: 'badge', sel: UI.bsel.slice() }); UI.badgeMode = null; UI.bsel = []; break;
-    case 'useBadge': doAct({ type: 'badge' }); closeSheet(); break;
+    case 'emoToggle': UI.emoOpen = !UI.emoOpen; if (SND.on) audio(); renderDock(); break;
+    case 'emote': sendEmote(btn.dataset.id); break;
     case 'who': openSheet('who', btn.dataset.t); break;
     case 'log': openSheet('log'); break;
     case 'menu': openSheet('menu'); break;
@@ -2766,7 +2736,6 @@ document.addEventListener('click', ev => {
     case 'askLeave': closeSheet(); openOverlay('confirm', { title: MODE === 'host' ? 'Fermer la table ?' : 'Quitter ?', text: MODE === 'host' ? 'Les autres joueurs seront déconnectés et la partie sera perdue.' : (MODE === 'local' ? 'La partie sur cet appareil sera perdue.' : 'Tu pourras revenir avec le même code tant que l\'hôte garde la table ouverte.'), ok: MODE === 'host' ? 'Fermer la table' : 'Quitter', act: 'leave' }); break;
   }
 });
-function renderBustPick() { Tray.update(); renderDock(); }
 document.addEventListener('keydown', ev => {
   if (ev.key === 'Enter' || ev.key === ' ') {
     const die = ev.target.closest && ev.target.closest('.die-pos');
@@ -2781,9 +2750,9 @@ window.addEventListener('resize', () => { if (S && UI.screen === 'game') renderS
 /* ================= Reprise ================= */
 function resumeSave() {
   const sv = LS.json('kostky-save');
-  if (!sv || !sv.S) { toast('Aucune partie à reprendre.', true); renderHome(); return; }
+  if (!sv || !sv.S || sv.S.v !== 2) { LS.del('kostky-save'); toast('Aucune partie à reprendre.', true); renderHome(); return; }
   S = sv.S; MODE = sv.mode; ME = sv.me;
-  UI.seenGame = false; UI.lastFlash = null; Tray.key = null;
+  UI.seenGame = false; UI.lastFlash = null; UI.lastEmote = null; REACT.last = null; Tray.key = null;
   if (MODE === 'host') {
     for (const p of S.players) if (!p.bot && p.id !== S.hostId) p.connected = false;
     SS.set('kostky-live', 'host');
