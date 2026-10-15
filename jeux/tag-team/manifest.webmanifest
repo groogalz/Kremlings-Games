@@ -1,0 +1,16 @@
+{
+  "name": "Tag Team",
+  "short_name": "Tag Team",
+  "description": "Le jeu de combat à deux, en ligne entre amis",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#16113a",
+  "theme_color": "#231b52",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

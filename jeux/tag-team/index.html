@@ -1,0 +1,2593 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#231b52">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Tag Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Bungee&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root {
+  --arena: #231b52; --arena2: #16113a; --panel: #2d2465; --panel2: #392f7d; --line: rgba(255,255,255,.14);
+  --txt: #f4f1ff; --mute: #b9b0e2; --dim: #8a82b8;
+  --me: #ff7a3d; --opp: #36c5ff;
+  --hp: #ffd23f; --lag: #ff3b4f; --heal: #3ddc84; --pow: #ad86ff; --dd: #ff5470; --blk: #6cbcff;
+  --paper: #fff4da; --ink: #1d1640;
+  --f-disp: 'Bungee', 'Impact', 'Arial Black', sans-serif;
+  --f-ui: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --f-body: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+  --r: 12px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+html { touch-action: manipulation; }
+#lobby, #select, #setup, #game, #ov, .btn { -webkit-user-select: none; user-select: none; }
+.input { -webkit-user-select: text; user-select: text; }
+body {
+  background: var(--arena2);
+  background-image: radial-gradient(rgba(255,255,255,.055) 1.2px, transparent 1.3px), radial-gradient(120% 80% at 50% 0%, #3a2c86 0%, var(--arena) 45%, var(--arena2) 100%);
+  background-size: 14px 14px, 100% 100%; background-attachment: fixed;
+  color: var(--txt); font-family: var(--f-body); font-size: 16px; line-height: 1.45;
+  -webkit-tap-highlight-color: transparent; overscroll-behavior: none;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+input { font: inherit; }
+:focus-visible { outline: 3px solid var(--hp); outline-offset: 2px; }
+.hidden { display: none !important; }
+.screen { min-height: 100dvh; }
+h1, h2, h3 { margin: 0; }
+.muted { color: var(--mute); }
+.small { font-size: .88rem; }
+
+/* ---------- boutons ---------- */
+.btn { border: 0; border-radius: 10px; padding: .7em 1.2em; font-family: var(--f-ui); font-weight: 700; font-size: 1.12rem; letter-spacing: .01em;
+  background: var(--panel2); color: var(--txt); box-shadow: 0 4px 0 rgba(0,0,0,.35); transition: transform .08s, box-shadow .08s, filter .15s; }
+.btn:hover { filter: brightness(1.12); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.btn[disabled] { opacity: .45; pointer-events: none; }
+.btn.hot { background: var(--me); color: #2a0e00; }
+.btn.cool { background: var(--opp); color: #002233; }
+.btn.gold { background: var(--hp); color: #2b2100; }
+.btn.ghost { background: transparent; box-shadow: inset 0 0 0 2px var(--line); }
+.btn.sm { font-size: .95rem; padding: .45em .85em; }
+.btn.big { font-size: 1.3rem; padding: .8em 1.4em; }
+.full { width: 100%; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.field { display: grid; gap: 6px; margin: 14px 0; }
+.field label { font-family: var(--f-ui); font-weight: 600; color: var(--mute); font-size: 1.02rem; }
+.input { width: 100%; padding: .7em .85em; border-radius: 10px; border: 2px solid var(--line); background: rgba(0,0,0,.28); color: var(--txt); font-size: 1.05rem; }
+.input:focus { border-color: var(--hp); outline: none; }
+
+/* ---------- accueil ---------- */
+#home { display: grid; place-items: center; padding: 28px 16px; }
+.home-box { width: min(440px, 100%); }
+.marquee { text-align: center; margin: 4px 0 18px; position: relative; }
+.marquee .t { font-family: var(--f-disp); font-size: clamp(3rem, 15vw, 5.4rem); line-height: .86; letter-spacing: .01em; display: block; color: #fff;
+  text-shadow: -4px 4px 0 var(--me), 4px -3px 0 var(--opp), 0 10px 26px rgba(0,0,0,.5); transform: skewY(-5deg); }
+.marquee .t + .t { margin-top: .08em; }
+.marquee .sub { display: block; font-family: var(--f-ui); font-size: 1.15rem; color: var(--mute); margin-top: 18px; }
+.sep { text-align: center; color: var(--dim); font-family: var(--f-ui); margin: 14px 0 4px; }
+.credit { margin-top: 22px; font-size: .8rem; color: var(--dim); line-height: 1.5; }
+.credit a { color: var(--mute); }
+#resumeBox .resume { margin-top: 12px; padding: 12px; border-radius: var(--r); background: rgba(255,210,63,.1); border: 2px solid rgba(255,210,63,.4); }
+
+/* ---------- salon ---------- */
+.page { width: min(760px, 100%); margin: 0 auto; padding: 22px 16px 40px; }
+.code { font-family: var(--f-disp); font-size: clamp(2.4rem, 11vw, 3.6rem); letter-spacing: .12em; color: var(--hp); line-height: 1; }
+.panel { background: rgba(45,36,101,.82); border: 2px solid var(--line); border-radius: 16px; padding: 16px; }
+.seats { display: grid; gap: 10px; margin: 14px 0; }
+.seat { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: rgba(0,0,0,.22); }
+.seat .tag { font-family: var(--f-disp); font-size: 1rem; width: 2.4em; height: 2.4em; display: grid; place-items: center; border-radius: 50%; }
+.seat .tag.p1 { background: var(--me); color: #2a0e00; }
+.seat .tag.p2 { background: var(--opp); color: #00222f; }
+.seat .nm { font-family: var(--f-ui); font-weight: 700; font-size: 1.25rem; flex: 1; }
+.opts { display: grid; gap: 12px; }
+.opt { display: grid; gap: 6px; }
+.opt > span { font-family: var(--f-ui); color: var(--mute); font-weight: 600; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { border: 2px solid var(--line); background: rgba(0,0,0,.2); border-radius: 999px; padding: .4em .9em; font-family: var(--f-ui); font-weight: 600; font-size: 1rem; }
+.seg button.on { background: var(--hp); color: #241b00; border-color: var(--hp); }
+.seg button[disabled] { opacity: .6; cursor: default; }
+
+/* ---------- emblèmes ---------- */
+.emb { width: 100%; height: 100%; display: block; }
+.disc { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: var(--k); padding: 8px; flex: none;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.25), 0 0 0 3px rgba(255,255,255,.12); --hole: rgba(0,0,0,.38); }
+.disc.lg { width: 74px; height: 74px; padding: 13px; }
+.disc.sm { width: 32px; height: 32px; padding: 5px; }
+.ico { width: 1em; height: 1em; display: inline-block; vertical-align: -.14em; }
+
+/* ---------- sélection ---------- */
+.picks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 18px; }
+.pickcol h3 { font-family: var(--f-ui); font-size: 1.1rem; margin-bottom: 8px; }
+.pickcol.me h3 { color: var(--me); } .pickcol.opp h3 { color: var(--opp); text-align: right; }
+.pickslots { display: flex; gap: 8px; }
+.pickcol.opp .pickslots { justify-content: flex-end; }
+.slot { width: 58px; height: 58px; border-radius: 50%; border: 2px dashed var(--line); display: grid; place-items: center; color: var(--dim); font-family: var(--f-ui); }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: 12px; }
+.ftile { text-align: left; border: 0; border-radius: 14px; padding: 12px; align-content: start; background: linear-gradient(160deg, color-mix(in srgb, var(--c) 34%, var(--panel)) 0%, var(--panel) 70%);
+  box-shadow: inset 0 0 0 2px var(--line); display: grid; gap: 8px; position: relative; color: var(--txt); }
+.ftile:hover { box-shadow: inset 0 0 0 2px var(--hp); }
+.ftile[disabled] { opacity: .35; }
+.ftile .nm { font-family: var(--f-ui); font-weight: 700; font-size: 1.2rem; line-height: 1.05; }
+.ftile .sb { font-size: .82rem; color: var(--mute); line-height: 1.2; }
+.ftile .stats { display: flex; gap: 10px; font-family: var(--f-ui); font-weight: 600; font-size: 1rem; }
+.ftile .stats .h { color: var(--hp); } .ftile .stats .p { color: var(--pow); }
+.cx { display: inline-flex; gap: 3px; vertical-align: middle; }
+.cx i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.22); }
+.cx i.on { background: var(--hp); }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-start; }
+.tags span { font-family: var(--f-ui); font-size: .82rem; padding: 1px 7px; border-radius: 999px; background: rgba(0,0,0,.25); color: var(--mute); }
+.status { font-family: var(--f-ui); font-size: 1.15rem; padding: 10px 14px; border-radius: 12px; background: rgba(0,0,0,.24); margin: 10px 0; }
+.status b { color: var(--hp); }
+
+/* ---------- cartes ---------- */
+.card { --w: 150px; --c: #888; width: var(--w); height: calc(var(--w) * 1.42); flex: none; background: var(--paper); color: var(--ink); border-radius: calc(var(--w) * .07);
+  border: calc(var(--w) * .022) solid var(--c); position: relative; overflow: hidden; display: flex; flex-direction: column; font-family: var(--f-ui);
+  box-shadow: 0 5px 0 rgba(0,0,0,.35); text-align: left; padding: 0; --hole: rgba(0,0,0,.3); }
+.card .top { background: var(--c); color: var(--k, #fff); display: flex; align-items: center; gap: calc(var(--w) * .04); padding: calc(var(--w) * .045) calc(var(--w) * .05); min-height: calc(var(--w) * .34); }
+.card .top .emb { width: calc(var(--w) * .17); height: calc(var(--w) * .17); flex: none; }
+.card .nm { font-weight: 700; font-size: calc(var(--w) * .1); line-height: 1.02; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.card .tx { padding: calc(var(--w) * .05) calc(var(--w) * .06); font-size: calc(var(--w) * .079); line-height: 1.16; font-weight: 500; flex: 1; overflow: hidden; }
+.card .tx.long { font-size: calc(var(--w) * .066); }
+.card .tx.xlong { font-size: calc(var(--w) * .058); }
+.card .tx p { margin: 0 0 .35em; }
+.card .tx .off { opacity: .38; }
+.card .tx .lbl { font-weight: 700; }
+.card .bonus { background: #ffcf3a; color: #2b2100; font-size: calc(var(--w) * .064); padding: calc(var(--w) * .03) calc(var(--w) * .05); line-height: 1.12; font-weight: 600; }
+.card .badge { position: absolute; right: calc(var(--w) * .04); top: calc(var(--w) * .04); width: calc(var(--w) * .16); height: calc(var(--w) * .16); border-radius: 50%;
+  background: #121018; color: #fff; display: grid; place-items: center; padding: 3px; }
+.card .copies { position: absolute; right: calc(var(--w) * .05); bottom: calc(var(--w) * .035); font-size: calc(var(--w) * .07); font-weight: 700; color: rgba(29,22,64,.45); }
+.card.start { border-color: #121018; }
+.card .k-atk { color: #c8102e; font-weight: 700; }
+.card .k-blk { color: #1f5fb8; font-weight: 700; }
+.card .k-hp { color: #12804b; font-weight: 700; }
+.card .k-dd { color: #b3122c; font-weight: 700; }
+.card .k-pw { color: #6a3fd1; font-weight: 700; }
+.card .k-x { color: #8a1010; font-weight: 700; }
+.card.back { background: repeating-linear-gradient(45deg, #2a2172 0 8px, #34298a 8px 16px); border-color: #4a3ca8; }
+.card.back.played { background: repeating-linear-gradient(45deg, #3a2f8f 0 6px, #4a3ca8 6px 12px); border-color: #6b5bd6; }
+.card.back::after { content: 'TT'; position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-disp); font-size: calc(var(--w) * .3); color: rgba(255,255,255,.18); }
+.card.dim { filter: saturate(.3) brightness(.62); }
+.card.cur { box-shadow: 0 0 0 3px var(--hp), 0 5px 0 rgba(0,0,0,.35); }
+.card.out { opacity: .25; }
+.card.sel { box-shadow: 0 0 0 4px var(--hp), 0 8px 0 rgba(0,0,0,.35); transform: translateY(-6px); }
+button.card { cursor: pointer; }
+.card.mini .tx, .card.mini .bonus { display: none; }
+.card.mini { height: auto; }
+.card.mini .top { min-height: calc(var(--w) * .58); align-items: flex-start; }
+.card.mini .nm { font-size: calc(var(--w) * .118); }
+
+/* ---------- jeu ---------- */
+#game { display: grid; height: 100dvh; grid-template-columns: minmax(250px, 310px) 1fr minmax(250px, 310px); grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "hud hud hud" "me arena opp" "deck deck deck"; gap: 10px; padding: 10px; overflow: hidden; }
+.hud { grid-area: hud; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 14px; align-items: center; }
+.hside { display: grid; gap: 6px; min-width: 0; }
+.hbar { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 8px; align-items: center; opacity: .72; transition: opacity .3s; min-width: 0; }
+.hbar.on { opacity: 1; }
+.hbar .disc { width: 36px; height: 36px; padding: 6px; }
+.hbar .lab { display: flex; justify-content: space-between; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 1.02rem; line-height: 1.1; margin-bottom: 3px; white-space: nowrap; }
+.hbar .lab .n { overflow: hidden; text-overflow: ellipsis; }
+.hbar .lab .v { color: var(--hp); }
+.hbar.on .lab .n::before { content: '▸ '; color: var(--hp); }
+.track { position: relative; height: 15px; border: 2px solid rgba(255,255,255,.85); border-radius: 3px; background: rgba(0,0,0,.45); transform: skewX(-14deg); overflow: hidden; }
+.track i { position: absolute; top: 0; bottom: 0; left: 0; }
+.track .lag { background: var(--lag); transition: width .7s .45s ease-out; }
+.track .fill { background: linear-gradient(180deg, #fff3a6, var(--hp) 45%, #e8a800); transition: width .35s ease-out; }
+.track.low .fill { background: linear-gradient(180deg, #ffb0a0, #ff6a3d 50%, #c33); }
+.hside.opp .hbar { grid-template-columns: minmax(0, 1fr) 36px; }
+.hside.opp .hbar .disc { order: 2; }
+.hside.opp .track i { left: auto; right: 0; }
+.hside.opp .track { transform: skewX(14deg); }
+.hside.opp .hbar .lab { flex-direction: row-reverse; }
+.hside.opp .hbar.on .lab .n::before { content: ''; } .hside.opp .hbar.on .lab .n::after { content: ' ◂'; color: var(--hp); }
+.hside .who { font-family: var(--f-ui); font-weight: 700; font-size: .95rem; color: var(--me); }
+.hside.opp .who { color: var(--opp); text-align: right; }
+.hmid { text-align: center; min-width: 96px; }
+.hmid .rnd { font-family: var(--f-disp); font-size: 2rem; line-height: 1; color: #fff; text-shadow: -2px 2px 0 var(--me), 2px -2px 0 var(--opp); }
+.hmid .trn { font-family: var(--f-ui); font-size: .95rem; color: var(--mute); }
+.hmid .tools { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+.iconbtn { border: 0; background: rgba(0,0,0,.3); border-radius: 8px; padding: 5px 9px; font-family: var(--f-ui); font-weight: 600; font-size: .9rem; color: var(--mute); }
+.iconbtn:hover { color: var(--txt); }
+.iconbtn.on { background: var(--hp); color: #241b00; }
+
+.col { min-height: 0; overflow-y: auto; display: grid; gap: 10px; align-content: start; scrollbar-width: thin; }
+.col.me { grid-area: me; } .col.opp { grid-area: opp; }
+.fp { border-radius: 14px; background: rgba(23,18,58,.88); border: 2px solid var(--line); padding: 10px 11px; display: grid; gap: 8px; text-align: left; color: var(--txt); width: 100%;
+  border-left: 5px solid var(--c); position: relative; }
+.col.opp .fp { border-left: 2px solid var(--line); border-right: 5px solid var(--c); }
+.fp.on { border-color: rgba(255,210,63,.7); border-left-color: var(--c); box-shadow: 0 0 0 1px rgba(255,210,63,.25), 0 0 24px rgba(255,210,63,.12); }
+.col.opp .fp.on { border-right-color: var(--c); }
+.fp.ko { opacity: .55; }
+.fp .hd { display: flex; gap: 10px; align-items: center; }
+.fp .hd .disc { width: 40px; height: 40px; padding: 7px; }
+.fp .hd .nm { font-family: var(--f-ui); font-weight: 700; font-size: 1.15rem; line-height: 1.05; }
+.fp .hd .sb { font-size: .78rem; color: var(--mute); line-height: 1.2; }
+.fp .hd .act { margin-left: auto; font-family: var(--f-ui); font-size: .82rem; font-weight: 700; color: #241b00; background: var(--hp); border-radius: 6px; padding: 1px 7px; }
+.cells { display: flex; flex-wrap: wrap; gap: 3px; }
+.cells i { width: 13px; height: 13px; border-radius: 3px; background: rgba(255,255,255,.1); position: relative; font-style: normal; transform: rotate(45deg) scale(.82); }
+.cells i.f { background: #3ccf73; }
+.cells i.cur { background: var(--hp); box-shadow: 0 0 0 2px #fff; }
+.cells i.stop::after, .cells i.ic::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; }
+.cells i.stop::after { background: #6c5cff; }
+.cells i.ic.pow::after { background: var(--pow); box-shadow: 0 0 0 1px #fff; }
+.cells i.ic.intrigue::after { background: #ff4d6d; }
+.cells i.ic.serpent::after { background: #fff; }
+.cells i.ko { background: #111; box-shadow: inset 0 0 0 1px #777; }
+.cells i.mask { background: #8fd14f; }
+.cells i.gone { background: transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.cells i.tmp { width: auto; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-family: var(--f-ui); font-weight: 600; font-size: 1rem; }
+.pw { color: var(--pow); display: inline-flex; align-items: center; gap: 4px; }
+.pw .cubes { display: inline-flex; flex-wrap: wrap; gap: 2px; max-width: 150px; }
+.pw .cubes i { width: 9px; height: 9px; background: var(--pow); border-radius: 2px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; background: rgba(0,0,0,.3); font-family: var(--f-ui); font-weight: 600; font-size: .92rem; white-space: nowrap; }
+.chip.fl { color: #ff8a3d; } .chip.cc { color: #7fd3ff; } .chip.sh { color: #ffcf6a; } .chip.gk { color: #ffb36b; } .chip.sc { color: #ff7a5c; }
+.chip.sp { color: #d7e9ff; } .chip.in { color: #ff8fa6; } .chip.mk { color: #a7e36c; } .chip.rg { color: #ff6d5e; } .chip.vx { color: #ffd76a; } .chip.sn { color: #eee; }
+.chip.warn { background: rgba(255,84,112,.22); color: #ffb3c0; }
+.meter { display: flex; gap: 2px; }
+.meter i { width: 8px; height: 10px; border-radius: 2px; background: rgba(255,255,255,.14); }
+.meter i.on { background: currentColor; }
+.pptracks { display: grid; gap: 4px; }
+.pptracks .pp { display: flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-size: .9rem; }
+.pptracks .pp b { width: 58px; font-weight: 600; }
+.pptracks .pp.cur b { color: var(--hp); }
+.pptracks .pp.dead b { color: var(--dim); text-decoration: line-through; }
+.tree { width: 100%; max-width: 230px; aspect-ratio: 1.15; position: relative; background: radial-gradient(circle at 50% 50%, rgba(138,90,43,.35), transparent 70%); border-radius: 10px; }
+.tree svg { width: 100%; height: 100%; display: block; }
+
+/* arène */
+.arena { grid-area: arena; position: relative; display: grid; grid-template-rows: auto 1fr auto; min-height: 0; border-radius: 18px; overflow: hidden;
+  background: linear-gradient(115deg, rgba(255,122,61,.16) 0 49.6%, rgba(54,197,255,.16) 50.4% 100%), rgba(10,8,30,.4); border: 2px solid var(--line); }
+.arena::before { content: ''; position: absolute; left: 50%; top: -10%; bottom: -10%; width: 3px; background: linear-gradient(transparent, rgba(255,255,255,.5), transparent); transform: rotate(14deg); pointer-events: none; }
+.clash { display: flex; align-items: center; justify-content: center; gap: clamp(10px, 4vw, 46px); padding: 14px 10px; position: relative; min-height: 0; }
+.clash .slot2 { display: grid; justify-items: center; gap: 8px; position: relative; }
+.clash .who { font-family: var(--f-ui); font-weight: 700; font-size: .95rem; }
+.clash .slot2.me .who { color: var(--me); } .clash .slot2.opp .who { color: var(--opp); }
+.clash .card { --w: clamp(128px, min(16vw, 31vh), 236px); }
+.clash .vs { font-family: var(--f-disp); font-size: 1.6rem; color: rgba(255,255,255,.5); }
+.slam-l { animation: slamL .45s cubic-bezier(.2,1.4,.4,1) both; }
+.slam-r { animation: slamR .45s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes slamL { from { transform: translateX(-60vw) rotate(-14deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes slamR { from { transform: translateX(60vw) rotate(14deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.stamp { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-12deg); font-family: var(--f-disp); font-size: 1.35rem; padding: 4px 12px; border: 4px solid currentColor;
+  border-radius: 8px; background: rgba(10,8,30,.78); white-space: nowrap; animation: stampIn .3s .5s both; pointer-events: none; z-index: 3; }
+.stamp.blk { color: var(--blk); } .stamp.cxl { color: #ff5470; } .stamp.dbl { color: var(--hp); top: 78%; }
+@keyframes stampIn { from { transform: translate(-50%, -50%) rotate(-12deg) scale(2.4); opacity: 0; } to { transform: translate(-50%, -50%) rotate(-12deg) scale(1); opacity: 1; } }
+.ticker { padding: 8px 14px 12px; display: grid; gap: 3px; align-content: start; height: 8.6em; overflow-y: auto; font-size: .92rem; scrollbar-width: thin; }
+.ticker div { animation: tick .3s both; color: var(--mute); }
+.ticker div.k { color: var(--txt); }
+@keyframes tick { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.atop { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px 0; font-family: var(--f-ui); color: var(--mute); font-size: .95rem; gap: 8px; }
+.banner { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 5; }
+.banner span { font-family: var(--f-disp); font-size: clamp(3rem, 12vw, 7rem); color: #fff; text-shadow: -5px 5px 0 var(--me), 5px -4px 0 var(--opp), 0 0 40px rgba(0,0,0,.7);
+  animation: bannerIn 1.4s both; }
+@keyframes bannerIn { 0% { transform: scale(3); opacity: 0; } 18% { transform: scale(1); opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(.95); } }
+.banner.stay span { animation: bannerStay .6s both; }
+@keyframes bannerStay { from { transform: scale(3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* nombres flottants */
+.fx { position: absolute; z-index: 20; pointer-events: none; font-family: var(--f-disp); font-size: 1.5rem; text-shadow: 0 3px 0 rgba(0,0,0,.6); animation: floatUp 1.5s ease-out both; }
+.fx.dmg { color: var(--lag); } .fx.heal { color: var(--heal); } .fx.pw { color: var(--pow); font-size: 1.15rem; }
+@keyframes floatUp { 0% { transform: translateY(8px) scale(.6); opacity: 0; } 15% { transform: translateY(0) scale(1.15); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateY(-38px); opacity: 0; } }
+.shake { animation: shake .4s; }
+@keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+
+/* decks */
+.decks { grid-area: deck; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; min-width: 0; }
+.strip { display: flex; gap: 6px; overflow-x: auto; padding: 6px 2px 10px; scrollbar-width: thin; align-items: flex-end; }
+.strip .card { --w: 92px; }
+.strip .card.mini { --w: 92px; }
+.decklab { font-family: var(--f-ui); font-weight: 700; font-size: .95rem; color: var(--me); display: flex; gap: 10px; align-items: baseline; }
+.decklab .muted { font-weight: 500; }
+.oppdeck { display: grid; justify-items: end; gap: 2px; }
+.oppdeck .decklab { color: var(--opp); }
+.oppdeck .strip .card { --w: 46px; }
+.oppdeck .strip .card:not(.back) { height: calc(46px * 1.42); }
+.oppdeck .strip .card .tx, .oppdeck .strip .card .nm, .oppdeck .strip .card .bonus { display: none; }
+.oppdeck .strip .card .top { flex: 1; justify-content: center; }
+.oppdeck .strip .card .top .emb { width: 26px; height: 26px; }
+
+/* feuilles, superpositions */
+#ov { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: rgba(8,6,24,.72); padding: 16px; overflow-y: auto; }
+.sheet { min-width: 0; width: min(760px, 100%); max-height: calc(100dvh - 32px); overflow-y: auto; background: var(--panel); border: 2px solid var(--line); border-radius: 18px; padding: 18px; position: relative; }
+.sheet h2 { font-family: var(--f-ui); font-size: 1.6rem; line-height: 1.1; margin-bottom: 6px; }
+.sheet .close { position: absolute; right: 10px; top: 10px; }
+.sheet .cardrow { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 14px 0; }
+.zoom .card { --w: min(270px, 74vw); margin: 0 auto; }
+.ruletext { font-size: .98rem; }
+.ruletext h3 { font-family: var(--f-ui); font-size: 1.25rem; margin: 16px 0 4px; color: var(--hp); }
+.ruletext p, .ruletext li { margin: 4px 0; }
+.ruletext ul { padding-left: 1.2em; margin: 4px 0; }
+.gl { display: grid; gap: 6px; margin: 8px 0; padding-left: 0; list-style: none; }
+.gl li { padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,.22); font-size: .95rem; }
+
+/* construction */
+.build { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+.build .drawn { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; padding-top: 8px; }
+.build .drawn .card { --w: clamp(120px, 26vw, 170px); }
+.build .ins { display: flex; align-items: flex-end; gap: 4px; overflow-x: auto; padding: 10px 4px 12px; scrollbar-width: thin; }
+.build .ins .card { --w: 76px; }
+.gap { flex: none; width: 26px; height: calc(76px * 1.42); border-radius: 8px; border: 2px dashed rgba(255,255,255,.25); display: grid; place-items: center; color: var(--mute); font-family: var(--f-disp); font-size: .9rem; background: transparent; padding: 0; }
+.gap:hover { border-color: var(--hp); color: var(--hp); }
+.gap.on { width: 82px; border: 3px solid var(--hp); background: rgba(255,210,63,.14); color: var(--hp); }
+.raven { padding: 10px 12px; border-radius: 12px; background: rgba(106,66,184,.35); border: 2px solid rgba(190,160,255,.5); display: flex; gap: 12px; align-items: center; }
+.raven .card { --w: 70px; }
+.bottoms { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-family: var(--f-ui); color: var(--mute); }
+.bottoms .card { --w: 56px; }
+
+/* divers */
+#toasts { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 80; display: grid; gap: 8px; width: min(420px, calc(100% - 32px)); }
+.toast { background: #120e30; border: 2px solid var(--hp); color: var(--txt); padding: 10px 14px; border-radius: 12px; font-family: var(--f-ui); font-size: 1.05rem; animation: tick .25s both; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+.toast.err { border-color: var(--lag); }
+#netbanner { position: fixed; top: 0; left: 0; right: 0; z-index: 90; background: var(--lag); color: #fff; text-align: center; padding: 6px 12px; font-family: var(--f-ui); font-weight: 700; }
+.waiting { display: inline-flex; gap: 4px; }
+.waiting i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: blink 1.2s infinite; }
+.waiting i:nth-child(2) { animation-delay: .2s; } .waiting i:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+.overbox { text-align: center; display: grid; gap: 14px; justify-items: center; }
+.overbox .verdict { font-family: var(--f-disp); font-size: clamp(2.2rem, 9vw, 3.6rem); line-height: 1; text-shadow: -3px 3px 0 var(--me), 3px -3px 0 var(--opp); }
+.choice { display: grid; gap: 8px; }
+.choice button { text-align: left; border: 0; border-radius: 12px; padding: 12px 14px; background: rgba(0,0,0,.25); box-shadow: inset 0 0 0 2px var(--line); color: var(--txt); font-family: var(--f-ui); font-size: 1.08rem; }
+.choice button:hover { box-shadow: inset 0 0 0 2px var(--hp); }
+.choice button b { color: var(--hp); }
+
+/* ---------- mobile ---------- */
+@media (max-width: 920px) {
+  #game { height: auto; min-height: 100dvh; overflow: visible; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto;
+    grid-template-areas: "hud hud" "opp opp" "arena arena" "me me" "deck deck"; padding: 8px; gap: 8px; }
+  .col { overflow: visible; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .hud, .col, .arena, .decks, .decks > * { min-width: 0; }
+  .tree { max-width: 150px; margin: 0 auto; }
+  .fp { padding: 8px; gap: 6px; }
+  .fp .hd .sb { display: none; }
+  .fp .hd .disc { width: 32px; height: 32px; padding: 5px; }
+  .fp .hd .nm { font-size: 1rem; }
+  .cells i { width: 9px; height: 9px; }
+  .cells { gap: 2px; }
+  .hud { gap: 6px 8px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .hside.me { grid-column: 1; grid-row: 1; } .hside.opp { grid-column: 2; grid-row: 1; }
+  .hmid { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .hmid .tools { margin-top: 0; }
+  .hbar { grid-template-columns: 28px minmax(0, 1fr); gap: 6px; }
+  .hside.opp .hbar { grid-template-columns: minmax(0, 1fr) 28px; }
+  .hbar .disc { width: 28px; height: 28px; padding: 4px; }
+  .hbar .lab { font-size: .88rem; }
+  .track { height: 11px; }
+  .hmid { min-width: 64px; }
+  .hmid .rnd { font-size: 1.5rem; }
+  .arena { min-height: 300px; }
+  .clash { gap: 6px; padding: 10px 4px; }
+  .clash .vs { font-size: 1rem; }
+  .clash .card { --w: min(37vw, 168px); }
+  .decks { grid-template-columns: 1fr; }
+  .oppdeck { justify-items: start; }
+  .tree { max-width: 180px; }
+}
+@media (max-width: 520px) {
+  .hside .who { font-size: .82rem; }
+  .hbar .lab .v { font-size: .82rem; }
+  .fp .stats { font-size: .9rem; }
+  .chip { font-size: .82rem; padding: 1px 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; }
+}
+
+</style>
+</head>
+<body>
+<div id="home" class="screen">
+  <div class="home-box">
+    <div class="marquee"><span class="t">Tag</span><span class="t">Team</span><span class="sub">Le jeu de combat à deux, en ligne entre amis</span></div>
+    <div class="field"><label for="name">Votre nom</label><input id="name" class="input" maxlength="18" autocomplete="nickname" placeholder="Tom"></div>
+    <button class="btn gold big full" data-act="host">Créer une partie</button>
+    <div class="sep">ou</div>
+    <div class="field"><label for="joinCode">Rejoindre avec un code</label>
+      <div class="row" style="flex-wrap:nowrap"><input id="joinCode" class="input" maxlength="5" placeholder="ABCDE" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--f-disp)"><button class="btn cool" data-act="join">Rejoindre</button></div>
+    </div>
+    <button class="btn ghost full" data-act="solo">S’entraîner contre le robot</button>
+    <div id="resumeBox"></div>
+    <div class="row" style="justify-content:space-between;margin-top:14px"><button class="btn ghost sm" data-act="rules">Règles du jeu</button><span class="muted small" id="netState"></span></div>
+    <div class="credit">Adaptation numérique <b>non officielle</b> de <b>Tag Team</b> et de son extension <b>L’Héritage d’Arthur</b> (Le Scorpion Masqué), pour jouer entre amis. Textes des cartes transcrits depuis la boîte ; aucune illustration du jeu n’est reproduite, les emblèmes sont originaux. Gratuite et non commerciale.</div>
+  </div>
+</div>
+<div id="lobby" class="screen hidden"></div>
+<div id="select" class="screen hidden"></div>
+<div id="setup" class="screen hidden"></div>
+<div id="game" class="screen hidden"></div>
+<div id="ov" class="hidden"></div>
+<div id="toasts"></div>
+<div id="netbanner" class="hidden"></div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+/* Tag Team — données des combattants et des cartes (transcrites depuis les photos de la boîte). */
+(function (root) {
+'use strict';
+
+const FIGHTERS = {
+  jeanne:    { n: 'Jeanne', sub: 'Le Bouclier Divin', box: 1, hp: 18, pw: 1, cx: 1, tags: ['Soutien', 'Polyvalence'], col: '#2c6bd6', ink: '#f6c445' },
+  wildbunch: { n: 'Le Wild Bunch', sub: 'La Bande de Hors-la-loi', box: 1, hp: 5, pw: 1, cx: 5, tags: ['Précision', 'Résilience'], col: '#e8892b', ink: '#5a2a12', stops: [1, 2, 3, 4] },
+  bodvar:    { n: 'Bödvar', sub: 'Le Berserkours', box: 1, hp: 11, pw: 3, cx: 2, tags: ['Dégâts élevés', 'Métamorphose'], col: '#c8312f', ink: '#ffd9a0', icons: { 6: 'pow' } },
+  shango:    { n: 'Shango', sub: 'Le Gardien du Feu et du Tonnerre', box: 1, hp: 15, pw: 0, cx: 5, tags: ['Agression', 'Tension'], col: '#e2502a', ink: '#ffe066' },
+  brijit:    { n: 'Maman Brijit', sub: 'La Sorcière Immortelle', box: 1, hp: 16, pw: 2, cx: 4, tags: ['Contrôle', 'Immortalité'], col: '#b0306e', ink: '#ffc7e0' },
+  mephisto:  { n: 'Méphisto', sub: "L'Émissaire des Ténèbres", box: 1, hp: 13, pw: 1, cx: 3, tags: ['Agression', 'Autonomie'], col: '#5d5670', ink: '#eeeaf6', icons: { 8: 'serpent' } },
+  peuple:    { n: 'Le Petit Peuple', sub: 'Les Esprits de la Forêt', box: 1, hp: 5, pw: 0, cx: 4, tags: ['Soutien', 'Persistance'], col: '#3f9a52', ink: '#e7f7c9' },
+  mordred:   { n: 'Mordred', sub: 'Le Chevalier Noir', box: 1, hp: 19, pw: 0, cx: 2, tags: ['Montée en puissance', 'Riposte'], col: '#7c3a9c', ink: '#ff4b4b' },
+  milady:    { n: 'Milady', sub: "La Cape et l'Épée", box: 1, hp: 16, pw: 1, cx: 2, tags: ['Imprévisibilité', 'Riposte'], col: '#d6334a', ink: '#ffd6dc', stops: [1], icons: { 12: 'intrigue', 8: 'intrigue', 2: 'intrigue' } },
+  golem:     { n: 'Le Golem', sub: 'Le Protecteur Colossal', box: 1, hp: 25, pw: 1, cx: 1, tags: ['Protection', 'Résistance'], col: '#d9762b', ink: '#3b2a20', icons: { 20: 'pow', 15: 'pow', 10: 'pow' } },
+  wong:      { n: 'Wong Fei-Hung', sub: 'Le Vieux Maître', box: 1, hp: 17, pw: 2, cx: 4, tags: ['Manipulation de la Puissance', 'Contrôle'], col: '#1f4e9c', ink: '#e9e2cf' },
+  ching:     { n: 'Ching Shih', sub: 'La Reine Pirate', box: 1, hp: 14, pw: 2, cx: 3, tags: ['Tension', 'Polyvalence'], col: '#16805e', ink: '#ffcc3d' },
+  morgane:   { n: 'Morgane', sub: "L'Enchanteresse", box: 2, hp: 15, pw: 1, cx: 3, tags: ['Prémonition', 'Contrôle'], col: '#6a42b8', ink: '#e8dcff' },
+  vert:      { n: 'Le Chevalier Vert', sub: 'Le Fléau des Champions', box: 2, hp: 14, pw: 1, cx: 3, tags: ['Risque/Récompense', 'Régénération'], col: '#2f8a4c', ink: '#d6ff7a', stops: [1] },
+  excalibur: { n: 'Excalibur', sub: "L'Épée du Destin", box: 2, hp: 7, pw: 0, cx: 4, tags: ['Immortalité', 'Soutien'], col: '#4a8fb5', ink: '#f2d27a' },
+  perceval:  { n: 'Perceval', sub: 'Le Chevalier du Graal', box: 2, hp: 15, pw: 0, cx: 2, tags: ['Comptage de cartes', 'Agressif'], col: '#d9a521', ink: '#26318f' },
+  merlin:    { n: 'Merlin', sub: "L'Héritier des Anciens", box: 2, hp: 14, pw: 2, cx: 5, tags: ['Arbre de compétences', "Construction d'actions"], col: '#8a5a2b', ink: '#b9e27a', stops: [7] },
+  dragon:    { n: 'Le Dragon', sub: 'La Bête Ardente', box: 2, hp: 20, pw: 2, cx: 1, tags: ['Tank', 'Montée en Puissance'], col: '#cc2f24', ink: '#ffb340' },
+};
+const ORDER = ['jeanne', 'wildbunch', 'bodvar', 'shango', 'brijit', 'mephisto', 'peuple', 'mordred', 'milady', 'golem', 'wong', 'ching',
+  'morgane', 'vert', 'excalibur', 'perceval', 'merlin', 'dragon'];
+
+// Puissance temporaire du Chevalier Vert selon la case de son marqueur de PV.
+const CV_TEMP = { 1: 8, 2: 4, 3: 4, 4: 3, 5: 3, 6: 3, 7: 2, 8: 2, 9: 2, 10: 1, 11: 1, 12: 1, 13: 0, 14: 0 };
+
+// Personnages du Petit Peuple (case de départ : +1 Cube à soi ou au Partenaire).
+const PP_CHARS = [
+  { n: 'la Fée', max: 3, top: 'p' },
+  { n: 'le Lutin', max: 4, top: 'p' },
+  { n: "l'Elfe", max: 5, top: 's' },
+];
+
+// Jetons Intrigue de Milady (11).
+const INTRIGUES = [
+  { k: 'atkrev', t: 'Attaquez et dévoilez une Intrigue' },
+  { k: 'atk2', t: 'Attaquez les deux Combattants adverses' },
+  { k: 'heal6p', t: 'Votre Partenaire récupère 6 PV' },
+  { k: 'dd1all', t: 'Tous les Combattants subissent 1 Dégât Direct' },
+  { k: 'pow2', t: 'Gagnez 2 Cubes de Puissance' },
+  { k: 'pow2p', t: 'Votre Partenaire gagne 2 Cubes de Puissance' },
+  { k: 'revpow1p', t: 'Dévoilez une Intrigue, votre Partenaire gagne 1 Cube' },
+  { k: 'pow11', t: 'Vous et votre Partenaire gagnez chacun 1 Cube' },
+  { k: 'poison', t: 'Poison' }, { k: 'poison', t: 'Poison' }, { k: 'poison', t: 'Poison' },
+];
+
+// Plateau Arbre de Merlin. b = branche, c = cases suivantes, a = actions, end = extrémité.
+const TREE = {
+  C:   { c: ['T1', 'R1'], x: 50, y: 50 },
+  T1:  { c: ['H1', 'B1'], x: 50, y: 38 },
+  R1:  { c: ['A1', 'D0e', 'D1'], x: 50, y: 62 },
+  H1:  { b: 'H', c: ['H2'], a: [['heal', 's', 1]], x: 36, y: 33 },
+  H2:  { b: 'H', c: ['H2e', 'H3'], a: [['heal', 's', 1]], x: 31, y: 24 },
+  H2e: { b: 'H', end: 1, a: [['heal', 's', 2]], x: 18, y: 28 },
+  H3:  { b: 'H', c: ['H3a', 'H3b'], a: [['heal', 'p', 1]], x: 25, y: 15 },
+  H3a: { b: 'H', end: 1, a: [['heal', 'p', 2]], x: 14, y: 8 },
+  H3b: { b: 'H', end: 1, a: [['heal', 's', 1], ['heal', 'p', 1]], x: 34, y: 5 },
+  B1:  { b: 'B', c: ['B1e', 'B2'], a: [], x: 64, y: 34 },
+  B1e: { b: 'B', end: 1, a: [['block']], x: 78, y: 28 },
+  B2:  { b: 'B', c: ['B3'], a: [['block']], x: 60, y: 24 },
+  B3:  { b: 'B', c: ['B4', 'B5'], a: [['block']], x: 58, y: 15 },
+  B4:  { b: 'B', c: ['B4e'], a: [['block']], x: 62, y: 8 },
+  B4e: { b: 'B', end: 1, a: [['cancel']], x: 55, y: 2 },
+  B5:  { b: 'B', c: ['B5e'], a: [['block']], x: 72, y: 12 },
+  B5e: { b: 'B', end: 1, a: [['deflect']], x: 80, y: 4 },
+  A1:  { b: 'A', c: ['A1e', 'A2'], a: [], x: 38, y: 66 },
+  A1e: { b: 'A', end: 1, a: [['atk']], x: 24, y: 63 },
+  A2:  { b: 'A', c: ['A3', 'A4'], a: [['atk']], x: 27, y: 73 },
+  A3:  { b: 'A', c: ['A5'], a: [['atk']], x: 18, y: 82 },
+  A5:  { b: 'A', c: ['A5e'], a: [['atk']], x: 20, y: 90 },
+  A5e: { b: 'A', end: 1, a: [['patk']], x: 26, y: 98 },
+  A4:  { b: 'A', c: ['A4e'], a: [['atk']], x: 38, y: 82 },
+  A4e: { b: 'A', end: 1, a: [['atk'], ['atkq']], x: 42, y: 92 },
+  D0e: { b: 'D', end: 1, a: [['dd', 'o', 1]], x: 76, y: 66 },
+  D1:  { b: 'D', c: ['D2'], a: [['dd', 'o', 1]], x: 61, y: 72 },
+  D2:  { b: 'D', c: ['D2e', 'D3'], a: [['dd', 'o', 2]], x: 63, y: 82 },
+  D2e: { b: 'D', end: 1, a: [['dd', 'o', 3]], x: 64, y: 95 },
+  D3:  { b: 'D', c: ['D3e'], a: [['dd', 'o', 1], ['dd', 'q', 1]], x: 77, y: 86 },
+  D3e: { b: 'D', end: 1, a: [['dd', 'o', 2], ['dd', 'q', 2]], x: 82, y: 97 },
+};
+const BRANCH_NAMES = { H: 'Soin', B: 'Blocage', A: 'Attaque', D: 'Dégâts Directs' };
+
+/* ------------------------------------------------------------------ */
+/* Cartes. x = exemplaires, s = dont carte de départ, t = texte,       */
+/* tb = texte face Ours (Bödvar), lb = effet « Lorsque Brisée »,       */
+/* rt = face pivotée (Invocations), bonus = bonus immédiat.            */
+/* ------------------------------------------------------------------ */
+const C = {};
+function def(f, list) { C[f] = list.map(d => Object.assign({ f, x: 1, s: 0 }, d, { k: f + '.' + d.k })); }
+
+const voice = (c, n) => c.voice(n);
+
+def('jeanne', [
+  { k: 'dieu', n: 'Dieu Premier Servi', s: 1, t: 'Gagnez 1 Voix divine.', fx: c => voice(c, 1) },
+  { k: 'main', n: 'Main de Justice', x: 2, t: 'Attaquez. Gagnez 1 Voix divine.', fx: c => { c.attack(); voice(c, 1); } },
+  { k: 'vision', n: 'Vision Divine', x: 2, t: 'Vous et votre Partenaire récupérez chacun 2 Points de vie.', fx: c => { c.heal(c.me, 2); c.heal(c.pa, 2); } },
+  { k: 'epee', n: 'Épée de Saint Michel', x: 2, t: 'Attaquez. Attaque réussie : récupérez autant de Points de vie que vous avez de Cubes de Puissance.',
+    fx: c => c.attack({ ok: () => c.heal(c.me, c.S(c.me).pw) }) },
+  { k: 'bouclier', n: 'Bouclier Béni', x: 3, t: 'Bloquez les Attaques de vos Adversaires. Blocage réussi : gagnez 1 Voix divine.',
+    blk: () => 'block', onBlock: c => voice(c, 1) },
+]);
+
+def('bodvar', [
+  { k: 'rage', n: 'Rage', s: 1, t: 'Bödvar : gagnez 1 Rage.', tb: 'Ours : Attaquez.', fx: c => { if (c.bear) c.attack(); else c.rage(1); } },
+  { k: 'runet', n: 'Rune de Transformation', x: 2, t: 'Bloquez. Blocage réussi : gagnez 1 Rage.', blk: () => 'block', onBlock: c => { if (!c.bear) c.rage(1); } },
+  { k: 'berserk', n: 'Berserk !', x: 2, t: 'Bödvar : Attaquez.', tb: 'Ours : Attaquez les deux Combattants adverses.',
+    fx: c => { c.attack(); if (c.bear) c.attack({ target: c.oq }); } },
+  { k: 'runep', n: 'Rune de Puissance', x: 2, t: 'Bloquez. Blocage réussi : gagnez 1 Cube de Puissance.', blk: () => 'block', onBlock: c => c.gain(c.me, 1) },
+  { k: 'liens', n: 'Liens du Sang', x: 2, t: 'Bödvar : votre Partenaire récupère 2 Points de vie.', tb: 'Ours : Attaquez.',
+    fx: c => { if (c.bear) c.attack(); else c.heal(c.pa, 2); } },
+  { k: 'transe', n: 'Transe Mystique', t: 'Gagnez 2 Cubes de Puissance. Si vous êtes Attaqué, vous subissez 2 Dégâts Directs supplémentaires.',
+    fx: c => { c.gain(c.me, 2); c.T.transe[c.me] = true; } },
+]);
+
+def('shango', [
+  { k: 'flamme', n: 'Flamme', s: 1, t: 'Enflammez.', fx: c => c.ignite(c.op) },
+  { k: 'pierre', n: 'Pierre de Tonnerre', t: 'Votre Partenaire vous transfère 1 Cube de Puissance.', fx: c => c.transfer(c.pa, c.me, 1) },
+  { k: 'cauter', n: 'Cautérisation', t: 'Votre Partenaire récupère 3 Points de vie.', fx: c => c.heal(c.pa, 3) },
+  { k: 'foudre', n: 'Foudre', x: 2, t: "Attaquez avec l'effet Puissance ardente TOUS les autres Combattants.",
+    fx: c => { c.attack(); c.attack({ target: c.oq }); c.attack({ target: c.pa }); } },
+  { k: 'mur', n: 'Mur de Feu', x: 2, t: 'Bloquez. Blocage réussi : vous et votre Partenaire gagnez chacun 1 Cube de Puissance.',
+    blk: () => 'block', onBlock: c => { c.gain(c.me, 1); c.gain(c.pa, 1); } },
+  { k: 'souffle', n: 'Souffle de Feu', x: 3, t: "Attaquez avec l'effet Puissance ardente. Attaque réussie : Enflammez.",
+    fx: c => c.attack({ ok: () => c.ignite(c.op) }) },
+]);
+
+def('brijit', [
+  { k: 'rhum', n: 'Rhum Arrangé', x: 2, s: 1, t: 'Subissez 1 Dégât Direct. Attaquez.', fx: c => { c.dd(c.me, 1); c.attack(); } },
+  { k: 'envout', n: 'Envoûtement', x: 2, t: 'Bloquez. Blocage réussi : les Attaques vous ciblant ou ciblant votre Partenaire à ce Tour ciblent plutôt le Partenaire adverse.',
+    blk: () => 'envout' },
+  { k: 'union', n: 'Union des Âmes', x: 2, t: 'Votre Partenaire subit 1 Dégât Direct, gagnez 1 Cube de Puissance.', fx: c => { c.dd(c.pa, 1); c.gain(c.me, 1); } },
+  { k: 'coq', n: 'Coq Noir', x: 2, t: "Annulez l'effet de la carte adverse.", can: 1 },
+  { k: 'sacrifice', n: "Sacrifice d'Amour", t: 'Votre Partenaire subit 1 Dégât Direct, récupérez 4 Points de vie.', fx: c => { c.dd(c.pa, 1); c.heal(c.me, 4); } },
+  { k: 'jeunesse', n: 'Jeunesse Éternelle', t: "Si l'un de vos Adversaires (ou les deux) doit récupérer des Points de vie, cet effet est annulé. Maman Brijit récupère alors le même nombre total de Points de vie et gagne 2 Cubes de Puissance.",
+    fx: c => c.on('intercept', () => { const n = c.stealHeals(); if (n > 0) { c.heal(c.me, n); c.gain(c.me, 2); } }) },
+]);
+
+def('mephisto', [
+  { k: 'jumeaux', n: 'Serpents Jumeaux', x: 3, s: 1, t: 'Serpent noir visible : Attaquez. Serpent blanc visible : gagnez 1 Cube de Puissance. ENSUITE, retournez le jeton Serpent.',
+    fx: c => { if (c.serpent === 'N') c.attack(); else c.gain(c.me, 1); c.flipSerpent(); } },
+  { k: 'neant', n: 'Serpent du Néant', x: 2, t: 'Serpent blanc visible : récupérez 3 Points de vie. Serpent noir visible : récupérez 1 Point de vie. Ne retournez pas le jeton.',
+    fx: c => c.heal(c.me, c.serpent === 'B' ? 3 : 1) },
+  { k: 'abimes', n: 'Serpent des Abîmes', x: 2, t: 'Serpent noir visible : Attaquez. Serpent blanc visible : subissez 1 Dégât Direct. Ne retournez pas le jeton.',
+    fx: c => { if (c.serpent === 'N') c.attack(); else c.dd(c.me, 1); } },
+  { k: 'colere', n: 'Colère des Damnés', t: 'Si votre Adversaire joue ce Tour-ci sa carte de départ : infligez-lui 4 Dégâts Directs.',
+    fx: c => { if (c.oppStart()) c.dd(c.op, 4); } },
+  { k: 'enfer', n: 'Bienvenue en Enfer !', t: "Si votre équipe doit perdre ce Tour-ci, quelle qu'en soit la raison, vous gagnez le Combat.",
+    fx: c => { c.T.enfer[c.team] = true; } },
+  { k: 'voleur', n: "Voleur d'Âme", t: 'Bloquez. Blocage réussi : récupérez un nombre de Points de vie égal à la Puissance des Attaques bloquées.',
+    blk: () => 'block', onBlock: (c, blocked) => c.heal(c.me, blocked.reduce((s, a) => s + c.atkPower(a, a.target), 0)) },
+]);
+
+def('peuple', [
+  { k: 'legendes', n: 'Toutes les Légendes ont une Fin', s: 1, t: 'Si tous les Personnages du Petit Peuple sont des Esprits au début de ce Tour, ils sont tous KO.',
+    fx: c => { if (c.S(c.me).spirits >= 4) c.T.ppKO[c.me] = true; } },
+  { k: 'enchev', n: 'Enchevêtrement', x: 2, t: "Annulez l'effet de la carte adverse.", can: 1 },
+  { k: 'tempete', n: 'Tempête Spirituelle', x: 2, t: 'Attaquez. La Puissance de votre Attaque est augmentée de 1 par Esprit.',
+    fx: c => c.attack({ plus: c.S(c.me).spirits }) },
+  { k: 'cercle', n: 'Cercle Magique', x: 2, t: 'Votre Partenaire récupère 2 Points de vie par Esprit.', fx: c => c.heal(c.pa, 2 * c.S(c.me).spirits) },
+  { k: 'bonnet', n: 'Invocation : Bonnet-Rouge', rt: 'Vous et votre Partenaire Attaquez.', t: 'Bloquez. Blocage réussi : pivotez cette carte (jusqu’à la fin du Combat).',
+    blk: c => c.rot ? null : 'block', onBlock: c => c.rotate(), fx: c => { if (c.rot) { c.attack(); c.attack({ by: c.pa }); } } },
+  { k: 'homme', n: 'Invocation : Homme Vert', rt: 'Vous et votre Partenaire récupérez chacun 3 Points de vie.', t: 'Bloquez. Blocage réussi : pivotez cette carte (jusqu’à la fin du Combat).',
+    blk: c => c.rot ? null : 'block', onBlock: c => c.rotate(), fx: c => { if (c.rot) { c.heal(c.me, 3); c.heal(c.pa, 3); } } },
+  { k: 'leshi', n: 'Invocation : Leshi', rt: 'Vous et votre Partenaire gagnez chacun 1 Cube de Puissance.', t: 'Bloquez. Blocage réussi : pivotez cette carte (jusqu’à la fin du Combat).',
+    blk: c => c.rot ? null : 'block', onBlock: c => c.rotate(), fx: c => { if (c.rot) { c.gain(c.me, 1); c.gain(c.pa, 1); } } },
+]);
+
+def('mordred', [
+  { k: 'tenebres', n: 'Puissance des Ténèbres', s: 1, t: 'Si vous avez au moins 8 Cubes de Puissance quand vous jouez cette carte, Attaquez. Gagnez 1 Cube de Puissance.',
+    fx: c => { if (c.S(c.me).pw >= 8) c.attack(); c.gain(c.me, 1); } },
+  { k: 'riposte', n: 'Riposte Vicieuse', x: 2, t: 'Bloquez. Blocage réussi : Attaquez.', blk: () => 'block', onBlock: c => c.attack() },
+  { k: 'poignard', n: 'Poignard dans le Dos', x: 3, t: "Si aucun Adversaire n'Attaque : Attaquez.",
+    fx: c => c.on('react1', () => { if (!c.oppAttacked()) c.attack(); }) },
+  { k: 'execution', n: 'Exécution', t: "Après la résolution de la carte adverse, si le Combattant actif adverse a 4 Points de vie ou moins, infligez-lui autant de Dégâts Directs qu'il lui reste de Points de vie.",
+    fx: c => c.on('exec', () => c.execute()) },
+  { k: 'cape', n: "Cape d'Ombre", x: 3, t: 'Bloquez. Blocage réussi : récupérez 3 Points de vie.', blk: () => 'block', onBlock: c => c.heal(c.me, 3) },
+]);
+
+def('milady', [
+  { k: 'style', n: 'Toujours avec Style', s: 1, t: 'Préparez une Intrigue.', fx: c => c.prepare() },
+  { k: 'amis', n: 'Mieux vaut faire partie de mes amis…', t: 'Votre Partenaire récupère autant de Points de vie que vous avez de Cubes de Puissance.',
+    fx: c => c.heal(c.pa, c.S(c.me).pw) },
+  { k: 'regard', n: 'Le Regard qui Tue', t: 'Attaquez. Si on vous Attaque : dévoilez une Intrigue.',
+    fx: c => { c.attack(); c.on('react2', () => { if (c.wasAttacked(c.me)) c.reveal(); }); } },
+  { k: 'previsible', n: 'Tellement Prévisible…', x: 2, t: 'Bloquez. Blocage réussi : dévoilez une Intrigue.', blk: () => 'block', onBlock: c => c.reveal() },
+  { k: 'echec', n: 'Échec et Mat', x: 2, t: 'Dévoilez une Intrigue.', fx: c => c.reveal() },
+  { k: 'venger', n: 'Pour pouvoir se venger, il faut savoir souffrir', x: 2, t: 'Récupérez 2 Points de vie. ENSUITE, si vous avez 16 Points de vie : préparez une Intrigue.',
+    fx: c => { c.heal(c.me, 2); c.on('end', () => { if (c.F(c.me).hp >= 16) c.prepare(); }); } },
+  { k: 'forte', n: 'Ce qui ne vous tue pas me rend plus forte', t: 'Attaquez. Si votre Attaque est bloquée : gagnez 1 Cube de Puissance.',
+    fx: c => c.attack({ blocked: () => c.gain(c.me, 1) }) },
+]);
+
+def('golem', [
+  { k: 'protec', n: 'Protection des Innocents', x: 2, s: 1, t: 'Placez le jeton Golem sur votre Partenaire et subissez alors 3 Dégâts Directs. Si votre Partenaire a déjà le jeton Golem, Attaquez.',
+    fx: c => { if (c.T.s0.golemTok === c.pa) c.attack(); else { c.dd(c.me, 3); c.on('actEnd', () => c.placeGolem()); } } },
+  { k: 'reanim', n: 'Réanimation', t: 'Vous appliquerez deux fois les effets de la prochaine carte.', fx: c => c.reanimate() },
+  { k: 'don', n: 'Don de Soi', x: 2, t: 'Transférez 1 Cube de Puissance à votre Partenaire.', fx: c => c.transfer(c.me, c.pa, 1) },
+  { k: 'soin', n: 'Soin des Blessés', x: 2, bonus: 'golem', t: 'Votre Partenaire récupère 1 Point de vie.', bt: 'Bonus immédiat : le Golem récupère 3 Points de vie.',
+    fx: c => c.heal(c.pa, 1) },
+  { k: 'poing', n: 'Poing Massif', x: 3, t: 'Attaquez.', fx: c => c.attack() },
+]);
+
+def('wong', [
+  { k: 'chute', n: '… Plus dure sera la chute', x: 2, s: 1, t: "Placez un jeton Concentration sur votre Adversaire. S'il en a déjà un, Attaquez avec la Puissance de votre Adversaire, puis reprenez le jeton Concentration.",
+    fx: c => c.concentration() },
+  { k: 'chi', n: 'Transfert de Chi', t: 'Transférez 2 Cubes de Puissance à votre Partenaire.', fx: c => c.transfer(c.me, c.pa, 2) },
+  { k: 'equilibre', n: 'Équilibre Spirituel', x: 2, t: 'Bloquez. Blocage réussi : votre Puissance devient égale à celle de votre Partenaire.',
+    blk: () => 'block', onBlock: c => c.setPower(c.me, c.F(c.pa).pw) },
+  { k: 'pression', n: 'Point de Pression', x: 2, t: "Après avoir appliqué l'effet de la carte adverse, retirez cette dernière du jeu. ENSUITE, retirez cette carte du jeu.",
+    fx: c => c.pressure() },
+  { k: 'tigre', n: 'Poing du Tigre', x: 2, t: 'Attaquez. Attaque réussie : transférez 1 Cube de Puissance à votre Partenaire.',
+    fx: c => c.attack({ ok: () => c.transfer(c.me, c.pa, 1) }) },
+  { k: 'acu', n: 'Acupuncture', t: 'Gagnez 1 Cube de Puissance. Votre Partenaire récupère 2 Points de vie.', fx: c => { c.gain(c.me, 1); c.heal(c.pa, 2); } },
+]);
+
+def('ching', [
+  { k: 'terreur', n: 'Terreur des Mers', s: 1, t: "0-7 Navires : Attaquez. 8-15 Navires : récupérez 2 Points de vie. 20 Navires : infligez à chacun de vos deux Adversaires autant de Dégâts Directs que ses Points de vie restants moins 1 ; ils ignorent toute autre perte ou récupération de PV ; revenez à 0 Navire. ENSUITE, gagnez 1 Navire.",
+    fx: c => { const n = c.ships; if (n <= 7) c.attack(); else if (n <= 15) c.heal(c.me, 2); else if (n >= 20) c.terror(); c.addShips(1); } },
+  { k: 'encercle', n: 'Encerclement', x: 2, t: 'Attaquez. Gagnez 1 Navire.', fx: c => { c.attack(); c.addShips(1); } },
+  { k: 'defense', n: 'Défense Acharnée', t: 'Bloquez. Blocage réussi : gagnez 1 Cube de Puissance.', blk: () => 'block', onBlock: c => c.gain(c.me, 1) },
+  { k: 'revanche', n: 'Revanche de la Flotte au Drapeau Rouge', t: 'Attaquez. 8-15 Navires : votre Partenaire Attaque également.',
+    fx: c => { c.attack(); if (c.ships >= 8 && c.ships <= 15) c.attack({ by: c.pa }); } },
+  { k: 'branle', n: 'Branle-bas de Combat', t: 'Gagnez 2 Navires.', fx: c => c.addShips(2) },
+  { k: 'pillards', n: 'Bande de Pillards', t: '0-7 Navires : votre Partenaire gagne 1 Cube de Puissance.', fx: c => { if (c.ships <= 7) c.gain(c.pa, 1); } },
+  { k: 'havre', n: 'Havre Caché', x: 2, t: 'Bloquez. Blocage réussi : gagnez 3 Navires.', blk: () => 'block', onBlock: c => c.addShips(3) },
+  { k: 'canon', n: 'Remontant Canon', t: 'Récupérez 3 Points de vie. 8-15 Navires : votre Partenaire récupère également 3 Points de vie.',
+    fx: c => { c.heal(c.me, 3); if (c.ships >= 8 && c.ships <= 15) c.heal(c.pa, 3); } },
+]);
+
+def('wildbunch', [
+  { k: 'sherif', n: 'Shérif Corrompu', s: 1, t: "Si vous avez le jeton Shérif, donnez-le à votre Adversaire et Attaquez. Si l'un de vos Adversaires a déjà le jeton Shérif, cet Adversaire gagne 1 Cube de Puissance ; reprenez le jeton Shérif et gagnez 1 Cube de Puissance.",
+    fx: c => c.corruptSheriff() },
+  { k: 'pot', n: 'Pot de Vin', x: 2, t: 'Bloquez. Blocage réussi : prenez le jeton Shérif.', blk: () => 'block', onBlock: c => c.setSheriff(c.me) },
+  { k: 'causer', n: "On n'est pas là pour causer", x: 2, t: 'Attaquez le Partenaire de votre Adversaire.', fx: c => c.attack({ target: c.oq }) },
+  { k: 'planque', n: 'Planque', bonus: 'wb', t: 'Vous et votre Partenaire récupérez 1 Point de vie.', bt: 'Bonus immédiat : le Wild Bunch récupère 1 Point de vie.',
+    fx: c => { c.heal(c.me, 1); c.heal(c.pa, 1); } },
+  { k: 'cles', n: "Clés de l'Armurerie", t: 'Le Combattant qui a le jeton Shérif gagne 2 Cubes de Puissance. ENSUITE, le jeton Shérif passe à son Adversaire actif.',
+    fx: c => c.armoryKeys() },
+  { k: 'medecin', n: 'Médecin Improvisé', x: 2, bonus: 'wb', t: 'Votre Partenaire récupère 3 Points de vie.', bt: 'Bonus immédiat : le Wild Bunch récupère 1 Point de vie.',
+    fx: c => c.heal(c.pa, 3) },
+  { k: 'gatling', n: 'Gatling du Shérif', t: 'Si vous avez le jeton Shérif : Attaquez les deux Combattants adverses. Attaque réussie : subissez 1 Dégât Direct.',
+    fx: c => { if (c.T.s0.sheriff === c.me) { let hit = false; const ok = () => { if (!hit) { hit = true; c.dd(c.me, 1); } }; c.attack({ ok }); c.attack({ target: c.oq, ok }); } } },
+]);
+
+def('morgane', [
+  { k: 'yeux', n: 'Mes Yeux sont Partout', s: 1, t: 'Si votre Adversaire joue sa carte de départ : gagnez 1 Puissance.', fx: c => { if (c.oppStart()) c.gain(c.me, 1); } },
+  { k: 'diversion', n: 'Diversion Mortelle', t: "Attaquez. Attaque réussie : annulez l'effet de la carte adverse.", fx: c => c.attack(), diversion: 1 },
+  { k: 'charme', n: 'Charme de Griffe-de-Corbeau', t: 'Bloquez. Blocage réussi : votre Partenaire récupère 2 Points de vie.', blk: () => 'block', onBlock: c => c.heal(c.pa, 2) },
+  { k: 'canal', n: 'Puissance Canalisée', x: 2, t: 'Bloquez. Blocage réussi : votre Partenaire gagne 1 Puissance.', blk: () => 'block', onBlock: c => c.gain(c.pa, 1) },
+  { k: 'spirale', n: 'Spirale de Vie', x: 2, t: 'Si vos Adversaires récupèrent des Points de vie : vous et votre Partenaire récupérez chacun cette quantité totale de Points de vie à leur place.',
+    fx: c => c.on('intercept', () => { const n = c.stealHeals(); if (n > 0) { c.heal(c.me, n); c.heal(c.pa, n); } }) },
+  { k: 'enchant', n: "L'Enchanteresse", t: "Bloquez. Blocage réussi : vos Adversaires s'Attaquent mutuellement. Échec : vous subissez 3 Dégâts Directs.",
+    blk: () => 'block', onBlock: c => c.mutual(), fx: c => c.on('react2', () => { if (!c.blockOk()) c.dd(c.me, 3); }) },
+  { k: 'miroir', n: 'Miroir Magique', x: 2, t: 'Si vos Adversaires gagnent de la Puissance : vous gagnez la même quantité de Puissance et Attaquez avec votre nouvelle Puissance.',
+    fx: c => c.on('intercept', () => { const g = c.T.gained[1 - c.team]; if (g > 0) { c.gain(c.me, g); c.attack({ pow: c.S(c.me).pw + g }); } }) },
+]);
+
+def('vert', [
+  { k: 'essence', n: "L'Essence de la Forêt", s: 1, t: 'Ignorez toute perte de Points de vie vous concernant ce Tour-ci. Descendez le Masque de Bois d’une case. ENSUITE, déplacez votre marqueur de PV sur votre nouveau maximum de PV.',
+    fx: c => { c.T.essence[c.me] = true; c.on('end', () => c.essence()); } },
+  { k: 'hache', n: 'La Hache de Bertilak', x: 2, t: 'Vous subissez 2 Dégâts Directs, plus toute autre perte de PV de ce Tour. Attaquez avec votre marqueur de PV sur sa nouvelle case.',
+    fx: c => { c.dd(c.me, 2); c.attack({ cv: 1 }); } },
+  { k: 'cpc', n: 'Coup pour Coup', x: 2, t: 'Si votre Adversaire a Attaqué : subissez la perte de PV et Attaquez avec votre marqueur de PV sur sa nouvelle case.',
+    fx: c => c.on('react2', () => { if (c.oppAttacked(true)) c.attack({ cv: 1 }); }) },
+  { k: 'chapelle', n: 'La Chapelle Verte', x: 2, t: "Si aucun de vos Adversaires n'Attaque : votre Partenaire récupère 4 Points de vie.",
+    fx: c => c.on('react1', () => { if (!c.oppAttacked()) c.heal(c.pa, 4); }) },
+  { k: 'colere', n: 'La Colère de la Forêt', t: "Attaquez. Attaque réussie : descendez le Masque de Bois d'une case.",
+    fx: c => c.attack({ ok: () => c.on('end', () => c.maskDown()) }) },
+  { k: 'masque', n: 'La Puissance du Masque', x: 2, t: "Descendez le Masque de Bois d'une case. Vous et votre Partenaire gagnez chacun 1 Puissance.",
+    fx: c => { c.on('end', () => c.maskDown()); c.gain(c.me, 1); c.gain(c.pa, 1); } },
+]);
+
+def('excalibur', [
+  { k: 'destin', n: "L'Épée du Destin", s: 1, t: 'Transférez 1 Puissance à votre Partenaire. Si vous ne pouvez pas : gagnez 1 Puissance.', lb: 'Votre Partenaire subit aussi 3 Dégâts Directs.',
+    fx: c => { if (c.F(c.me).pw >= 1) c.transfer(c.me, c.pa, 1); else c.gain(c.me, 1); if (c.broken) c.dd(c.pa, 3); } },
+  { k: 'aura', n: 'Aura Instable', x: 2, t: 'Votre Partenaire récupère 3 Points de vie.', lb: 'Vous déviez aussi toute Attaque vers votre Partenaire.',
+    blk: c => c.broken ? 'deflectP' : null, fx: c => c.heal(c.pa, 3) },
+  { k: 'brise', n: '« Ce qui n’aurait pas dû être brisé… »', t: 'Récupérez 1 Point de vie.', lb: 'Tous les autres Combattants subissent 2 Dégâts Directs.',
+    fx: c => { c.heal(c.me, 1); if (c.broken) { c.dd(c.pa, 2); c.dd(c.op, 2); c.dd(c.oq, 2); } } },
+  { k: 'libre', n: 'Enfin Libre !', t: 'Votre Partenaire subit 2 Dégâts Directs.', lb: 'Votre Partenaire effectue aussi une Attaque imblocable.',
+    fx: c => { c.dd(c.pa, 2); if (c.broken) c.attack({ by: c.pa, unblock: 1 }); } },
+  { k: 'courroux', n: 'Le Courroux de Pendragon', x: 2, t: 'Votre Partenaire Attaque.', lb: 'Votre Partenaire subit aussi 2 Dégâts Directs.',
+    fx: c => { c.attack({ by: c.pa }); if (c.broken) c.dd(c.pa, 2); } },
+  { k: 'acier', n: 'Acier contre Acier', x: 2, t: 'Bloquez. Blocage réussi : gagnez 1 Puissance.', lb: 'Votre Partenaire subit aussi 2 Dégâts Directs.',
+    blk: () => 'block', onBlock: c => c.gain(c.me, 1), fx: c => { if (c.broken) c.dd(c.pa, 2); } },
+  { k: 'fourreau', n: 'Le Fourreau Mystique', t: 'Déviez les Attaques de vos Adversaires.', lb: 'Votre Partenaire subit aussi 2 Dégâts Directs.',
+    blk: () => 'deflect', fx: c => { if (c.broken) c.dd(c.pa, 2); } },
+]);
+
+def('perceval', [
+  { k: 'errant', n: 'Le Chevalier Errant', s: 1, t: 'Attaquez et bloquez les Attaques de vos Adversaires.', blk: () => 'block', fx: c => c.attack() },
+  { k: 'graal', n: 'La Quête du Graal', t: 'Compte comme 2 cartes Perceval.', fx: () => {} },
+  { k: 'vision', n: 'Vision du Saint Graal', t: 'Tous les Combattants gagnent 1 Puissance.', fx: c => { c.gain(c.me, 1); c.gain(c.pa, 1); c.gain(c.op, 1); c.gain(c.oq, 1); } },
+  { k: 'acte', n: 'Acte Chevaleresque', x: 2, t: 'Bloquez. Blocage réussi : vous et votre Partenaire récupérez chacun autant de PV que le nombre de cartes Perceval jouées jusqu’à présent ce Round-ci.',
+    blk: () => 'block', onBlock: c => { const n = c.questCount(); c.heal(c.me, n); c.heal(c.pa, n); } },
+  { k: 'commence', n: 'La Quête Commence', x: 2, t: "Si c'est la première carte Perceval jouée ce Round, Attaquez. Sinon, récupérez 2 Points de vie.",
+    fx: c => { if (c.firstQuest()) c.attack(); else c.heal(c.me, 2); } },
+  { k: 'lance', n: 'La Lance Sanglante', t: 'Attaquez.', fx: c => c.attack() },
+  { k: 'grace', n: 'Coup de Grâce', x: 2, t: 'Si les 2 cartes précédentes étaient des cartes de votre Partenaire : Attaquez le Combattant adverse ayant le moins de Points de vie.',
+    fx: c => { if (c.prevTwoPartner()) c.attack({ target: c.weakestOpp() }); } },
+]);
+
+def('merlin', [
+  { k: 'ordre', n: "L'Ordre et le Chaos", s: 1, t: 'Activez les Arbres. ENSUITE, gagnez 1 Savoir Ancien.', tree: () => true,
+    fx: c => { c.trees(); c.knowledge(); } },
+  { k: 'langue', n: 'La Langue Oubliée', x: 2, t: 'Perdez 1 Puissance. Réussite : activez les Arbres.', tree: c => c.S(c.me).pw >= 1,
+    fx: c => { if (c.lose(c.me, 1)) c.trees(); } },
+  { k: 'rituel', n: 'Rituel Obscur', x: 2, t: 'Subissez 1 Dégât Direct. Gagnez 1 Puissance.', fx: c => { c.dd(c.me, 1); c.gain(c.me, 1); } },
+  { k: 'cercle', n: 'Le Cercle de Pierres', x: 2, t: 'Votre Partenaire perd 1 Puissance. Réussite : activez les Arbres.', tree: c => c.S(c.pa).pw >= 1,
+    fx: c => { if (c.lose(c.pa, 1)) c.trees(); } },
+  { k: 'disciple', n: 'Disciple des Savoirs Anciens', x: 3, t: 'Perdez 1 Puissance. Réussite : gagnez 1 Savoir Ancien.',
+    fx: c => { if (c.lose(c.me, 1)) c.knowledge(); } },
+]);
+
+def('dragon', [
+  { k: 'armure', n: "Armure d'Écailles", s: 1, t: 'Gagnez 1 Écaille.', fx: c => c.addScales(1) },
+  { k: 'queue', n: 'Coup de Queue', x: 2, t: 'Attaquez. Attaque réussie : gagnez 1 Écaille.', fx: c => c.attack({ ok: () => c.addScales(1) }) },
+  { k: 'ame', n: "L'Âme du Dragon", x: 2, t: "Aucune Écaille : vous gagnez 1 Puissance. De 1 à 5 Écailles : votre Partenaire gagne 1 Puissance.",
+    fx: c => { if (c.S(c.me).scales === 0) c.gain(c.me, 1); else c.gain(c.pa, 1); } },
+  { k: 'montagne', n: 'Au Cœur de la Montagne', x: 2, t: 'Bloquez. Blocage réussi : gagnez 1 Écaille.', blk: () => 'block', onBlock: c => c.addScales(1) },
+  { k: 'souffle', n: 'Le Souffle du Dragon', x: 2, t: 'Attaquez. La Puissance de votre Attaque est augmentée de 1 par Écaille. ENSUITE, défaussez toutes les Écailles.',
+    fx: c => { c.attack({ plus: c.S(c.me).scales }); c.on('end', () => c.discardScales()); } },
+  { k: 'aile', n: 'Sous Mon Aile', t: "Votre Partenaire récupère un nombre de PV égal au nombre d'Écailles que vous aviez au début du Tour.",
+    fx: c => c.heal(c.pa, c.S(c.me).scales) },
+]);
+
+// Résumés des règles propres à chaque combattant (d'après le Guide des combattants).
+const GUIDE = {
+  jeanne: ['Piste de Voix divine : chaque Voix divine avance le marqueur d’une case dans le sens horaire (le premier pas quitte l’Auréole centrale).', 'Case en haut à droite : Jeanne gagne 1 Cube. Case en bas à gauche : son Partenaire gagne 1 Cube.'],
+  wildbunch: ['Toutes les cases de PV sont des cases Stop : le marqueur ne bouge que d’une case par Tour, vers le bas si les pertes l’emportent, vers le haut si les soins l’emportent.', 'Le jeton Shérif commence près du Wild Bunch ; son Partenaire commence avec 1 Cube de plus.'],
+  bodvar: ['Chaque Rage avance le marqueur de Rage. Au 7e cran : +3 Cubes et Bödvar devient l’Ours Berserk.', 'Ce Tour-là, il ignore toute perte et tout gain de PV. L’Ours commence avec autant de PV que sa Puissance (15 maximum).', 'Case 6 de PV : +1 Cube.'],
+  shango: ['Enflammer : 1 Flamme sur l’Adversaire. S’il n’en avait aucune, celles de son Partenaire retournent dans la réserve. Ce n’est pas une Attaque.', 'Un Combattant avec 5 Flammes est incinéré : son équipe perd, même si l’autre équipe est KO le même Tour.', 'Puissance ardente : ses Attaques infligent 1 PV de plus par Flamme sur la cible.'],
+  brijit: ['Deux cases KO, puis une case +1 Cube : si son marqueur va au-delà des deux cases KO, elle revient à la vie, gagne 1 Cube et retourne sur la case 4 à la fin du Tour.', 'Arrivée tout en bas, elle ignore les pertes supplémentaires.'],
+  mephisto: ['Le jeton Serpent est tiré au hasard au début. Ses cartes dépendent de la face visible quand il les joue.', 'Case 8 de PV : retournez le Serpent (sans appliquer d’effet).'],
+  peuple: ['Trois Personnages, chacun avec sa piste de PV. Seul le Personnage en jeu perd ou récupère des PV.', 'Quand il tombe à 0, il devient un Esprit ; en fin de Tour, choisissez le suivant (il arrive en haut de sa piste et applique son effet).', 'Ils commencent avec 1 Esprit. Ils ne sont KO que si tous sont des Esprits quand « Toutes les Légendes ont une Fin » est révélée.'],
+  mordred: ['Pas de matériel spécial. Ses Blocages et ses Attaques conditionnelles le rendent redoutable en fin de Combat.'],
+  milady: ['Préparer une Intrigue : un jeton face cachée passe de la pile au-dessus de son plateau. Dévoiler : un jeton préparé au hasard est appliqué puis retiré du jeu.', 'Cases 12, 8 et 2 : dévoilez une Intrigue après les Actions des cartes. Le Poison (moitié des PV de l’Adversaire, arrondie en dessous) se résout toujours en dernier et ne met jamais KO.'],
+  golem: ['Le jeton Golem placé sur son Partenaire annule toutes les pertes de PV dues à des Attaques non bloquées (pas les Dégâts Directs), puis revient au Golem.', 'Réanimation : la carte suivante s’active deux fois.', 'Cases 20, 15 et 10 : +1 Cube.'],
+  wong: ['Deux jetons Concentration. « … Plus dure sera la chute » utilise la Puissance de l’Adversaire (ses Cubes seulement).', 'Point de Pression retire du jeu la carte adverse et elle-même.'],
+  ching: ['Piste de Navigation de 0 à 20 Navires (maximum 20). Plusieurs cartes changent selon le nombre de Navires.', 'À 20 Navires, Terreur des Mers ramène les deux Adversaires à 1 PV.'],
+  morgane: ['L’Œil du Corbeau : pendant la Construction, le joueur de Morgane voit quelle carte son adversaire ajoute (pas sa position) avant de choisir la sienne.'],
+  vert: ['Le Masque de Bois marque son maximum de PV ; il descend au fil du Combat.', 'Ses Attaques gagnent la Puissance temporaire indiquée à côté de sa case de PV (jusqu’à +8 à 1 PV). Case 1 : Stop.', 'L’Essence de la Forêt n’est pas une récupération.'],
+  excalibur: ['Quand son marqueur atteint la case Brisée, Excalibur ne perd pas : elle devient la Lame Brisée.', 'La Lame Brisée ne gagne ni ne perd plus de PV, et ses cartes appliquent en plus leur effet « Lorsque Brisée ».'],
+  perceval: ['La Quête du Chevalier : ses Attaques ont pour Puissance ses Cubes plus le nombre de cartes Perceval jouées ce Round (celle-ci comprise).'],
+  merlin: ['Plateau Arbre à 4 Branches (Soin, Blocage, Attaque, Dégâts Directs). Activer les Arbres : appliquez les Actions des cases occupées.', 'Gagner un Savoir Ancien : avancez le marqueur d’une case. À l’extrémité d’une Branche, il s’arrête : un nouveau marqueur part du centre et Merlin gagne 1 Cube. Une seule Branche par marqueur. Case 7 de PV : Stop.'],
+  dragon: ['Jusqu’à 5 Écailles. Chaque Écaille présente au début du Tour absorbe 1 point de perte due aux Attaques, puis est défaussée. Elles n’arrêtent pas les Dégâts Directs.'],
+};
+
+const API = { FIGHTERS, ORDER, CARDS: C, CV_TEMP, PP_CHARS, INTRIGUES, TREE, BRANCH_NAMES, GUIDE };
+root.TTData = API;
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Tag Team — moteur de règles (déterministe : même état + mêmes décisions = même résultat). */
+(function (root) {
+'use strict';
+const D = root.TTData || (typeof require !== 'undefined' ? require('./data.js') : null);
+const { FIGHTERS, CARDS, CV_TEMP, PP_CHARS, INTRIGUES, TREE, ORDER } = D;
+const DEF = {};
+Object.keys(CARDS).forEach(f => CARDS[f].forEach(d => { DEF[d.k] = d; }));
+
+const clone = o => JSON.parse(JSON.stringify(o));
+const partnerOf = i => (i ^ 1);
+const teamOf = i => (i >> 1);
+
+/* ---------------- hasard (mulberry32, état dans la partie) ---------------- */
+function rnd(st) {
+  let t = (st.rng = (st.rng + 0x6D2B79F5) >>> 0);
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const rint = (st, n) => Math.floor(rnd(st) * n);
+function shuffle(st, a) { for (let i = a.length - 1; i > 0; i--) { const j = rint(st, i + 1); const x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+
+/* ---------------- noms ---------------- */
+function fname(st, i) {
+  const F = st.f[i]; if (!F) return '?';
+  if (F.key === 'bodvar' && F.bear) return "l'Ours Berserk";
+  if (F.key === 'excalibur' && F.broken) return 'la Lame Brisée';
+  if (F.key === 'peuple' && F.cur != null) return 'le Petit Peuple (' + PP_CHARS[F.cur].n + ')';
+  return FIGHTERS[F.key].n;
+}
+function curHP(st, i) { const F = st.f[i]; if (F.key === 'peuple') return F.cur == null ? 0 : F.chars[F.cur].hp; return F.hp; }
+function maxHP(st, i) { const F = st.f[i]; if (F.key === 'peuple') return F.cur == null ? 0 : F.chars[F.cur].max; if (F.key === 'vert') return F.mask - 1; return F.max; }
+function isKO(F) {
+  if (F.key === 'brijit') return F.hp === 0 || F.hp === -1;
+  if (F.key === 'excalibur' || F.key === 'peuple') return false;
+  return F.hp <= 0;
+}
+
+/* ================================================================== */
+/*  Création de partie et sélection des combattants                    */
+/* ================================================================== */
+function newGame(o) {
+  o = o || {};
+  const st = {
+    v: 1, rng: (o.seed >>> 0) || 1, opts: { mode: o.mode || 'draft', pool: o.pool || 'all', memo: o.memo === 'on' ? 'on' : 'off' },
+    phase: 'select', round: 0, ti: 0, turn: 0,
+    p: [0, 1].map(t => ({ team: t, name: (o.names && o.names[t]) || ('Joueur ' + (t + 1)), picks: [], fight: [], build: [], drawn: [], choice: null, played: [], reanim: false, setup: null, seen: null })),
+    f: [], cards: {}, nid: 1, sheriff: null, golemTok: null, act: [null, null],
+    log: [], need: null, turnDec: null, winner: null, endReason: '', last: null, seq: 0,
+  };
+  let pool = ORDER.filter(k => st.opts.pool === 'all' || FIGHTERS[k].box === 1);
+  if (pool.length > 12 && st.opts.mode === 'draft') pool = shuffle(st, pool.slice()).slice(0, 12);
+  if (st.opts.mode === 'draft') {
+    const p = shuffle(st, pool.slice());
+    st.sel = { mode: 'draft', step: 1, hands: [p.slice(0, 6), p.slice(6, 12)], chosen: [null, null], pool: p.slice() };
+  } else {
+    const first = o.first != null ? o.first : rint(st, 2);
+    st.sel = { mode: 'free', avail: pool.slice().sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b)), order: [first, 1 - first, 1 - first, first], idx: 0, pool: pool.slice() };
+  }
+  log(st, 'Sélection des combattants.');
+  return st;
+}
+
+function log(st, txt, x) { const e = { r: st.round, n: st.turn, t: txt }; if (x) Object.assign(e, x); st.log.push(e); if (st.log.length > 400) st.log.splice(0, st.log.length - 400); }
+
+function pickFighter(st, team, key) {
+  const s = st.sel;
+  if (s.mode === 'draft') {
+    if (s.chosen[team] != null || !s.hands[team].includes(key)) return 'Choix impossible.';
+    s.chosen[team] = key;
+    if (s.chosen[0] != null && s.chosen[1] != null) {
+      for (const t of [0, 1]) { st.p[t].picks.push(s.chosen[t]); s.hands[t] = s.hands[t].filter(k => k !== s.chosen[t]); log(st, st.p[t].name + ' choisit ' + FIGHTERS[s.chosen[t]].n + '.'); }
+      s.chosen = [null, null];
+      if (s.step === 1) { s.step = 2; const h = s.hands; s.hands = [h[1], h[0]]; }
+      else finishSelection(st);
+    }
+  } else {
+    if (s.order[s.idx] !== team || !s.avail.includes(key)) return 'Choix impossible.';
+    st.p[team].picks.push(key); s.avail = s.avail.filter(k => k !== key); s.idx++;
+    log(st, st.p[team].name + ' choisit ' + FIGHTERS[key].n + '.');
+    if (s.idx >= 4) finishSelection(st);
+  }
+  return null;
+}
+
+function finishSelection(st) {
+  st.f = [];
+  for (const t of [0, 1]) st.p[t].picks.forEach((key, s) => {
+    const fd = FIGHTERS[key];
+    const F = { i: t * 2 + s, key, team: t, slot: s, hp: fd.hp, max: fd.hp, pw: fd.pw, flames: 0, conc: 0 };
+    if (key === 'jeanne') F.voice = 0;
+    if (key === 'bodvar') { F.rage = 0; F.bear = false; }
+    if (key === 'mephisto') F.serpent = rint(st, 2) ? 'N' : 'B';
+    if (key === 'peuple') { F.chars = PP_CHARS.map(c => ({ hp: 0, max: c.max, spirit: false })); F.cur = null; F.spirits = 1; F.hp = 0; }
+    if (key === 'milady') { F.pile = shuffle(st, INTRIGUES.map(x => x.k)); F.prepared = []; F.revealed = []; }
+    if (key === 'ching') F.ships = 0;
+    if (key === 'vert') { F.mask = 15; F.max = 14; }
+    if (key === 'excalibur') F.broken = false;
+    if (key === 'merlin') F.tree = { m: [{ node: 'C', path: ['C'], done: false }], reserve: 3 };
+    if (key === 'dragon') F.scales = 0;
+    st.f.push(F);
+  });
+  st.f.forEach(F => { if (F.key === 'wildbunch') { st.sheriff = F.i; st.f[partnerOf(F.i)].pw += 1; } });
+  for (const t of [0, 1]) {
+    const P = st.p[t]; const starts = []; const rest = [];
+    [t * 2, t * 2 + 1].forEach(fi => {
+      CARDS[st.f[fi].key].forEach(d => {
+        for (let n = 0; n < d.x; n++) {
+          const id = st.nid++;
+          st.cards[id] = { id, k: d.k, f: fi, start: n < d.s, rot: false, out: false };
+          (n < d.s ? starts : rest).push(id);
+        }
+      });
+    });
+    P.starts = starts; P.build = shuffle(st, rest); P.fight = [];
+  }
+  st.phase = 'setup';
+  log(st, 'Mise en place : chaque joueur ordonne ses deux cartes de départ.');
+}
+
+function setupDone(st, team, d) {
+  const P = st.p[team];
+  if (P.setup) return 'Déjà fait.';
+  const order = d && d.order;
+  if (!Array.isArray(order) || order.length !== 2 || !order.every(id => P.starts.includes(id)) || order[0] === order[1]) return 'Ordre invalide.';
+  const pp = st.f.find(F => F.team === team && F.key === 'peuple');
+  if (pp && !(d.pp >= 0 && d.pp <= 2)) return 'Choisissez un Personnage du Petit Peuple.';
+  P.setup = { order: order.slice(), pp: pp ? d.pp : null };
+  if (st.p[0].setup && st.p[1].setup) {
+    for (const t of [0, 1]) {
+      const Q = st.p[t]; Q.fight = Q.setup.order.slice();
+      if (Q.setup.pp != null) { const F = st.f.find(G => G.team === t && G.key === 'peuple'); choosePP(st, F.i, Q.setup.pp, null); }
+    }
+    st.round = 1; st.ti = 0; st.phase = 'fight';
+    st.act = [st.cards[st.p[0].fight[0]].f, st.cards[st.p[1].fight[0]].f];
+    log(st, 'Round 1 — Combat !');
+  }
+  return null;
+}
+
+function choosePP(st, fi, idx, ev) {
+  const F = st.f[fi]; const ch = F.chars[idx];
+  F.cur = idx; ch.hp = ch.max; F.hp = ch.hp;
+  const top = PP_CHARS[idx].top; const tgt = top === 's' ? fi : partnerOf(fi);
+  st.f[tgt].pw += 1;
+  const txt = 'Le Petit Peuple fait entrer ' + PP_CHARS[idx].n + ' (' + ch.max + ' PV) : ' + fname(st, tgt) + ' gagne 1 Cube.';
+  log(st, txt); if (ev) ev.push({ t: 'note', f: fi, txt });
+}
+
+/* ================================================================== */
+/*  Résolution d'un Tour                                               */
+/* ================================================================== */
+class Side {
+  constructor(T, team, card) {
+    this.T = T; this.st = T.st; this.team = team; this.card = card; this.def = card ? DEF[card.k] : {};
+    this.cancelled = false; this.block = null; this.blockOk_ = false; this.bonusDone = false; this.blocked = []; this.double = false;
+  }
+  setPlayers(me) { this.me = me; this.pa = partnerOf(me); const o = this.st.act[1 - this.team]; this.op = o != null ? o : (1 - this.team) * 2; this.oq = partnerOf(this.op); }
+  begin() {
+    this.blockOk_ = false; this.bonusDone = false; this.blocked = [];
+    const F = this.st.f[this.me];
+    this.rot = !!(this.card && this.card.rot); this.bear = !!F.bear; this.broken = !!F.broken; this.serpent = F.serpent; this.ships = F.ships;
+  }
+  F(i) { return this.st.f[i]; }
+  S(i) { return this.T.s0.f[i]; }
+  computeBlock() {
+    if (this.cancelled || !this.card) return null;
+    const d = this.def;
+    if (d.tree) { if (!d.tree(this)) return null; const nodes = this.treeNodes(); if (nodes.some(a => a[0] === 'deflect')) return 'deflect'; if (nodes.some(a => a[0] === 'block')) return 'block'; return null; }
+    return d.blk ? d.blk(this) : null;
+  }
+  treeNodes() { const out = []; const F = this.F(this.me); if (!F.tree) return out; F.tree.m.forEach(m => (TREE[m.node].a || []).forEach(a => out.push(a))); return out; }
+  willCancel() { const d = this.def; if (!this.card) return false; if (d.can) return true; if (d.tree && d.tree(this) && this.treeNodes().some(a => a[0] === 'cancel')) return true; return false; }
+
+  /* ---- actions de base ---- */
+  attack(o) {
+    o = o || {}; const T = this.T;
+    const A = { id: ++T.aid, team: o.team != null ? o.team : this.team, by: o.by != null ? o.by : this.me, target: o.target != null ? o.target : this.op,
+      act: T.act, stage: T.stage, plus: o.plus || 0, pow: o.pow, unblock: !!o.unblock, noBlock: !!o.noBlock, cv: !!o.cv, ok: o.ok, onBlk: o.blocked,
+      chk: false, done: false, blocked: false, redir: null, snap: T.s0 };
+    T.atk.push(A);
+    return A;
+  }
+  dd(t, n) { if (t == null || !(n > 0)) return; this.T.dd.push({ t, n, act: this.T.act }); }
+  heal(t, n, regen) { if (t == null || !(n > 0)) return; this.T.heals.push({ t, n, act: this.T.act, regen: !!regen }); }
+  gain(t, n) { this.T.gain(t, n); }
+  lose(t, n) { const F = this.F(t); if (F.pw >= n) { F.pw -= n; this.T.ev.push({ t: 'pow', f: t, d: -n }); return true; } return false; }
+  transfer(a, b, n) { const m = Math.min(n, this.F(a).pw); if (m <= 0) return 0; this.F(a).pw -= m; this.F(b).pw += m; this.T.ev.push({ t: 'pow', f: a, d: -m }, { t: 'pow', f: b, d: m }); return m; }
+  setPower(t, v) { const F = this.F(t); const d = v - F.pw; if (!d) return; F.pw = v; if (d > 0) this.T.gained[F.team] += d; this.T.ev.push({ t: 'pow', f: t, d }); }
+  on(stage, fn) { (this.T.q[stage] = this.T.q[stage] || []).push(fn); }
+  note(txt, f) { this.T.note(txt, f != null ? f : this.me); }
+
+  /* ---- tests ---- */
+  oppAttacked(any) { const T = this.T; return T.atk.some(A => A.act === T.act && A.team !== this.team && (any || A.stage === 2)); }
+  wasAttacked(f) { const T = this.T; return T.atk.some(A => A.act === T.act && A.team !== this.team && (A.redir != null ? A.redir : A.target) === f && !(A.blocked && A.redir == null)); }
+  blockOk() { return this.blockOk_; }
+  oppStart() { const o = this.T.sides[1 - this.team]; return !!(o && o.card && o.card.start); }
+  atkPower(A, t) { return this.T.atkPower(A, t); }
+
+  /* ---- mécaniques propres aux combattants ---- */
+  voice(n) {
+    const F = this.F(this.me);
+    for (let k = 0; k < n; k++) {
+      F.voice = (F.voice % 4) + 1;
+      if (F.voice === 2) { this.note('Voix divine : Jeanne gagne 1 Cube.'); this.gain(this.me, 1); }
+      if (F.voice === 4) { this.note('Voix divine : ' + fname(this.st, this.pa) + ' gagne 1 Cube.'); this.gain(this.pa, 1); }
+    }
+  }
+  rage(n) {
+    const F = this.F(this.me); if (F.bear) return;
+    F.rage = Math.min(7, F.rage + n);
+    if (F.rage >= 7) {
+      this.gain(this.me, 3); F.bear = true; F.max = 15; F.hp = Math.min(15, F.pw);
+      this.T.transform[this.me] = true;
+      this.note('Bödvar se transforme en Ours Berserk ! (' + F.hp + ' PV)');
+    }
+  }
+  ignite(t) {
+    if (t == null) return; const st = this.st; const F = st.f[t];
+    const tot = () => st.f.reduce((s, G) => s + G.flames, 0);
+    if (F.flames > 0) { if (tot() < 5) F.flames++; }
+    else {
+      const P = st.f[partnerOf(t)]; if (P.flames) this.note('Les Flammes de ' + fname(st, P.i) + ' retournent à Shango.', P.i);
+      P.flames = 0; if (tot() < 5) F.flames = 1;
+    }
+    this.note(fname(st, t) + ' est enflammé (' + F.flames + ' Flamme' + (F.flames > 1 ? 's' : '') + ').', t);
+  }
+  flipSerpent() { const F = this.F(this.me); F.serpent = F.serpent === 'N' ? 'B' : 'N'; this.note('Le Serpent se retourne : ' + (F.serpent === 'N' ? 'noir' : 'blanc') + '.'); }
+  rotate() { if (this.card && !this.card.rot) { this.card.rot = true; this.note(DEF[this.card.k].n + ' est pivotée.'); } }
+  stealHeals() {
+    let n = 0; const T = this.T;
+    T.heals.forEach(h => { if (h.act === T.act && !h.regen && h.n > 0 && teamOf(h.t) !== this.team) { n += h.n; h.n = 0; } });
+    if (n > 0) this.note('Les soins adverses (' + n + ' PV) sont détournés.');
+    return n;
+  }
+  prepare() {
+    const F = this.F(this.me); if (!F.pile || !F.pile.length) return;
+    F.prepared.push(F.pile.shift()); this.note('Milady prépare une Intrigue (' + F.prepared.length + ' prête' + (F.prepared.length > 1 ? 's' : '') + ').');
+  }
+  reveal() {
+    const st = this.st, F = this.F(this.me);
+    if (!F.prepared || !F.prepared.length) { this.note('Aucune Intrigue préparée.'); return; }
+    const k = F.prepared.splice(rint(st, F.prepared.length), 1)[0]; F.revealed.push(k);
+    const it = INTRIGUES.find(x => x.k === k);
+    this.T.ev.push({ t: 'intrigue', f: this.me, k });
+    this.note('Intrigue dévoilée : ' + it.t + '.');
+    switch (k) {
+      case 'atkrev': this.attack(); this.reveal(); break;
+      case 'atk2': this.attack(); this.attack({ target: this.oq }); break;
+      case 'heal6p': this.heal(this.pa, 6); break;
+      case 'dd1all': [0, 1, 2, 3].forEach(i => this.dd(i, 1)); break;
+      case 'pow2': this.gain(this.me, 2); break;
+      case 'pow2p': this.gain(this.pa, 2); break;
+      case 'revpow1p': this.reveal(); this.gain(this.pa, 1); break;
+      case 'pow11': this.gain(this.me, 1); this.gain(this.pa, 1); break;
+      case 'poison': this.T.poisons.push({ target: this.op, by: this.me }); break;
+    }
+  }
+  execute() {
+    const T = this.T, st = this.st, t = this.op;
+    const F = st.f[t]; if (T.frozen[t] || (F.key === 'excalibur' && F.broken) || (F.key === 'peuple' && F.cur == null)) return;
+    const hp = curHP(st, t);
+    if (hp > 0 && hp <= 4) { this.note('Exécution : ' + fname(st, t) + ' subit ' + hp + ' Dégâts Directs.', t); T.move(t, -hp); T.icons(); T.post(); }
+  }
+  placeGolem() { this.st.golemTok = this.pa; this.note('Le jeton Golem protège ' + fname(this.st, this.pa) + '.', this.pa); }
+  reanimate() { this.st.p[this.team].reanim = true; this.note('Réanimation : la prochaine carte sera appliquée deux fois.'); }
+  concentration() {
+    const st = this.st, op = this.op;
+    if (this.S(op).conc > 0) {
+      this.attack({ pow: this.S(op).pw });
+      this.on('actEnd', () => { st.f[op].conc = 0; });
+      this.note('Wong retourne la force de ' + fname(st, op) + ' contre lui (' + this.S(op).pw + ').');
+    } else {
+      const used = st.f.reduce((s, G) => s + G.conc, 0);
+      if (used < 2) { st.f[op].conc = 1; this.note('Jeton Concentration posé sur ' + fname(st, op) + '.', op); }
+    }
+  }
+  pressure() {
+    if (this.T.act !== 1) return;
+    const o = this.T.sides[1 - this.team];
+    this.T.press.push({ own: this.card.id, opp: o && o.card ? o.card.id : null });
+  }
+  terror() { this.T.ching20 = [this.op, this.oq]; this.F(this.me).ships = 0; this.note('Terreur des Mers : la flotte écrase les deux Adversaires !'); }
+  addShips(n) { const F = this.F(this.me); const b = F.ships; F.ships = Math.min(20, F.ships + n); if (F.ships !== b) this.note('Ching Shih : ' + F.ships + ' Navire' + (F.ships > 1 ? 's' : '') + '.'); }
+  corruptSheriff() {
+    const st = this.st, s0 = this.T.s0.sheriff;
+    if (s0 === this.me) { st.sheriff = this.op; this.note('Le Shérif passe à ' + fname(st, this.op) + '.'); this.attack(); }
+    else if (s0 === this.op || s0 === this.oq) { this.gain(s0, 1); st.sheriff = this.me; this.gain(this.me, 1); this.note('Le Wild Bunch reprend le Shérif.'); }
+  }
+  setSheriff(f) { if (this.st.sheriff !== f) { this.st.sheriff = f; this.note('Le Wild Bunch prend le jeton Shérif.'); } }
+  armoryKeys() {
+    const st = this.st, h = st.sheriff; if (h == null) return;
+    this.gain(h, 2);
+    st.sheriff = teamOf(h) === this.team ? this.op : this.me;
+    this.note('Le Shérif passe à ' + fname(st, st.sheriff) + '.');
+  }
+  mutual() {
+    this.note('Envoûtés, ' + fname(this.st, this.op) + ' et ' + fname(this.st, this.oq) + ' s’attaquent mutuellement !');
+    this.attack({ by: this.op, target: this.oq, team: 1 - this.team, noBlock: 1 });
+    this.attack({ by: this.oq, target: this.op, team: 1 - this.team, noBlock: 1 });
+  }
+  essence() { const F = this.F(this.me); F.mask = Math.max(1, F.mask - 1); const b = F.hp; F.hp = Math.max(0, F.mask - 1); this.note('Le Masque descend ; le Chevalier Vert se régénère (' + F.hp + ' PV).'); this.T.ev.push({ t: 'hp', f: this.me, from: b, to: F.hp }); }
+  maskDown() { const F = this.F(this.me); F.mask = Math.max(1, F.mask - 1); if (F.hp >= F.mask) { const b = F.hp; F.hp = F.mask - 1; this.T.ev.push({ t: 'hp', f: this.me, from: b, to: F.hp }); } this.note('Le Masque de Bois descend (maximum ' + (F.mask - 1) + ' PV).'); }
+  questCount() { return this.T.questFor(this.me); }
+  firstQuest() {
+    const P = this.st.p[this.team]; const idx = P.played.indexOf(this.rec);
+    return !P.played.slice(0, idx).some(r => r.owner === this.me && !this.st.cards[r.id].out);
+  }
+  prevTwoPartner() {
+    const P = this.st.p[this.team]; const idx = P.played.indexOf(this.rec);
+    if (idx < 2) return false;
+    return P.played[idx - 1].owner === this.pa && P.played[idx - 2].owner === this.pa;
+  }
+  weakestOpp() { const a = this.S(this.op), b = this.S(this.oq); return b.hp < a.hp && !(b.key === 'peuple' && b.cur == null) ? this.oq : this.op; }
+  trees() {
+    const F = this.F(this.me);
+    F.tree.m.forEach(m => (TREE[m.node].a || []).forEach(a => {
+      switch (a[0]) {
+        case 'heal': this.heal(a[1] === 's' ? this.me : this.pa, a[2]); break;
+        case 'atk': this.attack(); break;
+        case 'patk': this.attack({ by: this.pa }); break;
+        case 'atkq': this.attack({ target: this.oq }); break;
+        case 'dd': this.dd(a[1] === 'o' ? this.op : this.oq, a[2]); break;
+      }
+    }));
+  }
+  knowledge() {
+    const T = this.T, F = this.F(this.me), tr = F.tree;
+    const m = tr.m.find(x => !x.done); if (!m) return;
+    const opts = merlinOptions(tr, m); if (!opts.length) return;
+    let choice = opts[0];
+    if (opts.length > 1) {
+      const i = T.mIdx++;
+      const d = T.dec && T.dec.merlin ? T.dec.merlin[i] : null;
+      if (d != null && opts.includes(d)) choice = d;
+      else if (T.auto) choice = T.auto({ type: 'merlin', team: this.team, f: this.me, options: opts, st: this.st });
+      else throw { need: { type: 'merlin', team: this.team, f: this.me, options: opts, idx: i } };
+    }
+    m.node = choice; m.path.push(choice);
+    const nd = TREE[choice];
+    if (nd.end) {
+      m.done = true;
+      this.note('Merlin maîtrise une Branche (' + D.BRANCH_NAMES[nd.b] + ').');
+      if (tr.reserve > 0) { tr.reserve--; tr.m.push({ node: 'C', path: ['C'], done: false }); this.gain(this.me, 1); this.note('Un nouveau marqueur rejoint l’Arbre : Merlin gagne 1 Cube.'); }
+    } else this.note('Merlin gagne un Savoir Ancien.');
+  }
+  addScales(n) { const F = this.F(this.me); const b = F.scales; F.scales = Math.min(5, F.scales + n); if (F.scales !== b) this.note('Le Dragon gagne une Écaille (' + F.scales + ').'); }
+  discardScales() { const F = this.F(this.me); if (F.scales) { F.scales = 0; this.note('Le Dragon défausse ses Écailles.'); } }
+}
+
+function merlinBranchOf(node) { return TREE[node].b || null; }
+function merlinOptions(tr, m) {
+  const used = new Set(tr.m.filter(x => x !== m).map(x => merlinBranchOf(x.node)).filter(Boolean));
+  const free = n => { const nd = TREE[n]; if (nd.b) return !used.has(nd.b); return (nd.c || []).some(free); };
+  return (TREE[m.node].c || []).filter(free);
+}
+
+class Turn {
+  constructor(st, dec, auto) {
+    this.st = st; this.dec = dec || {}; this.auto = auto || null; this.mIdx = 0;
+    this.ev = []; this.atk = []; this.dd = []; this.heals = []; this.q = {}; this.endQ = [];
+    this.transe = {}; this.enfer = {}; this.ppKO = {}; this.essence = {}; this.transform = {}; this.frozen = {}; this.mbRevive = {}; this.ppSpirit = {};
+    this.ching20 = null; this.gained = [0, 0]; this.poisons = []; this.iconIntrigues = 0; this.passed = {}; this.press = []; this.aid = 0; this.act = 1; this.stage = 0;
+    this.sides = [null, null];
+  }
+  note(txt, f) { this.ev.push({ t: 'note', f, txt }); log(this.st, txt); }
+  gain(t, n) { if (t == null || !(n > 0)) return; const F = this.st.f[t]; F.pw += n; this.gained[F.team] += n; this.ev.push({ t: 'pow', f: t, d: n }); }
+  snapshot() { return clone({ f: this.st.f, sheriff: this.st.sheriff, golemTok: this.st.golemTok }); }
+  questFor(pf) {
+    const st = this.st, P = st.p[teamOf(pf)];
+    return P.played.reduce((s, r) => s + (r.owner === pf && !st.cards[r.id].out ? r.cnt : 0), 0);
+  }
+  atkPower(A, tgt) {
+    const st = this.st, by = st.f[A.by], snap = A.snap || this.s0;
+    let p;
+    if (A.pow != null) p = A.pow;
+    else {
+      const s = snap.f[A.by];
+      p = s.pw + (A.plus || 0);
+      if (by.key === 'vert') p += CV_TEMP[A.cv ? by.hp : s.hp] || 0;
+      if (by.key === 'perceval') p += this.questFor(A.by);
+    }
+    if (by.key === 'shango' && tgt != null) p += snap.f[tgt].flames;
+    return Math.max(0, p);
+  }
+
+  run() {
+    const st = this.st;
+    st.turn++;
+    const n = st.ti;
+    for (const t of [0, 1]) {
+      const P = st.p[t], id = P.fight[n];
+      if (id != null) { const card = st.cards[id]; this.sides[t] = new Side(this, t, card); st.act[t] = card.f; }
+    }
+    for (const t of [0, 1]) {
+      const s = this.sides[t]; if (!s) continue;
+      s.setPlayers(s.card.f);
+      const P = st.p[t];
+      s.rec = { id: s.card.id, owner: s.card.f, cnt: s.def.k === 'perceval.graal' ? 2 : 1 };
+      P.played.push(s.rec);
+      if (P.reanim) { P.reanim = false; s.double = true; }
+      this.ev.push({ t: 'reveal', team: t, card: s.card.id, f: s.card.f, k: s.card.k, rot: !!s.card.rot });
+      log(st, fname(st, s.card.f) + ' joue « ' + s.def.n + ' »' + (s.double ? ' (Réanimation : deux fois)' : '') + '.', { pl: t, id: s.card.id });
+    }
+    this.activation(1, [0, 1].filter(t => this.sides[t]));
+    for (const t of [0, 1]) if (this.sides[t] && this.sides[t].double && st.phase === 'fight') { this.note('Seconde activation de « ' + this.sides[t].def.n + ' ».', this.sides[t].me); this.activation(2, [t]); }
+    this.end();
+    st.ti++;
+    if (st.phase === 'fight' && st.ti >= Math.max(st.p[0].fight.length, st.p[1].fight.length)) roundOver(st);
+  }
+
+  activation(act, teams) {
+    const st = this.st;
+    this.act = act; this.s0 = this.snapshot(); this.gained = [0, 0];
+    const parts = teams.map(t => this.sides[t]);
+    parts.forEach(s => s.begin());
+    this.stage = 1;
+    if (act === 1) {
+      const will = [0, 1].map(t => !!(this.sides[t] && this.sides[t].willCancel()));
+      [0, 1].forEach(t => { const o = this.sides[1 - t]; if (will[t] && o) { o.cancelled = true; } });
+    }
+    parts.forEach(s => { s.block = s.computeBlock(); });
+    if (act === 1) parts.forEach(s => {
+      if (s.def.diversion && !s.cancelled) { const o = this.sides[1 - s.team]; if (o && !o.cancelled && !o.block) { o.cancelled = true; o.block = null; } }
+    });
+    if (act === 1) [0, 1].forEach(t => { const s = this.sides[t]; if (s && s.cancelled) { this.ev.push({ t: 'cancel', team: t }); log(st, '« ' + s.def.n + ' » est annulée.'); } });
+    parts.forEach(s => { if (s.def.k === 'perceval.graal') s.rec.cnt = s.cancelled ? 1 : (s.double ? 4 : 2); });
+    this.stage = 2;
+    parts.forEach(s => { if (!s.cancelled && s.def.fx) s.def.fx(s); });
+    this.stage = 3; this.runQ('react1'); this.settle();
+    this.stage = 4; this.runQ('react2'); this.settle();
+    this.stage = 5; this.runQ('intercept'); this.settle();
+    this.stage = 6; this.damage(); this.icons(); this.post();
+    this.stage = 7; this.runQ('exec');
+    this.stage = 8; this.runQ('actEnd');
+    this.endQ.push(...(this.q.end || [])); this.q = {};
+  }
+  runQ(name) { const L = this.q[name] || []; this.q[name] = []; L.forEach(fn => fn()); }
+
+  settle() {
+    for (let guard = 0; guard < 40; guard++) {
+      let ch = false;
+      for (const A of this.atk) if (!A.chk) { A.chk = true; ch = true; this.checkBlock(A); }
+      for (const s of this.sides) if (s && s.blockOk_ && !s.bonusDone) {
+        s.bonusDone = true; ch = true;
+        this.ev.push({ t: 'block', team: s.team, f: s.me });
+        log(this.st, fname(this.st, s.me) + ' bloque !');
+        if (s.def.onBlock && !s.cancelled && s.block && (s.def.tree ? false : true)) s.def.onBlock(s, s.blocked.slice());
+      }
+      for (const A of this.atk) if (A.chk && !A.done) { A.done = true; ch = true; if (!A.blocked) { if (A.ok) A.ok(A); } else if (A.onBlk) A.onBlk(A); }
+      if (!ch) break;
+    }
+  }
+  checkBlock(A) {
+    if (A.unblock || A.noBlock) return;
+    const bs = this.sides[1 - A.team];
+    if (!bs || !bs.block || bs.cancelled) return;
+    A.blocked = true; bs.blocked.push(A);
+    const st = this.st;
+    if (bs.block === 'deflect') A.redir = st.act[A.team];
+    else if (bs.block === 'deflectP') A.redir = bs.pa;
+    else if (bs.block === 'envout' && (A.target === bs.me || A.target === bs.pa)) A.redir = partnerOf(st.act[A.team]);
+    if (A.redir != null) log(st, 'L’Attaque de ' + fname(st, A.by) + ' est déviée vers ' + fname(st, A.redir) + '.');
+    bs.blockOk_ = true;
+  }
+
+  damage() {
+    const act = this.act;
+    const atks = this.atk.filter(A => A.act === act && !A.applied);
+    const dds = this.dd.filter(x => x.act === act && !x.applied);
+    const heals = this.heals.filter(x => x.act === act && !x.applied);
+    if (this.ching20 && !this.chingDone) {
+      this.chingDone = true;
+      this.ching20.forEach(f => {
+        const F = this.st.f[f];
+        if ((F.key === 'excalibur' && F.broken) || (F.key === 'peuple' && F.cur == null)) return;
+        if (!this.transform[f]) { const n = curHP(this.st, f) - 1; if (n > 0) this.move(f, -n); }
+        this.frozen[f] = true;
+      });
+    }
+    const first = [...new Set(atks.filter(A => A.cv).map(A => A.by))];
+    const order = first.concat([0, 1, 2, 3].filter(f => !first.includes(f)));
+    order.forEach(f => this.applyTo(f, atks, dds, heals));
+    atks.forEach(A => { A.applied = true; });
+    dds.forEach(x => { x.applied = true; }); heals.forEach(x => { x.applied = true; });
+  }
+  applyTo(f, atks, dds, heals) {
+    const st = this.st, F = st.f[f], key = F.key;
+    let atk = 0, hit = false, dd = 0, heal = 0;
+    for (const A of atks) {
+      const tg = A.redir != null ? A.redir : A.target;
+      if (A.blocked && A.redir == null) { if (!A.logged) { A.logged = true; this.ev.push({ t: 'atkres', by: A.by, to: A.target, blocked: true }); } continue; }
+      if (tg !== f) continue;
+      const p = this.atkPower(A, f); atk += p; hit = true; A.dealt = p;
+      this.ev.push({ t: 'atkres', by: A.by, to: f, pw: p, redir: A.redir != null });
+      log(st, fname(st, A.by) + ' attaque ' + fname(st, f) + ' (' + p + ').');
+    }
+    for (const x of dds) if (x.t === f) dd += x.n;
+    for (const x of heals) if (x.t === f) heal += x.n;
+    if (!hit && !dd && !heal) return;
+    if (hit && this.s0.golemTok === f && st.golemTok === f) {
+      if (atk > 0) this.note('Le jeton Golem absorbe l’Attaque contre ' + fname(st, f) + '.', f);
+      atk = 0; st.golemTok = null;
+    }
+    if (key === 'dragon' && atk > 0) {
+      const used = Math.min(F.scales, this.s0.f[f].scales, atk);
+      if (used > 0) { F.scales -= used; atk -= used; this.note('Les Écailles du Dragon absorbent ' + used + ' point' + (used > 1 ? 's' : '') + '.', f); }
+    }
+    if (hit && this.transe[f]) dd += 2;
+    if (this.transform[f] || this.frozen[f]) return;
+    if (key === 'excalibur' && F.broken) return;
+    if (key === 'peuple' && (F.cur == null || F.chars[F.cur].spirit)) return;
+    if (this.essence[f]) { atk = 0; dd = 0; }
+    const net = heal - atk - dd;
+    if (dd) log(st, fname(st, f) + ' subit ' + dd + ' Dégât' + (dd > 1 ? 's' : '') + ' Direct' + (dd > 1 ? 's' : '') + '.');
+    if (heal) log(st, fname(st, f) + ' doit récupérer ' + heal + ' PV.');
+    this.move(f, net);
+  }
+  move(f, net) {
+    const st = this.st, F = st.f[f], key = F.key, fd = FIGHTERS[key];
+    if (!net) return;
+    if (key === 'wildbunch') net = Math.sign(net);
+    let hp, min = 0, max;
+    let ch = null;
+    if (key === 'peuple') { if (F.cur == null) return; ch = F.chars[F.cur]; if (ch.spirit) return; hp = ch.hp; max = ch.max; }
+    else { hp = F.hp; max = key === 'vert' ? F.mask - 1 : F.max; if (key === 'brijit') min = -2; }
+    const stops = (key === 'bodvar' && F.bear) ? [] : (fd.stops || []);
+    const from = hp, dir = Math.sign(net); let n = Math.abs(net); const passed = [];
+    while (n > 0) { const nx = hp + dir; if (nx < min || nx > max) break; hp = nx; n--; passed.push(hp); if (stops.includes(hp)) break; }
+    if (ch) { ch.hp = hp; F.hp = hp; } else F.hp = hp;
+    (this.passed[f] = this.passed[f] || []).push(...passed);
+    if (hp !== from) this.ev.push({ t: 'hp', f, from, to: hp });
+    if (key === 'brijit' && hp === -2 && !this.mbRevive[f]) { this.frozen[f] = true; this.mbRevive[f] = true; this.note('Maman Brijit franchit la mort… et revient !', f); }
+    if (key === 'excalibur' && hp === 0 && !F.broken) { F.broken = true; this.note('Excalibur se brise ! Elle devient la Lame Brisée.', f); }
+    if (key === 'peuple' && hp === 0 && ch && !ch.spirit) { ch.spirit = true; this.ppSpirit[f] = true; this.note(PP_CHARS[F.cur].n + ' devient un Esprit.', f); }
+  }
+  icons() {
+    const st = this.st;
+    for (const f of [0, 1, 2, 3]) {
+      const sp = this.passed[f]; if (!sp || !sp.length) continue; this.passed[f] = [];
+      const F = st.f[f];
+      const icons = (F.key === 'bodvar' && F.bear) ? {} : (FIGHTERS[F.key].icons || {});
+      for (const h of sp) {
+        const ic = icons[h]; if (!ic) continue;
+        if (ic === 'pow') { F.pw += 1; this.ev.push({ t: 'pow', f, d: 1 }); this.note(fname(st, f) + ' passe la case ' + h + ' : +1 Cube.', f); }
+        if (ic === 'intrigue') { this.iconIntrigues++; this.iconMilady = f; }
+        if (ic === 'serpent') { F.serpent = F.serpent === 'N' ? 'B' : 'N'; this.note('Case Serpent : le Serpent se retourne (' + (F.serpent === 'N' ? 'noir' : 'blanc') + ').', f); }
+      }
+    }
+  }
+  miladySide(f) {
+    const st = this.st; const t = teamOf(f);
+    const s = new Side(this, t, null); s.setPlayers(f); s.begin(); return s;
+  }
+  post() {
+    if (this.inPost) return; this.inPost = true;
+    const st = this.st; let guard = 0;
+    const saveAct = this.act;
+    while ((this.iconIntrigues > 0 || this.poisons.length) && guard++ < 8) {
+      if (this.iconIntrigues > 0) {
+        const n = this.iconIntrigues; this.iconIntrigues = 0;
+        const ms = this.miladySide(this.iconMilady);
+        this.act = 'p' + guard; this.s0 = this.snapshot();
+        this.note('Case Intrigue : Milady dévoile ' + (n > 1 ? n + ' Intrigues' : 'une Intrigue') + '.', this.iconMilady);
+        for (let k = 0; k < n; k++) ms.reveal();
+        this.settle(); this.damage(); this.icons();
+        continue;
+      }
+      const ps = this.poisons.shift(); const t = ps.target; const F = st.f[t];
+      if (this.frozen[t] || this.transform[t] || (F.key === 'excalibur' && F.broken) || (F.key === 'peuple' && F.cur == null)) continue;
+      const hp = curHP(st, t); const n = Math.floor(Math.max(0, hp) / 2);
+      this.note('Poison : ' + fname(st, t) + ' perd ' + n + ' PV.', t);
+      if (n > 0) { this.move(t, -n); this.icons(); }
+    }
+    this.act = saveAct; this.inPost = false;
+  }
+
+  end() {
+    const st = this.st;
+    this.endQ.forEach(fn => fn());
+    this.press.forEach(p => {
+      if (p.opp != null) { st.cards[p.opp].out = true; log(st, 'Point de Pression : « ' + DEF[st.cards[p.opp].k].n + ' » est retirée du jeu.'); }
+      st.cards[p.own].out = true;
+      this.ev.push({ t: 'note', txt: 'Point de Pression : les deux cartes sont retirées du jeu.' });
+    });
+    Object.keys(this.mbRevive).forEach(f => { const F = st.f[f]; F.hp = 4; F.pw += 1; this.ev.push({ t: 'hp', f: +f, from: -2, to: 4 }, { t: 'pow', f: +f, d: 1 }); });
+    // Fin de partie ?
+    const inc = [false, false], lose = [false, false];
+    st.f.forEach(F => { if (F.flames >= 5) inc[F.team] = true; if (isKO(F)) lose[F.team] = true; });
+    Object.keys(this.ppKO).forEach(f => { lose[teamOf(+f)] = true; });
+    const L = (inc[0] || inc[1]) ? inc : lose;
+    let winner = null, reason = '';
+    const enf = [0, 1].filter(t => this.enfer[t] && L[t]);
+    if (enf.length === 1) { winner = enf[0]; reason = 'enfer'; }
+    else if (L[0] && L[1]) { winner = 'draw'; reason = inc[0] ? 'incineration' : 'double'; }
+    else if (L[0] || L[1]) { winner = L[0] ? 1 : 0; reason = (inc[0] || inc[1]) ? 'incineration' : 'ko'; }
+    st.f.forEach(F => { if (isKO(F)) this.ev.push({ t: 'ko', f: F.i }); if (F.flames >= 5) this.ev.push({ t: 'incin', f: F.i }); });
+    if (winner != null) {
+      st.phase = 'over'; st.winner = winner; st.endReason = reason;
+      const txt = winner === 'draw' ? 'Match nul !' : (reason === 'enfer' ? 'Bienvenue en Enfer ! ' : '') + st.p[winner].name + ' remporte le Combat !';
+      log(st, txt); this.ev.push({ t: 'over', winner, reason });
+      return;
+    }
+    // Petit Peuple : nouveau Personnage
+    Object.keys(this.ppSpirit).forEach(fs => {
+      const f = +fs, F = st.f[f];
+      F.spirits = Math.min(4, F.spirits + 1);
+      const opts = [0, 1, 2].filter(i => !F.chars[i].spirit);
+      if (!opts.length) { F.cur = null; F.hp = 0; this.note('Tous les Personnages du Petit Peuple sont des Esprits.', f); }
+      else if (opts.length === 1) choosePP(st, f, opts[0], this.ev);
+      else if (this.auto) choosePP(st, f, this.auto({ type: 'ppNext', team: F.team, f, options: opts, st }), this.ev);
+      else st.need = { type: 'ppNext', team: F.team, f, options: opts };
+    });
+  }
+}
+
+function roundOver(st) {
+  for (const t of [0, 1]) { const P = st.p[t]; P.fight = P.fight.filter(id => !st.cards[id].out); }
+  if (st.p.some(P => P.build.length < 3)) {
+    st.phase = 'over'; st.winner = 'draw'; st.endReason = 'deck';
+    log(st, 'Un Deck de Construction est épuisé : match nul.');
+    return;
+  }
+  st.phase = 'build';
+  for (const t of [0, 1]) { const P = st.p[t]; P.drawn = P.build.splice(0, 3); P.choice = null; P.seen = null; }
+  log(st, 'Fin du Round ' + st.round + ' — Construction.');
+}
+
+function resolveTurn(st0, dec, auto) {
+  const st = clone(st0);
+  const T = new Turn(st, dec, auto);
+  T.run();
+  return { st, ev: T.ev };
+}
+
+/* ================================================================== */
+/*  Construction                                                       */
+/* ================================================================== */
+function hasMorgane(st, t) { return st.f.some(F => F.team === t && F.key === 'morgane'); }
+function buildWaiting(st, team) {
+  // Le joueur de Morgane attend que l'autre ait choisi.
+  return hasMorgane(st, team) && !hasMorgane(st, 1 - team) && !st.p[1 - team].choice;
+}
+function buildChoice(st, team, d) {
+  const P = st.p[team];
+  if (P.choice) return 'Déjà choisi.';
+  if (buildWaiting(st, team)) return 'Le Corbeau attend le choix adverse.';
+  if (!d || !P.drawn.includes(d.pick)) return 'Carte invalide.';
+  const pos = d.pos | 0; if (pos < 0 || pos > P.fight.length) return 'Position invalide.';
+  let bottom = (d.bottom || []).filter(id => P.drawn.includes(id) && id !== d.pick);
+  const others = P.drawn.filter(id => id !== d.pick);
+  if (bottom.length !== 2 || bottom[0] === bottom[1]) bottom = others;
+  P.choice = { pick: d.pick, pos, bottom };
+  const o = 1 - team;
+  if (hasMorgane(st, o) && !hasMorgane(st, team)) st.p[o].seen = st.cards[d.pick].k;
+  if (st.p[0].choice && st.p[1].choice) finishBuild(st);
+  return null;
+}
+function finishBuild(st) {
+  const ev = [];
+  for (const t of [0, 1]) {
+    const P = st.p[t], c = P.choice;
+    P.fight.splice(c.pos, 0, c.pick);
+    P.build.push(...c.bottom);
+    P.drawn = [];
+  }
+  for (const t of [0, 1]) {
+    const P = st.p[t], d = DEF[st.cards[P.choice.pick].k];
+    if (d.bonus) {
+      const T = new Turn(st, {}); T.s0 = T.snapshot(); T.act = 'b';
+      const fi = st.f.findIndex(F => F.team === t && F.key === (d.bonus === 'golem' ? 'golem' : 'wildbunch'));
+      if (fi >= 0) {
+        T.note('Bonus immédiat (' + st.p[t].name + ') : ' + fname(st, fi) + ' récupère ' + (d.bonus === 'golem' ? 3 : 1) + ' PV.', fi);
+        T.move(fi, d.bonus === 'golem' ? 3 : 1); T.icons(); T.post();
+        ev.push(...T.ev);
+      }
+    }
+  }
+  for (const t of [0, 1]) { const P = st.p[t]; P.lastPick = P.choice.pick; P.choice = null; P.played = []; P.seen = null; }
+  st.round++; st.ti = 0; st.phase = 'fight';
+  st.act = [st.cards[st.p[0].fight[0]].f, st.cards[st.p[1].fight[0]].f];
+  st.last = { kind: 'build', ev };
+  log(st, 'Round ' + st.round + ' — Combat !');
+}
+
+/* ================================================================== */
+/*  API                                                                */
+/* ================================================================== */
+function pendingFor(st, team) {
+  if (st.need && st.need.team === team) return Object.assign({}, st.need);
+  if (st.phase === 'select') {
+    const s = st.sel;
+    if (s.mode === 'draft') return s.chosen[team] == null ? { type: 'pick', options: s.hands[team].slice(), step: s.step } : null;
+    return s.order[s.idx] === team ? { type: 'pick', options: s.avail.slice(), step: s.idx } : null;
+  }
+  if (st.phase === 'setup') {
+    const P = st.p[team]; if (P.setup) return null;
+    return { type: 'setup', starts: P.starts.slice(), pp: st.f.some(F => F.team === team && F.key === 'peuple') };
+  }
+  if (st.phase === 'build') {
+    const P = st.p[team]; if (P.choice) return null;
+    if (buildWaiting(st, team)) return { type: 'wait-raven' };
+    return { type: 'build', drawn: P.drawn.slice(), fight: P.fight.slice(), seen: P.seen };
+  }
+  return null;
+}
+
+function act(st, team, d) {
+  if (st.phase === 'over') return 'La partie est terminée.';
+  d = d || {};
+  if (st.need && st.need.team === team) {
+    const n = st.need;
+    if (n.type === 'merlin') {
+      if (!n.options.includes(d.node)) return 'Case invalide.';
+      st.turnDec = st.turnDec || { merlin: [] }; st.turnDec.merlin[n.idx] = d.node; st.need = null; return null;
+    }
+    if (n.type === 'ppNext') {
+      if (!n.options.includes(d.pp)) return 'Personnage invalide.';
+      st.need = null; choosePP(st, n.f, d.pp, null); return null;
+    }
+  }
+  if (st.phase === 'select') return pickFighter(st, team, d.key);
+  if (st.phase === 'setup') return setupDone(st, team, d);
+  if (st.phase === 'build') return buildChoice(st, team, d);
+  return 'Rien à faire pour le moment.';
+}
+
+/* Joue le Tour suivant. Renvoie { ev } ou { need } (décision attendue) ou null. */
+function stepTurn(st, auto) {
+  if (st.phase !== 'fight' || st.need) return null;
+  let res;
+  try { res = resolveTurn(st, st.turnDec, auto); }
+  catch (e) { if (e && e.need) { st.need = e.need; return { need: e.need }; } throw e; }
+  const keep = st.seq;
+  Object.keys(st).forEach(k => delete st[k]); Object.assign(st, res.st);
+  st.seq = keep; st.turnDec = null;
+  st.last = { kind: 'turn', ev: res.ev, turn: st.turn, round: st.round };
+  return { ev: res.ev };
+}
+
+/* Vue filtrée pour un joueur (ce qu'il a le droit de voir). */
+function view(st, team) {
+  const v = clone(st);
+  delete v.rng; delete v.turnDec;
+  const vis = new Set();
+  const hideOld = st.opts.memo !== 'on' && st.phase !== 'over';
+  const nowIds = new Set(st.last && st.last.kind === 'turn' ? st.last.ev.filter(e => e.t === 'reveal').map(e => e.card) : []);
+  v.p.forEach((P, t) => {
+    if (t !== team && hideOld) { P.playedCount = P.played.length; P.played = P.played.filter(r => nowIds.has(r.id)); }
+    P.played.forEach(r => vis.add(r.id));
+    if (t === team) {
+      P.fight.forEach(id => vis.add(id)); P.drawn.forEach(id => vis.add(id)); (P.starts || []).forEach(id => vis.add(id));
+      P.buildKeys = P.build.map(id => st.cards[id].k).sort();
+      P.build = P.build.length;
+      if (P.choice) vis.add(P.choice.pick);
+    } else {
+      P.fightCount = P.fight.length; P.fight = []; P.build = P.build.length; P.drawn = P.drawn.length;
+      P.choice = P.choice ? true : null; P.starts = []; P.setup = P.setup ? true : null; P.seen = null;
+      if (P.lastPick != null) P.lastPick = null;
+    }
+  });
+  if (st.phase === 'over') Object.keys(v.cards).forEach(id => vis.add(+id));
+  Object.keys(v.cards).forEach(id => { if (!vis.has(+id)) delete v.cards[id]; });
+  v.f.forEach(F => { if (F.pile) { F.pile = F.pile.length; F.prepared = F.prepared.length; } });
+  if (v.need && v.need.team !== team) v.need = { type: v.need.type, team: v.need.team, waiting: true };
+  if (v.sel && v.sel.mode === 'draft') {
+    v.sel.hands = v.sel.hands.map((h, t) => t === team ? h : h.length);
+    v.sel.chosen = v.sel.chosen.map((c, t) => t === team ? c : (c != null));
+  }
+  if (hideOld) v.log = v.log.filter(l => l.pl == null || l.pl === team || nowIds.has(l.id));
+  v.me = team;
+  v.pending = pendingFor(st, team);
+  return v;
+}
+
+const API = { newGame, act, pendingFor, stepTurn, resolveTurn, view, clone, DEF, fname, curHP, maxHP, isKO, merlinOptions, partnerOf, teamOf, rnd, rint, shuffle, Turn };
+root.TTEngine = API;
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Tag Team — robot (simule le Round à venir pour choisir sa carte). */
+(function (root) {
+'use strict';
+const E = root.TTEngine || (typeof require !== 'undefined' ? require('./engine.js') : null);
+const D = root.TTData || (typeof require !== 'undefined' ? require('./data.js') : null);
+const { TREE } = D;
+
+const TIER = { golem: 8, dragon: 8, jeanne: 7, mordred: 7, milady: 7, bodvar: 7, perceval: 7, wong: 6, ching: 6, shango: 6, brijit: 6,
+  mephisto: 6, morgane: 6, vert: 6, excalibur: 5, merlin: 5, peuple: 5, wildbunch: 5 };
+
+function branchOf(node) { const nd = TREE[node]; if (nd.b) return [nd.b]; return (nd.c || []).map(c => TREE[c].b).filter(Boolean); }
+function auto(q) {
+  if (q.type === 'merlin') {
+    const pref = { A: 4, D: 3.5, B: 2.5, H: 1.5 };
+    let best = q.options[0], bs = -1;
+    q.options.forEach(o => { const s = Math.max(...branchOf(o).map(b => pref[b] || 0)) + Math.random() * 1.2; if (s > bs) { bs = s; best = o; } });
+    return best;
+  }
+  if (q.type === 'ppNext') { const F = q.st.f[q.f]; return q.options.slice().sort((a, b) => F.chars[b].max - F.chars[a].max)[0]; }
+  return null;
+}
+
+function ratio(F) {
+  if (F.key === 'peuple') return F.chars.reduce((s, c) => s + (c.spirit ? 0 : (c.hp || (F.cur == null ? c.max : 0))), 0) / 12;
+  if (F.key === 'excalibur') return F.broken ? 0.8 : 0.5 + 0.5 * F.hp / 7;
+  if (F.key === 'brijit') return Math.max(0, F.hp) / 16 + 0.1;
+  if (F.key === 'wildbunch') return F.hp / 5;
+  return Math.max(0, F.hp) / F.max;
+}
+function evalState(s, team) {
+  if (s.phase === 'over') return s.winner === team ? 1000 : (s.winner === 'draw' ? -60 : -1000);
+  const side = t => {
+    const fs = s.f.filter(F => F.team === t);
+    const r = fs.map(ratio);
+    return { min: Math.min(r[0], r[1]), sum: r[0] + r[1], pw: fs.reduce((a, F) => a + F.pw, 0), fl: Math.max(...fs.map(F => F.flames)) };
+  };
+  const a = side(team), b = side(1 - team);
+  return 100 * (a.min - b.min) + 30 * (a.sum - b.sum) + 2.5 * (Math.min(a.pw, 14) - Math.min(b.pw, 14)) - 18 * a.fl * a.fl / 5 + 18 * b.fl * b.fl / 5;
+}
+
+function playRound(s) {
+  let guard = 0;
+  while (s.phase === 'fight' && guard++ < 60) { if (s.need) { s.need = null; } const r = E.stepTurn(s, auto); if (!r) break; }
+  return s;
+}
+function prepSim(st) {
+  const s = E.clone(st); s.rng = (Math.random() * 4294967296) >>> 0; s.need = null; s.turnDec = null; return s;
+}
+function startFight(s) {
+  s.p.forEach(Q => { Q.drawn = []; Q.choice = null; Q.played = []; Q.seen = null; });
+  s.round++; s.ti = 0; s.phase = 'fight';
+  s.act = [s.cards[s.p[0].fight[0]].f, s.cards[s.p[1].fight[0]].f];
+}
+
+function chooseBuild(st, team) {
+  const P = st.p[team], O = st.p[1 - team];
+  let oppPool = O.build.concat(Array.isArray(O.drawn) ? O.drawn : []);
+  if (P.seen) { const seen = oppPool.filter(id => st.cards[id].k === P.seen); if (seen.length) oppPool = seen; }
+  const opts = [];
+  P.drawn.forEach(pick => { for (let pos = 0; pos <= P.fight.length; pos++) opts.push({ pick, pos }); });
+  const samples = opts.length > 40 ? 2 : 3;
+  let best = null, bs = -Infinity;
+  for (const o of opts) {
+    let tot = 0;
+    for (let k = 0; k < samples; k++) {
+      const s = prepSim(st);
+      s.p[team].fight.splice(o.pos, 0, o.pick);
+      const Q = s.p[1 - team];
+      if (oppPool.length) { const id = oppPool[Math.floor(Math.random() * oppPool.length)]; Q.fight.splice(Math.floor(Math.random() * (Q.fight.length + 1)), 0, id); }
+      startFight(s); playRound(s);
+      tot += evalState(s, team);
+    }
+    const sc = tot / samples + Math.random() * 2;
+    if (sc > bs) { bs = sc; best = o; }
+  }
+  return { pick: best.pick, pos: best.pos, bottom: P.drawn.filter(id => id !== best.pick) };
+}
+
+function chooseSetup(st, team, pend) {
+  const P = st.p[team], O = st.p[1 - team];
+  const orders = [[pend.starts[0], pend.starts[1]], [pend.starts[1], pend.starts[0]]];
+  const oo = O.setup ? [O.setup.order] : [[O.starts[0], O.starts[1]], [O.starts[1], O.starts[0]]];
+  let best = orders[0], bs = -Infinity;
+  for (const ord of orders) {
+    let tot = 0;
+    for (const oq of oo) {
+      const s = prepSim(st);
+      s.p[team].fight = ord.slice(); s.p[1 - team].fight = oq.slice();
+      s.f.forEach(F => { if (F.key === 'peuple' && F.cur == null) { F.cur = 2; F.chars[2].hp = 5; F.hp = 5; } });
+      s.round = 0; startFight(s); playRound(s); tot += evalState(s, team);
+    }
+    if (tot + Math.random() > bs) { bs = tot; best = ord; }
+  }
+  return { order: best, pp: pend.pp ? 2 : undefined };
+}
+
+function choosePick(st, team, pend) {
+  let best = pend.options[0], bs = -1;
+  pend.options.forEach(k => { const s = (TIER[k] || 5) + Math.random() * 3; if (s > bs) { bs = s; best = k; } });
+  return { key: best };
+}
+
+function decide(st, team) {
+  const pend = E.pendingFor(st, team);
+  if (!pend) return null;
+  switch (pend.type) {
+    case 'pick': return choosePick(st, team, pend);
+    case 'setup': return chooseSetup(st, team, pend);
+    case 'build': return chooseBuild(st, team);
+    case 'merlin': return { node: auto(Object.assign({}, pend, { st })) };
+    case 'ppNext': return { pp: auto(Object.assign({}, pend, { st })) };
+  }
+  return null;
+}
+
+const API = { decide, auto, evalState };
+root.TTBot = API;
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Tag Team — emblèmes originaux des combattants et pictogrammes (SVG). */
+(function (root) {
+'use strict';
+const H = 'var(--hole, rgba(0,0,0,.45))';
+const P = {
+  jeanne: `<ellipse cx="24" cy="8.5" rx="11" ry="3.8" fill="none" stroke="currentColor" stroke-width="3"/><path d="M22 14h4v19h7v4h-7v7h-4v-7h-7v-4h7z"/>`,
+  wildbunch: `<path d="M24 3.5l5.7 11.6 12.8 1.9-9.3 9 2.2 12.7L24 32.7l-11.4 6 2.2-12.7-9.3-9 12.8-1.9z"/><circle cx="24" cy="22.5" r="4.2" fill="${H}"/><circle cx="24" cy="4" r="2.6"/><circle cx="42.6" cy="17" r="2.6"/><circle cx="5.4" cy="17" r="2.6"/><circle cx="35.6" cy="39.6" r="2.6"/><circle cx="12.4" cy="39.6" r="2.6"/>`,
+  bodvar: `<ellipse cx="24" cy="31.5" rx="10.5" ry="9"/><ellipse cx="10.5" cy="19.5" rx="4.2" ry="5.4" transform="rotate(-20 10.5 19.5)"/><ellipse cx="18.5" cy="11.5" rx="4.2" ry="5.6" transform="rotate(-8 18.5 11.5)"/><ellipse cx="29.5" cy="11.5" rx="4.2" ry="5.6" transform="rotate(8 29.5 11.5)"/><ellipse cx="37.5" cy="19.5" rx="4.2" ry="5.4" transform="rotate(20 37.5 19.5)"/>`,
+  shango: `<rect x="22" y="5" width="4" height="39" rx="2"/><path d="M22 8C14 2 6 5 4 14c7-2 13 0 18 5z"/><path d="M26 8c8-6 16-3 18 6-7-2-13 0-18 5z"/><path d="M33 26l-6 8h5l-4 9 9-11h-5l3-6z"/>`,
+  brijit: `<path d="M24 4C14.6 4 8.5 10.4 8.5 19c0 5.2 2.3 8.7 5.5 10.8V37h20v-7.2c3.2-2.1 5.5-5.6 5.5-10.8C39.5 10.4 33.4 4 24 4z"/><circle cx="17.5" cy="20" r="4.4" fill="${H}"/><circle cx="30.5" cy="20" r="4.4" fill="${H}"/><path d="M24 25l-2.5 5h5z" fill="${H}"/><path d="M17 37v6M21.7 37v6M26.3 37v6M31 37v6" stroke="currentColor" stroke-width="3"/>`,
+  mephisto: `<path d="M15 42c-7-6 1-12 9-16.5S38 15 31 7" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><path d="M33 42c7-6-1-12-9-16.5S10 15 17 7" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" opacity=".5"/><circle cx="31" cy="6.5" r="3.6"/><circle cx="17" cy="6.5" r="3.6" opacity=".5"/>`,
+  peuple: `<path d="M5 23C5 12.5 13.5 5.5 24 5.5S43 12.5 43 23z"/><path d="M18.5 23h11v15.5c0 4.5-11 4.5-11 0z"/><circle cx="15.5" cy="15.5" r="2.8" fill="${H}"/><circle cx="29" cy="11.5" r="2.2" fill="${H}"/><circle cx="34.5" cy="18" r="2" fill="${H}"/>`,
+  mordred: `<path d="M9 23C9 12 15.5 4.5 24 4.5S39 12 39 23v19H9z"/><path d="M14.5 19h19v4.5H26.5V37h-5V23.5h-7z" fill="${H}"/><path d="M24 4.5V1" stroke="currentColor" stroke-width="3"/>`,
+  milady: `<path d="M23 3h2v27h-2z"/><path d="M13 29.5c3 4.5 19 4.5 22 0l-1.5 4.5c-4.5 3.4-14.5 3.4-19 0z"/><rect x="21.8" y="33" width="4.4" height="8.5" rx="1.6"/><circle cx="24" cy="44" r="2.6"/><path d="M33 4c-6 2-9 8-8 15 5-3 9-8 8-15z" opacity=".55"/>`,
+  golem: `<path d="M7 14.5L24 6l17 8.5v20L24 43 7 34.5z"/><path d="M7 14.5L24 23l17-8.5M24 23v20M15 19l-2 7 4 4M33 27l3 5" fill="none" stroke="${H}" stroke-width="2.4" stroke-linejoin="round"/>`,
+  wong: `<path d="M24 7.5A16.5 16.5 0 1 0 40.5 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M24 15.5A8.5 8.5 0 1 0 32.5 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="24" r="3.2"/><path d="M33 4l7 3.5-3.5 7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+  ching: `<path d="M13 5c11 4 17 14 17 29H12c4-9.5 4-19.5 1-29z"/><path d="M14 13h11M15 20h13M15 27h14" stroke="${H}" stroke-width="2"/><path d="M33 13c6 5 8 12 8 21h-8c1-7 1-14 0-21z" opacity=".6"/><path d="M5 37h38l-5.5 7H10.5z"/>`,
+  morgane: `<path d="M31 5.5a18.5 18.5 0 1 0 12 31.5A15.5 15.5 0 1 1 31 5.5z"/><path d="M27 21l9-4-3 6 6 1-8 4z" fill="${H}"/>`,
+  vert: `<path d="M24 3c2 5 6.5 4.5 8.5 8.5s-1.5 6.5 2 9.5 7 2 7 6.5-4.5 4-6.5 8-1 6.5-6 6.5S24 41 24 41s-.5 3-5 3-4-4.5-6-6.5-6.5-1.5-6.5-6.5 3.5-3.5 7-6.5-.5-5.5 2-9.5S22 8 24 3z"/><path d="M24 9v35" stroke="${H}" stroke-width="2.2"/>`,
+  excalibur: `<path d="M21.8 2.5h4.4v24h-4.4z"/><path d="M14.5 25.5h19v4.2h-19z"/><path d="M22.5 29.7h3V35h-3z"/><path d="M6 45l6.5-12.5h23L42 45z"/>`,
+  perceval: `<path d="M11 7h26c0 11-5.5 17.5-13 17.5S11 18 11 7z"/><path d="M21.8 24h4.4v10.5h-4.4z"/><path d="M13.5 41c2-4.5 19-4.5 21 0v3.5h-21z"/><path d="M24 1.5l1.5 3h3l-2.4 2 1 3-3.1-1.9-3.1 1.9 1-3-2.4-2h3z"/>`,
+  merlin: `<circle cx="24" cy="15" r="11"/><circle cx="13.5" cy="21" r="7.5"/><circle cx="34.5" cy="21" r="7.5"/><path d="M21.8 24h4.4v15h-4.4z"/><path d="M12 45c3.5-6 20.5-6 24 0z"/>`,
+  dragon: `<path d="M3 24C9.5 12.5 16.5 8.5 24 8.5S38.5 12.5 45 24c-6.5 11.5-13.5 15.5-21 15.5S9.5 35.5 3 24z"/><ellipse cx="24" cy="24" rx="3.6" ry="11.5" fill="${H}"/>`,
+};
+function emblem(key, cls) {
+  return `<svg class="emb ${cls || ''}" viewBox="0 0 48 48" fill="currentColor" aria-hidden="true">${P[key] || ''}</svg>`;
+}
+// Pictogrammes d'actions
+const ICO = {
+  atk: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M12 1.5l2.2 6.3 6.3-2.6-3.3 5.8L23 12l-5.8 1.9 3.3 5.8-6.3-2.6L12 22.5l-2.2-5.4-6.3 2.6 3.3-5.8L1 12l5.8-1.9-3.3-5.8 6.3 2.6z"/></svg>`,
+  shield: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M12 2l8 3v6c0 5.5-3.4 9.6-8 11-4.6-1.4-8-5.5-8-11V5z"/></svg>`,
+  heart: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M12 2l10 10-10 10L2 12z"/><path fill="rgba(0,0,0,.25)" d="M10.5 7h3v3.5H17v3h-3.5V17h-3v-3.5H7v-3h3.5z"/></svg>`,
+  cube: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M12 2l9 5v10l-9 5-9-5V7z"/><path fill="rgba(255,255,255,.28)" d="M12 2l9 5-9 5-9-5z"/></svg>`,
+  flame: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg>`,
+  hand: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M8 11V5a1.5 1.5 0 0 1 3 0v5V3.5a1.5 1.5 0 0 1 3 0V10V4.5a1.5 1.5 0 0 1 3 0V12V8a1.5 1.5 0 0 1 3 0v6c0 4.5-3 8-7.5 8S6 19.5 4.5 16L3 12.5a1.5 1.5 0 0 1 2.6-1.5L8 14z"/></svg>`,
+  swirl: `<svg viewBox="0 0 24 24" class="ico"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M12 4a8 8 0 1 0 8 8M12 8a4 4 0 1 0 4 4"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M12 2l3 6.3 6.9 1-5 4.8 1.2 6.9L12 17.8 5.9 21l1.2-6.9-5-4.8 6.9-1z"/></svg>`,
+  ship: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M7 3c5 2 8 7 8 14H6c2-5 2-9 1-14zM2 18h20l-3 4H5z"/></svg>`,
+  scale: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M12 3c5 3 7 8 7 13-2-2-4.5-3-7-3s-5 1-7 3c0-5 2-10 7-13z"/></svg>`,
+  ghost: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7v12l2.5-2 2.3 2 2.2-2 2.2 2 2.3-2 2.5 2V9a7 7 0 0 0-7-7z"/><circle cx="9.5" cy="10" r="1.5" fill="rgba(0,0,0,.5)"/><circle cx="14.5" cy="10" r="1.5" fill="rgba(0,0,0,.5)"/></svg>`,
+  mask: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M4 4h16v8c0 5-4 9-8 9s-8-4-8-9z"/><path fill="rgba(0,0,0,.45)" d="M7 9h4v2.5H7zM13 9h4v2.5h-4zM10 15h4v1.6h-4z"/></svg>`,
+  dagger: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M11 2h2v12h-2zM7 14h10v2H7zM10.5 16h3v6h-3z"/></svg>`,
+  raven: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M3 14c4-1 6-5 10-6 3-1 6 0 8 2l-3 1 2 2c-3 0-5 2-8 3-3 1-6 0-9-2z"/></svg>`,
+  golem: `<svg viewBox="0 0 24 24" class="ico"><path fill="currentColor" d="M4 7l8-4 8 4v10l-8 4-8-4z"/></svg>`,
+};
+
+root.TTArt = { emblem, ICO, PATHS: P };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Tag Team — interface et réseau (PeerJS : un hôte, un invité ou le robot). */
+(function () {
+'use strict';
+const E = window.TTEngine, B = window.TTBot, D = window.TTData, ART = window.TTArt;
+const { FIGHTERS, CARDS, GUIDE, PP_CHARS, TREE, BRANCH_NAMES, INTRIGUES, CV_TEMP } = D;
+const DEF = E.DEF;
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const Q = new URLSearchParams(location.search);
+const PREFIX = 'tagteam-v1-';
+const TIME = +(Q.get('speed') || 1);
+const LS = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* idem */ } },
+};
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+const S = {
+  role: null, name: LS.get('tt-name') || '', code: null, peer: null, hostConn: null, token: LS.get('tt-token') || null,
+  seats: [null, null], opts: Object.assign({ mode: 'draft', pool: 'all', speed: 1, memo: 'off' }, LS.get('tt-opts') || {}), st: null, v: null, seat: 0, paused: false,
+  timers: {}, ui: {}, animTurn: null, hudKey: '', meta: {}, joined: false, everConnected: false,
+};
+if (!S.token) { S.token = Math.random().toString(36).slice(2) + Date.now().toString(36); LS.set('tt-token', S.token); }
+
+/* ================================================================== */
+/*  Petits utilitaires d'interface                                     */
+/* ================================================================== */
+function show(id) { $$('.screen').forEach(s => s.classList.toggle('hidden', s.id !== id)); window.scrollTo(0, 0); }
+function toast(msg, err) {
+  const t = document.createElement('div'); t.className = 'toast' + (err ? ' err' : ''); t.textContent = msg;
+  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3800);
+}
+function netBanner(msg) { const b = $('#netbanner'); if (!msg) b.classList.add('hidden'); else { b.textContent = msg; b.classList.remove('hidden'); } }
+function openOv(html, cls) { const ov = $('#ov'); ov.innerHTML = `<div class="sheet ${cls || ''}">${html}</div>`; ov.classList.remove('hidden'); ov.dataset.kind = cls || ''; }
+function closeOv() { const ov = $('#ov'); ov.classList.add('hidden'); ov.innerHTML = ''; ov.dataset.kind = ''; }
+const waitDots = '<span class="waiting"><i></i><i></i><i></i></span>';
+const fcol = key => FIGHTERS[key].col;
+function discHTML(key, cls, bear) {
+  const fd = FIGHTERS[key];
+  const c = bear ? '#7b3a1d' : fd.col;
+  return `<span class="disc ${cls || ''}" style="--c:${c};--k:${fd.ink}">${ART.emblem(key)}</span>`;
+}
+function cxHTML(n) { let s = '<span class="cx" title="Complexité ' + n + '/5">'; for (let i = 1; i <= 5; i++) s += `<i class="${i <= n ? 'on' : ''}"></i>`; return s + '</span>'; }
+
+/* Mots-clés des cartes mis en valeur */
+function rich(t) {
+  let s = esc(t);
+  s = s.replace(/\b(Attaquez|Attaque(?:s)?(?: réussie)?|Attaqué|Attaquent|s’Attaquent|s'Attaquent)\b/g, '<span class="k-atk">$1</span>');
+  s = s.replace(/\b(Bloquez|Blocage(?: réussi)?|bloquée?s?|Déviez|déviez)\b/g, '<span class="k-blk">$1</span>');
+  s = s.replace(/(Dégâts? Directs?)/g, '<span class="k-dd">$1</span>');
+  s = s.replace(/((?:récupère[zr]?|récupérez|Récupérez|Récupère)\s[^.,;]*?Points? de vie|Points? de vie|PV\b)/g, '<span class="k-hp">$1</span>');
+  s = s.replace(/(Cubes? de Puissance|Puissance)/g, '<span class="k-pw">$1</span>');
+  s = s.replace(/(Annulez|annulé)/g, '<span class="k-x">$1</span>');
+  return s;
+}
+
+/* ================================================================== */
+/*  Cartes                                                             */
+/* ================================================================== */
+function cardHTML(id, o) {
+  o = o || {};
+  const v = S.v;
+  const inst = typeof id === 'number' || /^\d+$/.test(id) ? (v && v.cards[id]) : null;
+  const key = inst ? inst.k : id;
+  const d = DEF[key];
+  if (!d) return `<div class="card back" style="--w:${o.w || ''}"></div>`;
+  const fk = d.f;
+  const F = inst && v ? v.f[inst.f] : (o.fi != null && v ? v.f[o.fi] : null);
+  const start = inst ? inst.start : !!o.start;
+  const rot = inst ? inst.rot : false;
+  const bear = F && F.bear, broken = F && F.broken;
+  let body = '';
+  if (d.tb) body = `<p class="${bear ? 'off' : ''}">${rich(d.t)}</p><p class="${bear || !F ? '' : 'off'}">${rich(d.tb)}</p>`;
+  else if (d.rt) body = rot ? `<p><span class="lbl">Pivotée :</span> ${rich(d.rt)}</p><p class="off">${rich(d.t)}</p>` : `<p>${rich(d.t)}</p><p class="off"><span class="lbl">Pivotée :</span> ${rich(d.rt)}</p>`;
+  else if (d.lb) body = `<p>${rich(d.t)}</p><p class="${broken || !F ? '' : 'off'}"><span class="lbl">Lorsque Brisée :</span> ${rich(d.lb)}</p>`;
+  else body = `<p>${rich(d.t)}</p>`;
+  const len = (d.t + (d.tb || d.rt || d.lb || '')).length;
+  const lc = len > 210 ? 'xlong' : len > 130 ? 'long' : '';
+  const cls = ['card', start ? 'start' : '', o.cls || ''].join(' ');
+  const tag = o.btn ? 'button' : 'div';
+  const attrs = (o.btn ? ` type="button" data-act="${o.btn}" data-id="${esc(id)}"` : '') + (o.title !== false ? ` aria-label="${esc(d.n)}"` : '');
+  return `<${tag} class="${cls}" style="--c:${fcol(fk)};--k:${FIGHTERS[fk].ink};${o.w ? '--w:' + o.w + ';' : ''}"${attrs}>
+    <div class="top">${ART.emblem(fk)}<span class="nm">${esc(d.n)}</span></div>
+    ${d.bt ? `<div class="bonus">⚠ ${esc(d.bt)}</div>` : ''}
+    <div class="tx ${lc}">${body}</div>
+    ${start ? `<span class="badge">${ART.ICO.star}</span>` : ''}
+    ${o.copies && d.x > 1 ? `<span class="copies">×${d.x}</span>` : ''}
+  </${tag}>`;
+}
+function zoomCard(id) { openOv(`<button class="btn sm ghost close" data-act="closeOv">Fermer</button><div class="zoom" style="padding-top:34px">${cardHTML(id)}</div>`, 'zoomsheet'); }
+
+/* ================================================================== */
+/*  Fiche d'un combattant                                              */
+/* ================================================================== */
+function fighterSheet(key, pickable) {
+  const fd = FIGHTERS[key];
+  const cards = CARDS[key].map(d => cardHTML(d.k, { w: '128px', copies: true, start: d.s > 0, btn: 'zoom' })).join('');
+  openOv(`<button class="btn sm ghost close" data-act="closeOv">Fermer</button>
+    <div class="row" style="gap:14px;align-items:center;padding-right:70px">${discHTML(key, 'lg')}<div><h2>${esc(fd.n)}</h2><div class="muted">${esc(fd.sub)}</div>
+    <div class="row small" style="margin-top:4px;gap:12px"><b style="color:var(--hp)">${key === 'peuple' ? '3 + 4 + 5 PV' : fd.hp + ' PV'}</b><b style="color:var(--pow)">${fd.pw} Puissance</b>${cxHTML(fd.cx)}</div>
+    <div class="tags" style="margin-top:6px">${fd.tags.map(t => `<span>${esc(t)}</span>`).join('')}</div></div></div>
+    <ul class="gl">${(GUIDE[key] || []).map(g => `<li>${esc(g)}</li>`).join('')}</ul>
+    <div class="cardrow">${cards}</div>
+    ${pickable ? `<button class="btn gold big full" data-act="pick" data-key="${key}">Choisir ${esc(fd.n)}</button>` : ''}`, 'fsheet');
+}
+
+/* ================================================================== */
+/*  Accueil                                                            */
+/* ================================================================== */
+function initHome() {
+  $('#name').value = S.name;
+  const qc = (Q.get('code') || '').toUpperCase();
+  if (/^[A-Z]{5}$/.test(qc) && !S.codeUsed) { S.codeUsed = true; $('#joinCode').value = qc; setTimeout(() => { (S.name ? $('[data-act=join]') : $('#name')).focus(); }, 50); }
+  const r = LS.get('tt-host');
+  const g = LS.get('tt-guest');
+  let html = '';
+  if (r && r.st && Date.now() - r.ts < 6 * 3600e3 && r.st.phase !== 'over') html += `<div class="resume"><b>Partie en cours</b> (code ${esc(r.code)}${r.solo ? ', contre le robot' : ''})<div class="row" style="margin-top:8px"><button class="btn gold sm" data-act="resume">Reprendre la partie</button><button class="btn ghost sm" data-act="forget">Oublier</button></div></div>`;
+  else if (g && g.code && Date.now() - g.ts < 6 * 3600e3) html += `<div class="resume">Dernière partie rejointe : <b>${esc(g.code)}</b><div class="row" style="margin-top:8px"><button class="btn cool sm" data-act="rejoin">Rejoindre à nouveau</button></div></div>`;
+  $('#resumeBox').innerHTML = html;
+  show('home');
+}
+function readName() {
+  const n = $('#name').value.trim().slice(0, 18);
+  if (!n) { toast('Entrez votre nom.', true); $('#name').focus(); return null; }
+  S.name = n; LS.set('tt-name', n); return n;
+}
+
+/* ================================================================== */
+/*  Réseau : hôte                                                      */
+/* ================================================================== */
+function peerOpts() {
+  const o = { debug: 0 };
+  if (Q.get('peerhost')) { o.host = Q.get('peerhost'); o.port = +(Q.get('peerport') || 9000); o.path = Q.get('peerpath') || '/'; o.secure = false; }
+  return o;
+}
+function makeCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 5; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
+
+function hostStart(resume) {
+  if (typeof Peer === 'undefined') { toast('Le service de connexion ne s’est pas chargé. Vérifiez internet.', true); return; }
+  S.role = 'host'; S.seat = 0;
+  if (resume) { S.code = resume.code; S.st = resume.st; S.opts = resume.opts; S.seats = resume.seats; if (S.seats[1] && S.seats[1].kind === 'guest') S.seats[1].online = false; }
+  else { S.code = makeCode(); S.st = null; S.seats = [{ kind: 'host', name: S.name }, null]; }
+  let tries = 0;
+  const open = () => {
+    S.peer = new Peer(PREFIX + S.code, peerOpts());
+    S.peer.on('open', () => { netBanner(null); $('#netState').textContent = ''; if (S.st) hostChanged(); else renderLobby(); });
+    S.peer.on('connection', conn => {
+      conn.on('data', d => onHostData(conn, d));
+      conn.on('close', () => onGuestGone(conn));
+      conn.on('error', () => onGuestGone(conn));
+    });
+    S.peer.on('disconnected', () => { netBanner('Connexion au serveur perdue… reconnexion'); setTimeout(() => { try { S.peer.reconnect(); } catch (e) { /* rien */ } }, 1500); });
+    S.peer.on('error', e => {
+      if (e.type === 'unavailable-id' && tries++ < 12) { netBanner('Récupération du code ' + S.code + '…'); try { S.peer.destroy(); } catch (x) { /* rien */ } setTimeout(open, 2500); return; }
+      if (e.type === 'unavailable-id') { toast('Ce code est déjà utilisé. Créez une nouvelle partie.', true); return; }
+      if (e.type === 'network' || e.type === 'server-error' || e.type === 'socket-error') netBanner('Serveur de connexion injoignable. Vérifiez internet.');
+    });
+  };
+  open();
+  if (S.st) hostChanged(); else renderLobby();
+}
+function soloStart(resume) {
+  S.role = 'solo'; S.seat = 0;
+  if (resume) { S.code = resume.code; S.st = resume.st; S.opts = resume.opts; S.seats = resume.seats; hostChanged(); return; }
+  S.code = 'SOLO'; S.seats = [{ kind: 'host', name: S.name }, { kind: 'bot', name: 'Robot' }]; S.st = null;
+  renderLobby();
+}
+function hostSend(seat, msg) { const s = S.seats[seat]; if (s && s.conn && s.conn.open) { try { s.conn.send(msg); } catch (e) { /* rien */ } } }
+function lobbyMsg() { return { t: 'lobby', code: S.code, opts: S.opts, seats: S.seats.map(s => s && { kind: s.kind, name: s.name, online: s.online !== false }) }; }
+function onHostData(conn, d) {
+  if (!d || typeof d !== 'object') return;
+  if (d.t === 'hello') {
+    const name = String(d.name || 'Invité').slice(0, 18);
+    const s1 = S.seats[1];
+    if (s1 && s1.kind === 'guest' && s1.token === d.token) { s1.conn = conn; s1.online = true; s1.name = name; s1.auto = false; toast(name + ' est de retour.'); }
+    else if (!S.st && (!s1 || s1.kind === 'bot')) { S.seats[1] = { kind: 'guest', name, token: d.token, conn, online: true }; toast(name + ' a rejoint la partie.'); }
+    else { try { conn.send({ t: 'full' }); } catch (e) { /* rien */ } setTimeout(() => conn.close(), 300); return; }
+    netBanner(null);
+    if (S.st) hostChanged(); else { renderLobby(); hostSend(1, lobbyMsg()); }
+    return;
+  }
+  const seat = S.seats.findIndex(s => s && s.conn === conn);
+  if (seat < 0) return;
+  if (d.t === 'act') { applyAct(seat, d.d); return; }
+  if (d.t === 'pause') { S.paused = !!d.on; toast(S.seats[seat].name + (S.paused ? ' met en pause.' : ' relance le combat.')); hostChanged(); return; }
+  if (d.t === 'step') { manualStep(); return; }
+  if (d.t === 'leave') { onGuestGone(conn, true); }
+}
+function onGuestGone(conn, left) {
+  const s = S.seats[1];
+  if (!s || s.conn !== conn) return;
+  s.conn = null; s.online = false;
+  if (!S.st) { S.seats[1] = null; renderLobby(); toast(s.name + ' a quitté le salon.'); return; }
+  toast(s.name + (left ? ' a quitté la partie.' : ' s’est déconnecté.'), true);
+  hostChanged();
+}
+function applyAct(seat, d) {
+  if (!S.st) return;
+  const err = E.act(S.st, seat, d);
+  if (err) { if (seat === S.seat) toast(err, true); else hostSend(seat, { t: 'err', msg: err }); return; }
+  S.st.seq++;
+  hostChanged();
+}
+function viewMeta() { return { paused: S.paused, speed: S.opts.speed, code: S.code, seats: S.seats.map(s => s && { kind: s.kind, name: s.name, online: s.online !== false, auto: !!s.auto }), role: S.role }; }
+function hostChanged() {
+  if (!S.st) return;
+  LS.set('tt-host', { code: S.code, st: S.st, opts: S.opts, seats: S.seats.map(s => s && { kind: s.kind, name: s.name, token: s.token }), ts: Date.now(), solo: S.role === 'solo' });
+  if (S.st.phase === 'over') LS.del('tt-host');
+  const meta = viewMeta();
+  if (S.seats[1] && S.seats[1].kind === 'guest') hostSend(1, { t: 'view', v: E.view(S.st, 1), meta });
+  onView(E.view(S.st, 0), meta);
+  schedule();
+}
+function seatIsBot(t) { const s = S.seats[t]; return s && (s.kind === 'bot' || (s.kind === 'guest' && s.auto)); }
+function schedule() {
+  clearTimeout(S.timers.bot); clearTimeout(S.timers.step);
+  const st = S.st; if (!st || st.phase === 'over') return;
+  for (const t of [0, 1]) {
+    if (!seatIsBot(t)) continue;
+    const p = E.pendingFor(st, t);
+    if (p && p.type !== 'wait-raven') {
+      const delay = (p.type === 'build' ? 1300 : p.type === 'pick' ? 900 : 700) * TIME;
+      S.timers.bot = setTimeout(() => { if (S.st !== st) return; const d = B.decide(S.st, t); if (d) applyAct(t, d); }, delay);
+      return;
+    }
+  }
+  if (st.phase === 'fight' && !st.need && !S.paused) {
+    const sp = S.opts.speed || 1;
+    let delay = 2900 / sp;
+    if (st.ti === 0) delay = 2300 / Math.min(sp, 1.4);
+    const last = st.last && st.last.ev ? st.last.ev : [];
+    if (last.some(e => e.t === 'intrigue' || e.t === 'block' || e.t === 'cancel')) delay += 500 / sp;
+    delay += Math.min(1600, last.filter(e => e.t === 'note').length * 220) / sp;
+    const waitingGuest = S.seats[1] && S.seats[1].kind === 'guest' && S.seats[1].online === false && !S.seats[1].auto;
+    if (waitingGuest) return;
+    S.timers.step = setTimeout(doStep, delay * TIME);
+  }
+}
+function doStep() {
+  if (!S.st || S.st.phase !== 'fight' || S.st.need) return;
+  const r = E.stepTurn(S.st);
+  S.st.seq++;
+  if (r && r.need && seatIsBot(r.need.team)) { /* le robot décidera */ }
+  hostChanged();
+}
+function manualStep() { if (S.st && S.st.phase === 'fight' && !S.st.need) { clearTimeout(S.timers.step); doStep(); } }
+function startGame() {
+  const seed = (Math.random() * 4294967296) >>> 0;
+  S.st = E.newGame({ seed, names: [S.seats[0].name, S.seats[1].name], mode: S.opts.mode, pool: S.opts.pool, memo: S.opts.memo });
+  S.paused = false; S.animTurn = null; S.ui = {}; S.hudKey = ''; removeReturnBtn();
+  hostChanged();
+}
+function rematch() {
+  if (S.role === 'guest') return;
+  if (S.seats[1] && S.seats[1].kind === 'guest' && S.seats[1].online === false) { toast('Votre adversaire n’est pas connecté.', true); return; }
+  closeOv(); startGame();
+}
+
+/* ================================================================== */
+/*  Réseau : invité                                                    */
+/* ================================================================== */
+function guestJoin(code) {
+  if (typeof Peer === 'undefined') { toast('Le service de connexion ne s’est pas chargé. Vérifiez internet.', true); return; }
+  S.role = 'guest'; S.seat = 1; S.code = code; S.joined = false; S.everConnected = false;
+  LS.set('tt-guest', { code, ts: Date.now() });
+  $('#netState').textContent = 'Connexion…';
+  S.peer = new Peer(undefined, peerOpts());
+  let attempts = 0;
+  const connect = () => {
+    const c = S.peer.connect(PREFIX + code, { reliable: true });
+    S.hostConn = c;
+    c.on('open', () => { S.everConnected = true; attempts = 0; netBanner(null); c.send({ t: 'hello', name: S.name, token: S.token }); });
+    c.on('data', onGuestData);
+    c.on('close', () => { if (S.role !== 'guest' || S.left) return; netBanner('Connexion à l’hôte perdue… reconnexion'); setTimeout(connect, 2500); });
+  };
+  S.peer.on('open', connect);
+  S.peer.on('error', e => {
+    if (e.type === 'peer-unavailable') {
+      if (!S.everConnected && attempts++ >= 2) { toast('Aucune partie avec le code ' + code + '.', true); $('#netState').textContent = ''; leaveToHome(); return; }
+      netBanner('L’hôte est injoignable… nouvel essai'); setTimeout(connect, 3000); return;
+    }
+    if (e.type === 'network' || e.type === 'server-error' || e.type === 'socket-error') netBanner('Serveur de connexion injoignable. Vérifiez internet.');
+  });
+  S.peer.on('disconnected', () => { setTimeout(() => { try { S.peer.reconnect(); } catch (x) { /* rien */ } }, 1500); });
+}
+function onGuestData(d) {
+  if (!d || typeof d !== 'object') return;
+  if (d.t === 'lobby') { S.code = d.code; S.opts = d.opts; S.seats = d.seats; S.joined = true; renderLobby(); return; }
+  if (d.t === 'view') { S.joined = true; onView(d.v, d.meta); return; }
+  if (d.t === 'err') { toast(d.msg, true); return; }
+  if (d.t === 'full') { toast('Cette partie est complète.', true); S.left = true; LS.del('tt-guest'); leaveToHome(); }
+}
+function send(d) {
+  if (S.role === 'guest') { if (S.hostConn && S.hostConn.open) S.hostConn.send({ t: 'act', d }); else toast('Pas de connexion à l’hôte.', true); }
+  else applyAct(S.seat, d);
+}
+function leaveToHome() {
+  clearTimeout(S.timers.bot); clearTimeout(S.timers.step);
+  if (S.role === 'guest' && S.hostConn) { try { S.hostConn.send({ t: 'leave' }); } catch (e) { /* rien */ } }
+  S.left = true;
+  try { if (S.peer) S.peer.destroy(); } catch (e) { /* rien */ }
+  S.peer = null; S.role = null; S.st = null; S.v = null; S.hudKey = '';
+  closeOv(); initHome();
+  setTimeout(() => { S.left = false; }, 500);
+}
+
+/* ================================================================== */
+/*  Salon                                                              */
+/* ================================================================== */
+function renderLobby() {
+  show('lobby');
+  const host = S.role !== 'guest';
+  const seat = (s, i) => {
+    if (!s) return `<div class="seat"><span class="tag p${i + 1}">${i + 1}P</span><span class="nm muted">En attente d’un joueur ${waitDots}</span>${host ? `<button class="btn sm" data-act="addBot">Jouer contre le robot</button>` : ''}</div>`;
+    const kind = s.kind === 'bot' ? 'Robot' : s.kind === 'host' ? 'Hôte' : 'Invité';
+    return `<div class="seat"><span class="tag p${i + 1}">${i + 1}P</span><span class="nm">${esc(s.name)}</span><span class="muted small">${kind}</span>${host && i === 1 && s.kind === 'bot' && S.role === 'host' ? `<button class="btn sm ghost" data-act="rmBot">Retirer</button>` : ''}</div>`;
+  };
+  const seg = (k, vals) => `<div class="seg">${vals.map(([v, l]) => `<button type="button" ${host ? '' : 'disabled'} class="${S.opts[k] === v ? 'on' : ''}" data-act="opt" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
+  $('#lobby').innerHTML = `<div class="page">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div>${S.role === 'solo' ? '<h2 style="font-family:var(--f-ui);font-size:1.8rem">Partie contre le robot</h2>' : `<div class="muted" style="font-family:var(--f-ui)">Code de la partie</div><div class="code">${esc(S.code || '…')}</div><div class="muted small">Donnez ce code à votre adversaire.</div>${/^https?:/.test(location.protocol) ? '<button class="btn sm" style="margin-top:8px" data-act="copyLink">Copier le lien</button>' : ''}`}</div>
+      <button class="btn ghost sm" data-act="leave">Quitter</button>
+    </div>
+    <div class="seats">${seat(S.seats[0], 0)}${seat(S.seats[1], 1)}</div>
+    <div class="panel opts">
+      <div class="opt"><span>Choix des combattants</span>${seg('mode', [['draft', 'Draft (règle officielle)'], ['free', 'Choix libre, chacun son tour']])}</div>
+      <div class="opt"><span>Combattants disponibles</span>${seg('pool', [['base', 'Boîte de base (12)'], ['all', 'Base + L’Héritage d’Arthur (18)']])}</div>
+      <div class="opt"><span>Cartes adverses déjà jouées</span>${seg('memo', [['off', 'À retenir de mémoire (règle officielle)'], ['on', 'Visibles (aide-mémoire)']])}</div>
+      <div class="opt"><span>Vitesse du combat</span>${seg('speed', [[0.7, 'Posée'], [1, 'Normale'], [1.6, 'Rapide']])}</div>
+    </div>
+    <div style="margin-top:16px">${host ? `<button class="btn gold big full" data-act="start" ${S.seats[1] ? '' : 'disabled'}>Lancer la partie</button>` : `<div class="status">L’hôte va lancer la partie ${waitDots}</div>`}</div>
+  </div>`;
+}
+
+/* ================================================================== */
+/*  Réception d'une vue                                                */
+/* ================================================================== */
+function onView(v, meta) {
+  const prev = S.v; S.v = v; S.meta = meta || {}; S.paused = S.role === 'guest' ? !!S.meta.paused : S.paused;
+  if (v.phase === 'select' || v.phase === 'setup') {
+    if (['over', 'build', 'merlin', 'pp'].includes($('#ov').dataset.kind)) closeOv();
+    removeReturnBtn(); S.hudKey = ''; if (v.phase === 'select') S.animTurn = null; S.ui.hideOver = false;
+  }
+  if (v.phase === 'build' && (!prev || prev.phase !== 'build')) S.ui.hideBuild = false;
+  if (v.phase === 'select') renderSelect(v);
+  else if (v.phase === 'setup') renderSetup(v);
+  else renderGame(v, prev);
+}
+
+/* ---------------- sélection ---------------- */
+function renderSelect(v) {
+  show('select');
+  const me = v.me, op = 1 - me, sel = v.sel, pend = v.pending;
+  const myPicks = v.p[me].picks, opPicks = v.p[op].picks;
+  const slots = (picks, mine) => [0, 1].map(i => picks[i] ? `<button class="slotbtn" data-act="fsheet" data-key="${picks[i]}" style="border:0;background:none;padding:0" title="${esc(FIGHTERS[picks[i]].n)}">${discHTML(picks[i], 'lg')}</button>`
+    : (mine && sel.mode === 'draft' && sel.chosen && sel.chosen[me] && i === picks.length ? `<span class="slot" style="border-style:solid;border-color:var(--hp)">${discHTML(sel.chosen[me], '')}</span>` : `<span class="slot">?</span>`)).join('');
+  let status = '', list = [];
+  if (sel.mode === 'draft') {
+    const hand = Array.isArray(sel.hands[me]) ? sel.hands[me] : [];
+    list = hand;
+    if (pend && pend.type === 'pick') status = sel.step === 1 ? 'Draft : choisissez <b>votre premier combattant</b> dans votre main. Les autres passeront à votre adversaire.' : 'Votre adversaire vous a passé sa main : choisissez <b>votre second combattant</b>.';
+    else status = 'Choix enregistré. ' + esc(v.p[op].name) + ' choisit ' + waitDots;
+  } else {
+    list = sel.avail;
+    const turn = sel.order[sel.idx];
+    status = turn === me ? 'À vous de choisir <b>un combattant</b>.' : esc(v.p[op].name) + ' choisit ' + waitDots;
+  }
+  const canPick = pend && pend.type === 'pick';
+  $('#select').innerHTML = `<div class="page" style="width:min(1060px,100%)">
+    <div class="row" style="justify-content:space-between"><h2 style="font-family:var(--f-disp);font-size:clamp(1.4rem,5vw,2.2rem)">Choix des combattants</h2>
+      <div class="row"><button class="btn ghost sm" data-act="rules">Règles</button><button class="btn ghost sm" data-act="leave">Quitter</button></div></div>
+    <div class="picks"><div class="pickcol me"><h3>${esc(v.p[me].name)} (vous)</h3><div class="pickslots">${slots(myPicks, true)}</div></div>
+      <div class="pickcol opp"><h3>${esc(v.p[op].name)}</h3><div class="pickslots">${slots(opPicks, false)}</div></div></div>
+    <div class="status">${status}</div>
+    <div class="fgrid">${list.map(k => tileHTML(k, canPick)).join('')}</div>
+    <p class="muted small" style="margin-top:14px">Touchez un combattant pour lire ses règles et voir ses 10 cartes.</p>
+  </div>`;
+}
+function tileHTML(k, can) {
+  const fd = FIGHTERS[k];
+  return `<button type="button" class="ftile" style="--c:${fd.col}" data-act="fsheet" data-key="${k}" data-can="${can ? 1 : ''}">
+    <div class="row" style="flex-wrap:nowrap;gap:10px">${discHTML(k)}<div><div class="nm">${esc(fd.n)}</div><div class="sb">${esc(fd.sub)}</div></div></div>
+    <div class="stats"><span class="h">${k === 'peuple' ? '3+4+5' : fd.hp} PV</span><span class="p">${fd.pw} Puiss.</span>${cxHTML(fd.cx)}</div>
+    <div class="tags">${fd.tags.map(t => `<span>${esc(t)}</span>`).join('')}</div></button>`;
+}
+
+/* ---------------- mise en place ---------------- */
+function renderSetup(v) {
+  show('setup');
+  const me = v.me, P = v.p[me], pend = v.pending;
+  const u = S.ui.setup = S.ui.setup || { order: (P.starts || []).slice(), pp: 2 };
+  if (pend && pend.type === 'setup' && (!u.order.length || !u.order.every(id => pend.starts.includes(id)))) u.order = pend.starts.slice();
+  const myF = v.f.filter(F => F.team === me);
+  let body;
+  if (pend && pend.type === 'setup') {
+    body = `<p>Votre Deck de Combat commence avec vos deux cartes de départ. Choisissez celle qui sera jouée en premier.</p>
+      <div class="row" style="justify-content:center;gap:16px;margin:14px 0">${u.order.map((id, i) => `<div style="display:grid;justify-items:center;gap:6px"><span style="font-family:var(--f-disp);font-size:1.4rem;color:var(--hp)">${i + 1}</span>${cardHTML(id, { w: 'clamp(130px,38vw,180px)' })}</div>`).join('')}</div>
+      <div class="row" style="justify-content:center"><button class="btn" data-act="swapStart">Inverser l’ordre</button></div>
+      ${pend.pp ? `<h3 style="font-family:var(--f-ui);font-size:1.3rem;margin-top:20px">Petit Peuple : qui entre en premier ?</h3>
+        <div class="choice" style="margin-top:8px">${PP_CHARS.map((c, i) => `<button type="button" data-act="ppSetup" data-i="${i}" style="${u.pp === i ? 'box-shadow:inset 0 0 0 3px var(--hp)' : ''}"><b>${esc(cap(c.n))}</b> — ${c.max} PV · en entrant : ${c.top === 's' ? 'le Petit Peuple gagne 1 Cube' : 'son Partenaire gagne 1 Cube'}</button>`).join('')}</div>` : ''}
+      <button class="btn gold big full" style="margin-top:18px" data-act="setupOk">Prêt</button>`;
+  } else body = `<div class="status">Prêt. ${esc(v.p[1 - me].name)} prépare son équipe ${waitDots}</div>`;
+  $('#setup').innerHTML = `<div class="page">
+    <div class="row" style="justify-content:space-between"><h2 style="font-family:var(--f-disp);font-size:clamp(1.4rem,5vw,2.2rem)">Mise en place</h2><button class="btn ghost sm" data-act="leave">Quitter</button></div>
+    <div class="row" style="margin:14px 0;gap:14px">${myF.map(F => `<button class="ftile" style="--c:${fcol(F.key)};flex:1;min-width:150px" data-act="fsheet" data-key="${F.key}"><div class="row" style="flex-wrap:nowrap">${discHTML(F.key)}<div><div class="nm">${esc(FIGHTERS[F.key].n)}</div><div class="sb">${F.pw} Puissance${F.key === 'mephisto' ? ' · Serpent ' + (F.serpent === 'N' ? 'noir' : 'blanc') : ''}</div></div></div></button>`).join('')}</div>
+    <div class="panel">${body}</div>
+    <p class="muted small" style="margin-top:12px">Adversaire : ${v.f.filter(F => F.team !== me).map(F => esc(FIGHTERS[F.key].n)).join(' et ')}.</p></div>`;
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ================================================================== */
+/*  Écran de combat                                                    */
+/* ================================================================== */
+function ensureBoard(v) {
+  const key = v.f.map(F => F.key).join(',') + '|' + v.me;
+  if (S.hudKey === key && $('#game .hud')) return;
+  S.hudKey = key;
+  $('#game').innerHTML = `<header class="hud"><div class="hside me"></div><div class="hmid"></div><div class="hside opp"></div></header>
+    <section class="col me"></section><section class="arena"><div class="atop"></div><div class="clash"></div><div class="ticker"></div></section><section class="col opp"></section>
+    <footer class="decks"><div class="mydeck"></div><div class="oppdeck"></div></footer>`;
+  const me = v.me;
+  const side = t => [t * 2, t * 2 + 1].map(i => `<div class="hbar" data-f="${i}">${discHTML(v.f[i].key)}<div><div class="lab"><span class="n"></span><span class="v"></span></div><div class="track"><i class="lag"></i><i class="fill"></i></div></div></div>`).join('');
+  $('#game .hside.me').innerHTML = `<div class="who">${esc(v.p[me].name)}</div>` + side(me);
+  $('#game .hside.opp').innerHTML = `<div class="who">${esc(v.p[1 - me].name)}</div>` + side(1 - me);
+}
+function hpFrac(F) {
+  if (F.key === 'peuple') { if (F.cur == null) return 0; const c = F.chars[F.cur]; return c.hp / c.max; }
+  if (F.key === 'excalibur') return F.broken ? 1 : F.hp / F.max;
+  if (F.key === 'vert') return Math.max(0, F.hp) / 14;
+  return Math.max(0, F.hp) / F.max;
+}
+function hpLabel(F) {
+  if (F.key === 'peuple') return F.cur == null ? 'Esprits' : F.chars[F.cur].hp + '/' + F.chars[F.cur].max;
+  if (F.key === 'excalibur' && F.broken) return 'Brisée';
+  if (F.key === 'vert') return F.hp + '/' + (F.mask - 1);
+  if (F.key === 'brijit' && F.hp <= 0) return F.hp === -2 ? 'Revient !' : 'KO';
+  return Math.max(0, F.hp) + '/' + F.max;
+}
+function renderHud(v) {
+  v.f.forEach(F => {
+    const el = $(`#game .hbar[data-f="${F.i}"]`); if (!el) return;
+    el.classList.toggle('on', v.act[F.team] === F.i);
+    $('.n', el).textContent = cap(E.fname(v, F.i));
+    $('.v', el).textContent = hpLabel(F);
+    const f = Math.max(0, Math.min(1, hpFrac(F)));
+    $('.fill', el).style.width = (f * 100) + '%';
+    $('.lag', el).style.width = (f * 100) + '%';
+    $('.track', el).classList.toggle('low', f <= .3);
+    const d = $('.disc', el); d.style.setProperty('--c', F.key === 'bodvar' && F.bear ? '#7b3a1d' : (F.key === 'excalibur' && F.broken ? '#a0306e' : fcol(F.key)));
+  });
+  const nTurns = Math.max(v.p[0].fightCount != null ? v.p[0].fightCount : v.p[0].fight.length, v.p[1].fightCount != null ? v.p[1].fightCount : v.p[1].fight.length);
+  const turnTxt = v.phase === 'fight' ? (v.ti === 0 ? 'Combat !' : `Tour ${v.ti}/${nTurns}`) : v.phase === 'build' ? 'Construction' : 'Fin';
+  const canStep = S.paused && v.phase === 'fight' && !v.need;
+  $('#game .hmid').innerHTML = `<div class="rnd">R${v.round}</div><div class="trn">${turnTxt}</div>
+    <div class="tools"><button class="iconbtn ${S.paused ? 'on' : ''}" data-act="pause" title="Pause">${S.paused ? 'Reprendre' : 'Pause'}</button>${canStep ? '<button class="iconbtn" data-act="step">Tour suivant</button>' : ''}<button class="iconbtn" data-act="journal">Journal</button><button class="iconbtn" data-act="menu">Menu</button></div>`;
+}
+function cells(v, F) {
+  const fd = FIGHTERS[F.key];
+  const icons = F.key === 'bodvar' && F.bear ? {} : (fd.icons || {});
+  const stops = F.key === 'bodvar' && F.bear ? [] : (fd.stops || []);
+  if (F.key === 'peuple') {
+    return `<div class="pptracks">${F.chars.map((c, i) => `<div class="pp ${F.cur === i ? 'cur' : ''} ${c.spirit ? 'dead' : ''}"><b>${esc(cap(PP_CHARS[i].n))}</b><div class="cells">${Array.from({ length: c.max }, (_, k) => `<i class="${k < c.hp ? 'f' : ''} ${k + 1 === c.hp && F.cur === i ? 'cur' : ''}"></i>`).join('')}</div></div>`).join('')}</div>`;
+  }
+  if (F.key === 'excalibur' && F.broken) return `<div class="chip warn">Lame Brisée : ne gagne ni ne perd plus de PV</div>`;
+  const max = F.max;
+  let s = '<div class="cells">';
+  if (F.key === 'brijit') s += [-2, -1, 0].map(h => `<i class="${h === -2 ? 'ic pow' : 'ko'} ${F.hp === h ? 'cur' : ''}" title="${h === -2 ? 'Retour à la vie' : 'KO'}"></i>`).join('');
+  else s += `<i class="ko ${F.hp <= 0 ? 'cur' : ''}" title="${F.key === 'excalibur' ? 'Brisée' : 'KO'}"></i>`;
+  for (let h = 1; h <= max; h++) {
+    const cls = [];
+    if (F.key === 'vert' && h >= F.mask) cls.push('gone');
+    else if (h <= F.hp) cls.push('f');
+    if (h === F.hp) cls.push('cur');
+    if (stops.includes(h)) cls.push('stop');
+    if (icons[h]) cls.push('ic', icons[h]);
+    s += `<i class="${cls.join(' ')}" title="${h}${stops.includes(h) ? ' · Stop' : ''}${icons[h] ? ' · ' + ({ pow: '+1 Cube', intrigue: 'Intrigue', serpent: 'Serpent' }[icons[h]]) : ''}"></i>`;
+  }
+  if (F.key === 'vert') s += `<i class="mask" title="Masque de Bois"></i>`;
+  return s + '</div>';
+}
+function meter(n, max, cls) { let s = `<span class="meter ${cls || ''}">`; for (let i = 0; i < max; i++) s += `<i class="${i < n ? 'on' : ''}"></i>`; return s + '</span>'; }
+function treeSVG(F, opts) {
+  const m = F.tree.m; const occ = {}; m.forEach((x, i) => { occ[x.node] = i + 1; });
+  const lines = []; Object.keys(TREE).forEach(k => (TREE[k].c || []).forEach(c => lines.push(`<line x1="${TREE[k].x}" y1="${TREE[k].y}" x2="${TREE[c].x}" y2="${TREE[c].y}"/>`)));
+  const col = { H: '#3ddc84', B: '#6cbcff', A: '#ff5470', D: '#ffb340' };
+  const nodes = Object.keys(TREE).map(k => {
+    const nd = TREE[k], on = occ[k], opt = opts && opts.includes(k);
+    const fill = on ? '#ffd23f' : (nd.b ? col[nd.b] : '#fff');
+    return `<g ${opt ? `data-act="merlinPick" data-node="${k}" style="cursor:pointer"` : ''}><circle cx="${nd.x}" cy="${nd.y}" r="${nd.end ? 4.4 : 3.4}" fill="${fill}" fill-opacity="${on ? 1 : (nd.b ? .55 : .8)}" stroke="${opt ? '#fff' : (nd.end ? '#fff' : 'none')}" stroke-width="${opt ? 1.6 : .6}"/>${opt ? `<circle cx="${nd.x}" cy="${nd.y}" r="7" fill="none" stroke="#ffd23f" stroke-width="1.2"/>` : ''}</g>`;
+  }).join('');
+  return `<div class="tree"><svg viewBox="0 0 100 102"><g stroke="rgba(255,255,255,.35)" stroke-width="1.2">${lines.join('')}</g>${nodes}</svg></div>`;
+}
+function tokensHTML(v, F) {
+  const out = [];
+  const pw = F.pw;
+  out.push(`<span class="pw" title="Puissance">${ART.ICO.cube}<b>${pw}</b><span class="cubes">${'<i></i>'.repeat(Math.min(pw, 12))}</span></span>`);
+  if (F.flames) out.push(`<span class="chip fl" title="Flammes de Shango">${ART.ICO.flame}${F.flames}/5</span>`);
+  if (F.conc) out.push(`<span class="chip cc" title="Jeton Concentration de Wong">${ART.ICO.swirl}Concentration</span>`);
+  if (v.sheriff === F.i) out.push(`<span class="chip sh" title="Jeton Shérif">${ART.ICO.star}Shérif</span>`);
+  if (v.golemTok === F.i) out.push(`<span class="chip gk" title="Jeton Golem : protège des Attaques">${ART.ICO.golem}Protégé</span>`);
+  if (F.key === 'dragon') out.push(`<span class="chip sc" title="Écailles">${ART.ICO.scale}${meter(F.scales, 5)}</span>`);
+  if (F.key === 'ching') out.push(`<span class="chip sp" title="Navires (0-7 / 8-15 / 20)">${ART.ICO.ship}${F.ships}/20</span>`);
+  if (F.key === 'bodvar' && !F.bear) out.push(`<span class="chip rg" title="Rage : Ours au 7e cran">Rage ${meter(F.rage, 7)}</span>`);
+  if (F.key === 'bodvar' && F.bear) out.push(`<span class="chip rg">Ours Berserk</span>`);
+  if (F.key === 'jeanne') { const pos = ['Auréole', 'haut gauche', 'haut droite (+1)', 'bas droite', 'bas gauche (+1 Part.)']; out.push(`<span class="chip vx" title="Voix divine">Voix : ${pos[F.voice]}</span>`); }
+  if (F.key === 'mephisto') out.push(`<span class="chip sn">Serpent ${F.serpent === 'N' ? 'noir' : 'blanc'}</span>`);
+  if (F.key === 'milady') out.push(`<span class="chip in" title="Intrigues préparées / pile">${ART.ICO.dagger}${F.prepared} prête${F.prepared > 1 ? 's' : ''} · pile ${F.pile}</span>`);
+  if (F.key === 'peuple') out.push(`<span class="chip sp" title="Esprits">${ART.ICO.ghost}${F.spirits} Esprit${F.spirits > 1 ? 's' : ''}</span>`);
+  if (F.key === 'vert') out.push(`<span class="chip mk" title="Masque de Bois = maximum de PV">${ART.ICO.mask}Max ${F.mask - 1}</span><span class="chip mk" title="Puissance temporaire de sa case">+${CV_TEMP[F.hp] || 0} en Attaque</span>`);
+  if (F.key === 'merlin') out.push(`<span class="chip" title="Marqueurs en réserve">Réserve ${F.tree.reserve}</span>`);
+  if (F.key === 'morgane') out.push(`<span class="chip" title="L'Œil du Corbeau">${ART.ICO.raven}Corbeau</span>`);
+  return `<div class="stats">${out.join('')}</div>${F.key === 'merlin' ? treeSVG(F) : ''}`;
+}
+function panelHTML(v, F) {
+  const on = v.act[F.team] === F.i;
+  const ko = E.isKO(F) && v.phase === 'over';
+  const fd = FIGHTERS[F.key];
+  let name = E.fname(v, F.i); name = name.charAt(0).toUpperCase() + name.slice(1);
+  const col = F.key === 'bodvar' && F.bear ? '#7b3a1d' : (F.key === 'excalibur' && F.broken ? '#a0306e' : fd.col);
+  return `<button type="button" class="fp ${on ? 'on' : ''} ${ko ? 'ko' : ''}" style="--c:${col}" data-act="fpanel" data-f="${F.i}">
+    <div class="hd"><span class="disc" style="--c:${col};--k:${fd.ink}">${ART.emblem(F.key)}</span><div><div class="nm">${esc(name)}</div><div class="sb">${esc(fd.sub)}</div></div>${on ? '<span class="act">En jeu</span>' : ''}</div>
+    ${cells(v, F)}${tokensHTML(v, F)}</button>`;
+}
+function renderPanels(v) {
+  const me = v.me;
+  $('#game .col.me').innerHTML = [me * 2, me * 2 + 1].map(i => panelHTML(v, v.f[i])).join('');
+  $('#game .col.opp').innerHTML = [(1 - me) * 2, (1 - me) * 2 + 1].map(i => panelHTML(v, v.f[i])).join('');
+}
+function turnReveals(v) {
+  const L = v.last && v.last.kind === 'turn' ? v.last.ev : [];
+  const r = [null, null]; L.forEach(e => { if (e.t === 'reveal') r[e.team] = e; });
+  return r;
+}
+function renderArena(v, animate) {
+  const me = v.me, op = 1 - me;
+  const L = v.last && v.last.kind === 'turn' && v.phase !== 'select' ? v.last.ev : [];
+  const rev = turnReveals(v);
+  const cancel = [false, false], blk = [false, false]; let dbl = [false, false];
+  L.forEach(e => { if (e.t === 'cancel') cancel[e.team] = true; if (e.t === 'block') blk[e.team] = true; });
+  const slot = (t, cls) => {
+    const e = rev[t];
+    const who = t === me ? 'Vous' : esc(v.p[t].name);
+    if (!e || v.phase === 'build' && !animate) return `<div class="slot2 ${cls}"><span class="who">${who}</span>${e ? cardHTML(e.card, { btn: 'zoom' }) : '<div class="card back"></div>'}</div>`;
+    const stamps = (cancel[t] ? '<span class="stamp cxl">Annulée</span>' : '') + (blk[t] ? '<span class="stamp blk">Blocage !</span>' : '');
+    return `<div class="slot2 ${cls}"><span class="who">${who}</span><div class="${animate ? (t === me ? 'slam-l' : 'slam-r') : ''}" style="position:relative">${cardHTML(e.card, { btn: 'zoom' })}${stamps}</div></div>`;
+  };
+  $('#game .clash').innerHTML = slot(me, 'me') + '<span class="vs">VS</span>' + slot(op, 'opp');
+  let top = '';
+  if (v.phase === 'fight') {
+    if (v.need) top = v.need.team === me ? '<b style="color:var(--hp)">À vous de choisir.</b>' : esc(v.p[v.need.team].name) + ' fait un choix ' + waitDots;
+    else if (S.paused) top = 'Combat en pause.';
+    else top = v.ti === 0 ? 'Les cartes vont être révélées…' : 'Combat en cours';
+  } else if (v.phase === 'build') top = 'Construction du Round ' + (v.round + 1);
+  else if (v.phase === 'over') top = 'Combat terminé';
+  const off = S.meta && S.meta.seats && S.meta.seats[op] && S.meta.seats[op].kind === 'guest' && !S.meta.seats[op].online && S.role !== 'guest' ? ' · <span style="color:var(--lag)">adversaire déconnecté</span>' : '';
+  $('#game .atop').innerHTML = `<span>${top}${off}</span><span>${v.phase === 'fight' || v.phase === 'over' ? 'Deck : ' + (v.p[me].fight.length) + ' cartes' : ''}</span>`;
+  // Résumé du Tour
+  const lines = [];
+  if (v.last && v.last.kind === 'turn') {
+    const sum = {};
+    L.forEach(e => {
+      if (e.t === 'hp') { const s = sum[e.f] = sum[e.f] || { from: e.from, to: e.to, pw: 0 }; s.to = e.to; }
+      if (e.t === 'pow') { const s = sum[e.f] = sum[e.f] || { pw: 0 }; s.pw = (s.pw || 0) + e.d; }
+    });
+    rev.forEach(e => { if (e) lines.push({ k: 1, t: `${esc(cap(E.fname(v, e.f)))} joue « ${esc(DEF[e.k].n)} »` }); });
+    L.forEach(e => { if (e.t === 'note') lines.push({ t: esc(e.txt) }); });
+    L.filter(e => e.t === 'atkres' && !e.blocked).forEach(e => lines.push({ t: `${esc(cap(E.fname(v, e.by)))} frappe ${esc(E.fname(v, e.to))} (${e.pw})` }));
+    if (L.some(e => e.t === 'atkres' && e.blocked)) lines.push({ t: 'Attaque bloquée.' });
+    Object.keys(sum).forEach(f => { const s = sum[f]; if (s.from != null && s.to !== s.from) lines.push({ k: 1, t: `${esc(cap(E.fname(v, +f)))} : ${s.to > s.from ? '+' : ''}${s.to - s.from} PV` }); });
+  } else if (v.last && v.last.kind === 'build') v.last.ev.filter(e => e.t === 'note').forEach(e => lines.push({ k: 1, t: esc(e.txt) }));
+  $('#game .ticker').innerHTML = lines.map((l, i) => `<div class="${l.k ? 'k' : ''}" style="animation-delay:${animate ? (0.45 + i * 0.12) : 0}s">${l.t}</div>`).join('');
+}
+function renderDecks(v) {
+  const me = v.me, P = v.p[me], O = v.p[1 - me];
+  const playedIds = new Set(P.played.map(r => r.id));
+  const mine = P.fight.map((id, i) => {
+    const c = v.cards[id];
+    const cls = c && c.out ? 'out' : (v.phase === 'fight' && i < v.ti ? 'dim' : (v.phase === 'fight' && i === v.ti ? 'cur' : ''));
+    return cardHTML(id, { btn: 'zoom', cls: cls + ' mini' });
+  }).join('');
+  $('#game .mydeck').innerHTML = `<div class="decklab">Votre Deck de Combat <span class="muted">${P.fight.length} cartes · Construction : ${P.build} restantes</span></div><div class="strip">${mine}</div>`;
+  const n = O.fightCount != null ? O.fightCount : 0;
+  const memo = v.opts.memo === 'on' || v.phase === 'over';
+  const pc = O.playedCount != null ? O.playedCount : O.played.length;
+  const shown = memo ? O.played.map(r => cardHTML(r.id, { btn: 'zoom', w: '46px' })) : Array.from({ length: pc }, (_, i) => i === pc - 1 && O.played.length ? cardHTML(O.played[O.played.length - 1].id, { btn: 'zoom', w: '46px' }) : '<div class="card back played" style="--w:46px"></div>');
+  const backs = Math.max(0, n - shown.length);
+  $('#game .oppdeck').innerHTML = `<div class="decklab">Deck adverse <span class="muted">${n} cartes</span></div><div class="strip">${shown.join('')}${'<div class="card back" style="--w:46px"></div>'.repeat(backs)}</div>`;
+}
+function floatAt(el, txt, cls, delay) {
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const f = document.createElement('div'); f.className = 'fx ' + cls; f.textContent = txt;
+  f.style.left = (r.left + r.width / 2 - 20 + window.scrollX) + 'px'; f.style.top = (r.top + 6 + window.scrollY) + 'px';
+  f.style.animationDelay = (delay || 0) + 's'; f.style.position = 'absolute';
+  document.body.appendChild(f); setTimeout(() => f.remove(), 2600 + (delay || 0) * 1000);
+}
+function animateTurn(v) {
+  const L = v.last.ev;
+  const sum = {};
+  L.forEach(e => {
+    if (e.t === 'hp') { const s = sum[e.f] = sum[e.f] || { from: e.from, pw: 0 }; s.to = e.to; if (s.from == null) s.from = e.from; }
+    if (e.t === 'pow') { const s = sum[e.f] = sum[e.f] || { pw: 0 }; s.pw += e.d; }
+  });
+  Object.keys(sum).forEach(f => {
+    const s = sum[f]; const hb = $(`#game .hbar[data-f="${f}"]`); const fp = $(`#game .fp[data-f="${f}"]`);
+    if (s.from != null && s.to != null && s.to !== s.from) {
+      const d = s.to - s.from;
+      floatAt(fp || hb, (d > 0 ? '+' : '') + d, d > 0 ? 'heal' : 'dmg', .55);
+      if (d < 0 && fp) { setTimeout(() => fp.classList.add('shake'), 550); }
+    }
+    if (s.pw) floatAt(hb, (s.pw > 0 ? '+' : '') + s.pw + ' Puiss.', 'pw', .75);
+  });
+  const ko = L.find(e => e.t === 'over');
+  if (ko) {
+    const word = ko.winner === 'draw' ? 'Double K.O.' : (L.some(e => e.t === 'incin') && ko.reason === 'incineration' ? 'Incinéré !' : (ko.reason === 'enfer' ? 'Enfer !' : 'K.O.'));
+    banner(word, 1.1);
+  }
+}
+function banner(txt, delay) {
+  const a = $('#game .arena'); if (!a) return;
+  const b = document.createElement('div'); b.className = 'banner'; b.innerHTML = `<span style="animation-delay:${delay || 0}s">${esc(txt)}</span>`;
+  a.appendChild(b); setTimeout(() => b.remove(), 1500 + (delay || 0) * 1000);
+}
+function renderGame(v, prev) {
+  show('game');
+  ensureBoard(v);
+  const newTurn = v.last && v.last.kind === 'turn' && v.phase !== 'setup' && S.animTurn !== (v.round + ':' + v.last.turn) && prev && prev.phase !== 'setup';
+  if (v.last && v.last.kind === 'turn') S.animTurn = v.round + ':' + v.last.turn;
+  if (newTurn && prev) {
+    // barres : partir de l'ancien état pour l'animation
+    prev.f.forEach(F => { const el = $(`#game .hbar[data-f="${F.i}"]`); if (el) { const f = Math.max(0, Math.min(1, hpFrac(F))); $('.lag', el).style.width = (f * 100) + '%'; } });
+  }
+  renderHud(v);
+  renderPanels(v);
+  renderArena(v, newTurn);
+  renderDecks(v);
+  if (newTurn) animateTurn(v);
+  const roundStart = prev && v.phase === 'fight' && v.ti === 0 && (prev.phase === 'build' || prev.phase === 'setup' || prev.round !== v.round);
+  if (roundStart || (!prev && v.phase === 'fight' && v.ti === 0) || (prev && prev.phase === 'setup' && v.phase === 'fight')) banner('Round ' + v.round, 0.1);
+  renderOverlay(v, newTurn);
+}
+
+/* ---------------- superpositions de jeu ---------------- */
+const READING = ['zoomsheet', 'fsheet', 'journal', 'rules', 'menu'];
+function renderOverlay(v, newTurn) {
+  const kind = $('#ov').dataset.kind;
+  const reading = READING.includes(kind) && !$('#ov').classList.contains('hidden');
+  const pend = v.pending;
+  if (pend && pend.type === 'merlin') { removeReturnBtn(); merlinSheet(v, pend); return; }
+  if (pend && pend.type === 'ppNext') { removeReturnBtn(); ppSheet(v, pend); return; }
+  if (kind === 'merlin' || kind === 'pp') closeOv();
+  if (v.phase === 'over') {
+    if (kind === 'build') closeOv();
+    if (S.ui.hideOver) { showReturnBtn('Voir le résultat', 'showOver'); return; }
+    if (kind !== 'over' && !reading) { clearTimeout(S.timers.over); S.timers.over = setTimeout(() => { if (S.v && S.v.phase === 'over' && !S.ui.hideOver && !READING.includes($('#ov').dataset.kind)) overSheet(S.v); }, newTurn ? 2600 : 150); }
+    return;
+  }
+  if (kind === 'over') closeOv();
+  if (v.phase === 'build') {
+    if (S.ui.hideBuild) { showReturnBtn('Revenir à la Construction', 'showBuild'); return; }
+    if (!reading) buildSheet(v);
+    return;
+  }
+  removeReturnBtn();
+  if (kind === 'build') closeOv();
+}
+function showReturnBtn(label, act) {
+  let b = $('#backBuild');
+  if (!b) { b = document.createElement('button'); b.id = 'backBuild'; b.className = 'btn gold'; b.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:40;box-shadow:0 4px 0 rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.5)'; document.body.appendChild(b); }
+  b.dataset.act = act; b.textContent = label;
+}
+function removeReturnBtn() { const b = $('#backBuild'); if (b) b.remove(); }
+
+function buildSheet(v) {
+  removeReturnBtn();
+  const me = v.me, P = v.p[me], pend = v.pending, O = v.p[1 - me];
+  let html = `<h2>Construction — Round ${v.round + 1}</h2>`;
+  if (pend && pend.type === 'wait-raven') {
+    html += `<div class="raven">${ART.emblem('morgane', 'disc')}<div><b>L’Œil du Corbeau.</b> ${esc(O.name)} choisit sa carte en premier ; vous la verrez avant de choisir la vôtre. ${waitDots}</div></div>`;
+  } else if (pend && pend.type === 'build') {
+    const u = S.ui.build = S.ui.build && S.ui.build.round === v.round ? S.ui.build : { round: v.round, pick: null, pos: null, swap: false };
+    html += `<p class="muted" style="margin:4px 0 0">Choisissez une carte, puis l’endroit où l’insérer dans votre Deck de Combat. L’ordre des autres cartes ne change pas.</p>`;
+    if (pend.seen) html += `<div class="raven" style="margin-top:10px">${cardHTML(pend.seen, { btn: 'zoom' })}<div><b>Le Corbeau a vu</b> la carte que ${esc(O.name)} ajoute à son Deck : « ${esc(DEF[pend.seen].n)} ». Sa position reste secrète.</div></div>`;
+    html += `<div class="drawn">${pend.drawn.map(id => cardHTML(id, { btn: 'bpick', cls: u.pick === id ? 'sel' : '' })).join('')}</div>`;
+    const ins = [];
+    for (let i = 0; i <= pend.fight.length; i++) {
+      ins.push(u.pos === i && u.pick != null ? `<button class="gap on" data-act="bpos" data-i="${i}" aria-label="Insérer ici">${cardHTML(u.pick, { w: '76px' })}</button>` : `<button class="gap" data-act="bpos" data-i="${i}" aria-label="Insérer en position ${i + 1}">+</button>`);
+      if (i < pend.fight.length) ins.push(cardHTML(pend.fight[i], { w: '76px', btn: 'zoom' }));
+    }
+    html += `<div><div class="decklab" style="margin-top:6px">Votre Deck de Combat — touchez un « + » pour placer la carte</div><div class="ins">${ins.join('')}</div></div>`;
+    const others = pend.drawn.filter(id => id !== u.pick);
+    if (u.pick != null) {
+      const bo = u.swap ? others.slice().reverse() : others;
+      html += `<div class="bottoms">Sous le Deck de Construction, dans cet ordre : ${bo.map(id => cardHTML(id, { w: '56px', btn: 'zoom' })).join('')}<button class="btn sm ghost" data-act="bswap">Inverser</button></div>`;
+    }
+    html += `<div class="row" style="justify-content:space-between;margin-top:6px"><button class="btn ghost sm" data-act="hideBuild">Voir le plateau</button>
+      <button class="btn gold big" data-act="bok" ${u.pick != null && u.pos != null ? '' : 'disabled'}>Ajouter au Deck</button></div>`;
+  } else {
+    html += `<div class="status">Carte ajoutée. ${O.choice ? 'Les deux joueurs sont prêts.' : esc(O.name) + ' construit son Deck ' + waitDots}</div>
+      <div class="decklab">Votre nouveau Deck de Combat</div><div class="strip">${P.fight.map(id => cardHTML(id, { w: '76px', btn: 'zoom', cls: P.choice && P.choice.pick === id ? 'cur' : '' })).join('')}</div>
+      <div class="row" style="justify-content:flex-start;margin-top:8px"><button class="btn ghost sm" data-act="hideBuild">Voir le plateau</button></div>`;
+  }
+  openOv(html, 'build');
+}
+function merlinSheet(v, pend) {
+  const F = v.f[pend.f];
+  const active = F.tree.m.find(x => !x.done);
+  const used = new Set(F.tree.m.filter(x => x !== active).map(x => TREE[x.node].b).filter(Boolean));
+  const reach = n => { const nd = TREE[n]; if (nd.b) return used.has(nd.b) ? [] : [nd.b]; return [].concat(...(nd.c || []).map(reach)); };
+  const desc = node => {
+    const nd = TREE[node];
+    const branches = [...new Set(reach(node))];
+    const acts = (nd.a || []).map(a => ({ heal: `récupère ${a[2]} PV${a[1] === 'p' ? ' (Partenaire)' : ''}`, block: 'Blocage', cancel: 'Annulation', deflect: 'Déviation', atk: 'Attaque', patk: 'Attaque du Partenaire', atkq: 'Attaque sur le Partenaire adverse', dd: `${a[2]} Dégât${a[2] > 1 ? 's' : ''} Direct${a[2] > 1 ? 's' : ''}${a[1] === 'q' ? ' (Partenaire adverse)' : ''}` }[a[0]])).join(', ');
+    return `<b>${branches.map(b => BRANCH_NAMES[b]).join(' ou ')}</b>${nd.end ? ' · extrémité' : ''}${acts ? ' — ' + acts : ' — case de passage'}`;
+  };
+  openOv(`<h2>Merlin gagne un Savoir Ancien</h2><p class="muted">Choisissez où avancer le marqueur. Une seule Branche par marqueur ; à l’extrémité, un nouveau marqueur part du centre (+1 Cube).</p>
+    <div class="row" style="align-items:flex-start;gap:16px;flex-wrap:wrap"><div style="flex:0 0 220px">${treeSVG(F, pend.options)}</div>
+    <div class="choice" style="flex:1;min-width:220px">${pend.options.map(o => `<button type="button" data-act="merlinPick" data-node="${o}">${desc(o)}</button>`).join('')}</div></div>`, 'merlin');
+}
+function ppSheet(v, pend) {
+  const F = v.f[pend.f];
+  openOv(`<h2>Un Esprit de plus…</h2><p class="muted">Choisissez le Personnage du Petit Peuple qui entre en jeu (il arrive en haut de sa piste).</p>
+    <div class="choice">${pend.options.map(i => `<button type="button" data-act="ppPick" data-i="${i}"><b>${esc(cap(PP_CHARS[i].n))}</b> — ${F.chars[i].max} PV · en entrant : ${PP_CHARS[i].top === 's' ? 'le Petit Peuple gagne 1 Cube' : 'son Partenaire gagne 1 Cube'}</button>`).join('')}</div>`, 'pp');
+}
+function overSheet(v) {
+  if (!v || v.phase !== 'over') return;
+  const me = v.me, w = v.winner;
+  const big = w === 'draw' ? 'Match nul' : (w === me ? 'Victoire !' : 'Défaite');
+  const reason = { ko: 'par KO', incineration: 'par incinération', enfer: 'grâce à « Bienvenue en Enfer ! »', double: 'double KO', deck: 'un Deck de Construction est épuisé' }[v.endReason] || '';
+  const who = w === 'draw' ? '' : esc(v.p[w].name) + ' remporte le Combat ';
+  const host = S.role !== 'guest';
+  openOv(`<div class="overbox"><div class="verdict">${big}</div><div style="font-family:var(--f-ui);font-size:1.25rem">${who}${reason}${/\.$/.test(reason) ? '' : '.'}</div>
+    <div class="row" style="justify-content:center">${v.f.map(F => discHTML(F.key, F.team === me ? '' : 'sm')).join('')}</div>
+    <div class="row" style="justify-content:center">${host ? '<button class="btn gold big" data-act="rematch">Revanche</button>' : `<span class="muted">L’hôte peut lancer une revanche ${waitDots}</span>`}
+    <button class="btn ghost" data-act="journal">Journal</button><button class="btn ghost" data-act="closeOv">Voir le plateau</button><button class="btn ghost" data-act="leave">Accueil</button></div></div>`, 'over');
+}
+function journalSheet(v) {
+  const groups = {};
+  v.log.forEach(l => { (groups[l.r] = groups[l.r] || []).push(l); });
+  const rs = Object.keys(groups).map(Number).sort((a, b) => b - a);
+  openOv(`<button class="btn sm ghost close" data-act="closeOv">Fermer</button><h2>Journal</h2>
+    <p class="muted small">${v.opts.memo === 'on' ? 'Option aide-mémoire : toutes les cartes jouées restent listées.' : 'Règle officielle : les cartes adverses déjà jouées ne sont pas rappelées, seules les vôtres le sont.'}</p>
+    ${rs.map(r => `<h3 style="font-family:var(--f-ui);color:var(--hp);margin-top:12px">${r ? 'Round ' + r : 'Préparation'}</h3><div class="small" style="display:grid;gap:2px">${groups[r].map(l => `<div>${esc(l.t)}</div>`).join('')}</div>`).join('')}`, 'journal');
+}
+function fighterPanelSheet(v, fi) {
+  const F = v.f[fi]; const mine = F.team === v.me;
+  const P = v.p[F.team];
+  let where = '';
+  if (mine) {
+    const inFight = P.fight.filter(id => v.cards[id] && v.cards[id].f === fi).length;
+    const inBuild = (P.buildKeys || []).filter(k => k.startsWith(F.key + '.')).length;
+    where = `<p class="muted small">Dans votre Deck de Combat : ${inFight} carte${inFight > 1 ? 's' : ''} · encore dans la Construction : ${inBuild}.</p>`;
+  }
+  fighterSheet(F.key, false);
+  const sh = $('#ov .sheet');
+  if (sh) sh.insertAdjacentHTML('afterbegin', `<div style="margin-bottom:10px">${panelHTML(v, F).replace('<button', '<div').replace(/<\/button>$/, '</div>')}</div>${where}`);
+}
+function menuSheet() {
+  const host = S.role !== 'guest';
+  const s1 = S.seats[1];
+  const absent = host && S.role === 'host' && s1 && s1.kind === 'guest' && s1.online === false;
+  openOv(`<button class="btn sm ghost close" data-act="closeOv">Fermer</button><h2>Menu</h2>
+    ${S.role === 'host' ? `<p class="muted">Code de la partie : <b style="color:var(--hp);font-family:var(--f-disp)">${esc(S.code)}</b></p>` : ''}
+    ${host ? `<div class="opt" style="margin:10px 0"><span class="muted">Vitesse du combat</span><div class="seg">${[[0.7, 'Posée'], [1, 'Normale'], [1.6, 'Rapide']].map(([x, l]) => `<button class="${S.opts.speed === x ? 'on' : ''}" data-act="speed" data-v="${x}">${l}</button>`).join('')}</div></div>` : ''}
+    ${absent ? `<div class="status">${esc(s1.name)} est déconnecté. <button class="btn sm" data-act="autoGuest">${s1.auto ? 'Arrêter le robot' : 'Faire jouer le robot à sa place'}</button></div>` : ''}
+    ${host && s1 && s1.kind === 'guest' && s1.auto && !absent ? `<div class="status">Le robot joue pour ${esc(s1.name)}. <button class="btn sm" data-act="autoGuest">Arrêter</button></div>` : ''}
+    <div class="row" style="margin-top:12px"><button class="btn" data-act="rules">Règles</button><button class="btn ghost" data-act="leave">Quitter la partie</button></div>`, 'menu');
+}
+
+/* ---------------- règles ---------------- */
+function rulesSheet() {
+  openOv(`<button class="btn sm ghost close" data-act="closeOv">Fermer</button><h2>Règles du combat</h2><div class="ruletext">
+  <p>Chaque joueur forme une équipe de deux Combattants. Le premier qui met KO un Combattant adverse gagne.</p>
+  <h3>Mise en place</h3><ul><li>Chaque Combattant a 10 cartes. Les deux cartes de départ (bordure noire, étoile) forment votre Deck de Combat, dans l’ordre de votre choix.</li><li>Les 18 autres cartes, mélangées, forment votre Deck de Construction.</li></ul>
+  <h3>Un Round : Combat ! puis Construction !</h3>
+  <ul><li><b>Combat !</b> À chaque Tour, les deux joueurs révèlent en même temps la carte suivante de leur Deck de Combat et ses Actions se résolvent simultanément. Le Combattant de la carte est le <b>Combattant actif</b>, l’autre est son <b>Partenaire</b>. Le Combat s’arrête quand toutes les cartes ont été jouées.</li>
+  <li><b>Construction !</b> Piochez 3 cartes de votre Deck de Construction, ajoutez-en une où vous voulez dans votre Deck de Combat (sans changer l’ordre des autres), et glissez les deux autres sous le Deck de Construction. Le Deck de Combat ne se mélange jamais.</li></ul>
+  <h3>Actions</h3><ul>
+  <li><b>Attaque :</b> la cible (par défaut le Combattant actif adverse) perd autant de PV que la Puissance de l’attaquant au début du Tour. Les Cubes ne se dépensent pas.</li>
+  <li><b>Blocage :</b> annule toutes les Attaques de l’équipe adverse ce Tour-ci (pas les Dégâts Directs). S’il bloque au moins une Attaque, même de Puissance 0, son Bonus s’applique une fois.</li>
+  <li><b>Déviation :</b> un Blocage qui renvoie l’Attaque vers une autre cible.</li>
+  <li><b>Dégâts Directs :</b> une perte de PV qui n’est pas une Attaque : impossible à bloquer.</li>
+  <li><b>Récupération :</b> on ajoute les PV, moins ceux perdus le même Tour. Jamais au-dessus du maximum.</li>
+  <li><b>Annulation :</b> la carte adverse est entièrement ignorée.</li>
+  <li><b>Réussite :</b> une Attaque réussit si elle n’est pas bloquée ; un Blocage réussit s’il bloque une Attaque.</li>
+  <li><b>ENSUITE :</b> l’Action suivante se fait après les précédentes, qu’elles aient réussi ou non.</li></ul>
+  <h3>Pistes de PV</h3><ul><li>Une case Stop arrête le marqueur : le reste du mouvement de ce Tour est perdu.</li><li>Les icônes d’une case s’appliquent quand le marqueur s’y arrête ou la traverse, après les Actions des cartes.</li></ul>
+  <h3>Fin du Combat</h3><ul><li>Un Combattant sur sa case KO à la fin d’un Tour : son équipe perd. Les deux équipes en même temps : match nul.</li><li>Si un Deck de Construction ne contient plus 3 cartes : match nul.</li></ul>
+  <h3>Arbitrages de cette version</h3><ul>
+  <li>Les conditions « si aucun Adversaire n’Attaque » ne tiennent compte que des Attaques écrites sur la carte adverse, pas des ripostes.</li>
+  <li>Les effets qui se déclenchent en même temps sont appliqués dans un ordre fixe quand le livret ne précise rien.</li>
+  <li>Une option du salon permet de laisser visibles les cartes adverses déjà jouées (dans le jeu de société, on doit les retenir de mémoire).</li></ul>
+  <p class="muted small">Les règles propres à chaque Combattant sont dans sa fiche (touchez son panneau ou sa tuile).</p></div>`, 'rules');
+}
+
+/* ================================================================== */
+/*  Clics                                                              */
+/* ================================================================== */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) { if (e.target.id === 'ov' && READING.includes($('#ov').dataset.kind)) { closeOv(); if (S.v && ['fight', 'build', 'over'].includes(S.v.phase)) renderOverlay(S.v, false); } return; }
+  const a = b.dataset.act;
+  const v = S.v;
+  switch (a) {
+    case 'host': if (readName()) hostStart(null); break;
+    case 'solo': if (readName()) soloStart(null); break;
+    case 'join': { if (!readName()) return; const code = $('#joinCode').value.trim().toUpperCase(); if (!/^[A-Z]{5}$/.test(code)) { toast('Le code fait 5 lettres.', true); return; } guestJoin(code); break; }
+    case 'rejoin': { if (!readName()) return; const g = LS.get('tt-guest'); if (g) guestJoin(g.code); break; }
+    case 'resume': { if (!readName()) return; const r = LS.get('tt-host'); if (!r) return; S.seats = r.seats; if (r.solo) soloStart(r); else hostStart(r); break; }
+    case 'forget': LS.del('tt-host'); initHome(); break;
+    case 'rules': rulesSheet(); break;
+    case 'closeOv': { const k = $('#ov').dataset.kind; closeOv(); if (k === 'build') S.ui.hideBuild = true; if (k === 'over') S.ui.hideOver = true; if (S.v && ['fight', 'build', 'over'].includes(S.v.phase)) renderOverlay(S.v, false); break; }
+    case 'showOver': S.ui.hideOver = false; removeReturnBtn(); if (S.v) overSheet(S.v); break;
+    case 'leave': if (S.v && S.v.phase !== 'over' && S.st && S.role !== 'guest' && !confirmLeave(b)) return; leaveToHome(); break;
+    case 'copyLink': {
+      const url = location.origin + location.pathname + '?code=' + S.code;
+      const done = () => toast('Lien copié : il ouvre le jeu avec le code ' + S.code + '.');
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => toast(url));
+      else toast(url);
+      break;
+    }
+    case 'addBot': S.seats[1] = { kind: 'bot', name: 'Robot' }; renderLobby(); break;
+    case 'rmBot': S.seats[1] = null; renderLobby(); break;
+    case 'opt': { if (S.role === 'guest') return; let val = b.dataset.v; if (b.dataset.k === 'speed') val = +val; S.opts[b.dataset.k] = val; LS.set('tt-opts', S.opts); renderLobby(); if (S.role === 'host') hostSend(1, lobbyMsg()); break; }
+    case 'start': if (S.seats[1]) startGame(); break;
+    case 'fsheet': { const can = b.dataset.can === '1' && v && v.pending && v.pending.type === 'pick'; fighterSheet(b.dataset.key, can); break; }
+    case 'pick': closeOv(); send({ key: b.dataset.key }); break;
+    case 'zoom': if (b.closest('.ins') || b.closest('.drawn')) { /* géré ailleurs */ } zoomCard(b.dataset.id); break;
+    case 'swapStart': S.ui.setup.order.reverse(); renderSetup(v); break;
+    case 'ppSetup': S.ui.setup.pp = +b.dataset.i; renderSetup(v); break;
+    case 'setupOk': send({ order: S.ui.setup.order, pp: v.pending.pp ? S.ui.setup.pp : undefined }); break;
+    case 'bpick': { const u = S.ui.build; u.pick = +b.dataset.id; if (u.pos == null) u.pos = v.pending.fight.length; buildSheet(v); break; }
+    case 'bpos': { const u = S.ui.build; if (u.pick == null) { toast('Choisissez d’abord une des trois cartes.'); return; } u.pos = +b.dataset.i; buildSheet(v); break; }
+    case 'bswap': S.ui.build.swap = !S.ui.build.swap; buildSheet(v); break;
+    case 'bok': { const u = S.ui.build; const others = v.pending.drawn.filter(id => id !== u.pick); send({ pick: u.pick, pos: u.pos, bottom: u.swap ? others.reverse() : others }); break; }
+    case 'hideBuild': S.ui.hideBuild = true; closeOv(); showReturnBtn('Revenir à la Construction', 'showBuild'); break;
+    case 'showBuild': S.ui.hideBuild = false; removeReturnBtn(); if (S.v) renderOverlay(S.v, false); break;
+    case 'merlinPick': send({ node: b.dataset.node }); closeOv(); break;
+    case 'ppPick': send({ pp: +b.dataset.i }); closeOv(); break;
+    case 'pause': if (S.role === 'guest') { if (S.hostConn) S.hostConn.send({ t: 'pause', on: !S.paused }); } else { S.paused = !S.paused; hostChanged(); } break;
+    case 'step': if (S.role === 'guest') { if (S.hostConn) S.hostConn.send({ t: 'step' }); } else manualStep(); break;
+    case 'journal': if (v) journalSheet(v); break;
+    case 'menu': menuSheet(); break;
+    case 'speed': S.opts.speed = +b.dataset.v; menuSheet(); hostChanged(); break;
+    case 'autoGuest': { const s1 = S.seats[1]; if (s1) s1.auto = !s1.auto; closeOv(); hostChanged(); break; }
+    case 'fpanel': if (v) fighterPanelSheet(v, +b.dataset.f); break;
+    case 'rematch': rematch(); break;
+  }
+});
+function confirmLeave(b) {
+  if (b.dataset.sure) return true;
+  b.dataset.sure = '1'; b.textContent = 'Confirmer : quitter'; setTimeout(() => { if (b.isConnected) { delete b.dataset.sure; b.textContent = 'Quitter'; } }, 3000);
+  return false;
+}
+$('#joinCode') && $('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('[data-act=join]').click(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && READING.includes($('#ov').dataset.kind)) { closeOv(); if (S.v && ['fight', 'build', 'over'].includes(S.v.phase)) renderOverlay(S.v, false); } });
+window.addEventListener('beforeunload', () => { if (S.role === 'guest' && S.hostConn) { try { S.hostConn.close(); } catch (e) { /* rien */ } } });
+
+// Accès pour les tests automatisés
+window.__tt = { S, E, hostChanged, doStep };
+initHome();
+})();
+
+</script>
+<script>if('wakeLock' in navigator){var wl=null;function lk(){navigator.wakeLock.request('screen').then(function(w){wl=w;}).catch(function(){});}document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')lk();});lk();}</script>
+<script src="../../retour.js" data-accueil="#home"></script>
+</body>
+</html>

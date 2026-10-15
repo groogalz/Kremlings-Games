@@ -1,0 +1,2819 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kostky</title>
+<meta name="description" content="Kostky : le jeu de dés des tavernes de Bohême, à plusieurs en ligne ou contre des robots.">
+<meta name="theme-color" content="#140d09">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kostky">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=UnifrakturMaguntia&display=swap">
+<style>
+/* Une table de taverne bohémienne à la chandelle : chêne noirci, plateau de cuir sang-de-bœuf,
+   dés en os, laiton des insignes, ardoise pour les comptes. */
+:root {
+  --night: #140d09;
+  --oak: #2a1a11;
+  --oak-hi: #3c2717;
+  --oak-line: #5a3b22;
+  --leather: #5a2118;
+  --leather-hi: #7a3022;
+  --bone: #efe3c6;
+  --bone-dim: #b8a585;
+  --bone-faint: #8a7a60;
+  --brass: #d6a54c;
+  --brass-hi: #f1cf7c;
+  --brass-deep: #8a6223;
+  --blood: #d04a33;
+  --moss: #9cc184;
+  --slate: #22282a;
+  --slate-hi: #2e3537;
+  --chalk: #ece8dc;
+  --ink: #1b110b;
+  --shadow: rgba(0, 0, 0, .55);
+
+  --f-display: 'UnifrakturMaguntia', 'Pirata One', 'Old English Text MT', Georgia, serif;
+  --f-body: 'Alegreya', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --f-label: 'Alegreya SC', 'Alegreya', 'Palatino Linotype', Georgia, serif;
+
+  --r-s: 6px;
+  --r-m: 10px;
+  --tray: clamp(240px, min(100vw - 54px, 50dvh), 400px);
+  --ds: calc(var(--tray) * .158);
+  --dock-h: 150px;
+  --table-img: repeating-linear-gradient(180deg, #4a2c17 0 78px, #22130a 78px 80px);
+  --tray-img: linear-gradient(#5a3519, #3c2210);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html { overflow-x: hidden; }
+body {
+  margin: 0;
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--bone);
+  background-color: var(--night);
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+/* La table de la taverne : planches de chêne sombre, lueur de chandelle, coins dans l'ombre. */
+body::before, body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+body::before {
+  background-color: #2a180c;
+  background-image:
+    radial-gradient(ellipse 120% 90% at 50% 38%, transparent 35%, rgba(8, 4, 2, .78) 100%),
+    linear-gradient(180deg, rgba(14, 8, 4, .5), rgba(14, 8, 4, .3) 30%, rgba(14, 8, 4, .55)),
+    var(--table-img);
+  background-size: auto, auto, 600px auto;
+}
+body::after { /* chandelle */
+  background: radial-gradient(ellipse 75% 50% at 50% 30%, rgba(255, 170, 80, .17), transparent 70%);
+  animation: candle 5s ease-in-out infinite alternate;
+}
+@keyframes candle { 0% { opacity: .75; } 30% { opacity: 1; } 55% { opacity: .85; } 80% { opacity: .98; } 100% { opacity: .8; } }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+a { color: var(--brass-hi); }
+:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+.hidden { display: none !important; }
+.screen { min-height: 100%; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.num { font-variant-numeric: lining-nums tabular-nums; }
+.label { font-family: var(--f-label); letter-spacing: .06em; text-transform: lowercase; font-weight: 500; color: var(--bone-dim); font-size: 15px; }
+.hint { color: var(--bone-dim); font-size: 15px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 400; }
+
+/* ---------- Boutons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; padding: 0 18px; border-radius: var(--r-s);
+  font-family: var(--f-label); font-weight: 700; font-size: 17px; letter-spacing: .04em;
+  border: 1px solid var(--oak-line); background: linear-gradient(180deg, var(--oak-hi), var(--oak));
+  color: var(--bone); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 2px 0 rgba(0, 0, 0, .4);
+  transition: transform .08s, filter .15s, background .15s;
+  text-align: center; line-height: 1.1;
+}
+.btn:hover { filter: brightness(1.12); }
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: .42; cursor: not-allowed; filter: grayscale(.4); transform: none; }
+.btn.gold {
+  color: var(--ink); border-color: var(--brass-deep);
+  background: linear-gradient(180deg, var(--brass-hi), var(--brass) 55%, var(--brass-deep));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -2px 0 rgba(0, 0, 0, .2), 0 2px 0 rgba(0, 0, 0, .45);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .3);
+}
+.btn.blood { color: var(--bone); border-color: #6b1d12; background: linear-gradient(180deg, #b23b27, #7b2416); }
+.btn.ghost { background: transparent; box-shadow: none; border-color: transparent; color: var(--bone-dim); min-height: 40px; padding: 0 10px; font-size: 15px; }
+.btn.ghost:hover { color: var(--bone); }
+.btn.sm { min-height: 36px; padding: 0 12px; font-size: 15px; }
+.btn.big { min-height: 54px; font-size: 19px; }
+.btn.full { width: 100%; }
+.icon-btn {
+  width: 42px; height: 42px; border-radius: 50%; display: inline-grid; place-items: center;
+  border: 1px solid var(--oak-line); background: rgba(0, 0, 0, .25); color: var(--bone-dim);
+}
+.icon-btn:hover { color: var(--bone); }
+.icon-btn svg { width: 20px; height: 20px; }
+.icon-btn[aria-pressed="false"] { opacity: .55; }
+
+/* ---------- Champs ---------- */
+.field { display: grid; gap: 6px; }
+.field input, input.txt {
+  height: 48px; padding: 0 14px; border-radius: var(--r-s);
+  background: rgba(0, 0, 0, .35); border: 1px solid var(--oak-line); color: var(--bone);
+  font-size: 18px; width: 100%; min-width: 0;
+}
+.field input::placeholder { color: var(--bone-faint); }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row > .grow { flex: 1 1 140px; min-width: 0; }
+
+/* ---------- Accueil ---------- */
+#home { display: grid; place-items: center; padding-block: 28px 40px; }
+.home-card { width: min(440px, 100%); display: grid; gap: 18px; }
+.brand { text-align: center; display: grid; gap: 4px; justify-items: center; }
+.brand h1 {
+  font-family: var(--f-display); font-size: clamp(64px, 19vw, 104px); line-height: .9; color: var(--bone);
+  text-shadow: 0 0 22px rgba(255, 170, 70, .28), 0 3px 0 rgba(0, 0, 0, .6);
+  letter-spacing: .01em;
+}
+.brand .tag { font-family: var(--f-label); color: var(--brass); letter-spacing: .14em; text-transform: lowercase; font-size: 16px; }
+.brand .czech { font-style: italic; color: var(--bone-dim); font-size: 15px; }
+.home-dice { display: flex; justify-content: center; gap: 12px; margin: 6px 0 2px; }
+.home-dice img { width: 54px; height: 54px; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, .55)); }
+.home-dice img:nth-child(1) { transform: rotate(-14deg) translateY(4px); }
+.home-dice img:nth-child(2) { transform: rotate(6deg) translateY(-3px); }
+.home-dice img:nth-child(3) { transform: rotate(19deg) translateY(5px); }
+.panel {
+  background: linear-gradient(180deg, rgba(60, 39, 23, .92), rgba(36, 23, 14, .94));
+  border: 1px solid var(--oak-line); border-radius: var(--r-m);
+  box-shadow: inset 0 1px 0 rgba(255, 220, 160, .07), 0 18px 40px rgba(0, 0, 0, .45);
+  padding: 18px; display: grid; gap: 14px;
+}
+.sep { display: flex; align-items: center; gap: 12px; color: var(--bone-faint); font-family: var(--f-label); font-size: 14px; }
+.sep::before, .sep::after { content: ""; flex: 1; height: 1px; background: var(--oak-line); }
+.code-input { text-transform: uppercase; letter-spacing: .3em; font-family: var(--f-label); font-weight: 700; text-align: center; }
+.credit { font-size: 13.5px; color: var(--bone-faint); line-height: 1.5; text-align: center; }
+.resume { border: 1px dashed var(--brass-deep); border-radius: var(--r-s); padding: 12px; display: grid; gap: 8px; }
+
+/* ---------- Salon ---------- */
+#lobby, #setup { padding-block: 18px 120px; }
+.page { width: min(720px, 100%); margin: 0 auto; display: grid; gap: 16px; }
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.page-head h2 { font-family: var(--f-display); font-size: 42px; line-height: 1; }
+.code-box { display: grid; gap: 4px; justify-items: end; }
+.code-box .code { font-family: var(--f-label); font-weight: 700; font-size: 34px; letter-spacing: .28em; color: var(--brass-hi); line-height: 1; }
+.seat-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.seat {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-s);
+  background: rgba(0, 0, 0, .25); border: 1px solid rgba(90, 59, 34, .7);
+}
+.seat .n { font-family: var(--f-label); color: var(--bone-faint); width: 1.4em; text-align: center; }
+.seat .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; }
+.chip { font-family: var(--f-label); font-size: 13px; letter-spacing: .05em; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--oak-line); color: var(--bone-dim); white-space: nowrap; }
+.chip.host { border-color: var(--brass-deep); color: var(--brass-hi); }
+.chip.off { border-color: #6b1d12; color: #e7826f; }
+.chip.ok { border-color: #456b39; color: var(--moss); }
+.opt { display: grid; gap: 6px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  min-height: 40px; padding: 0 12px; border-radius: var(--r-s); border: 1px solid var(--oak-line);
+  background: rgba(0, 0, 0, .25); color: var(--bone-dim); font-family: var(--f-label); font-weight: 500; font-size: 16px;
+}
+.seg button[aria-pressed="true"] { background: linear-gradient(180deg, var(--brass-hi), var(--brass)); color: var(--ink); border-color: var(--brass-deep); font-weight: 700; }
+.seg button[disabled] { cursor: default; }
+.opt-note { font-size: 14px; color: var(--bone-faint); }
+.sticky-foot {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(20, 13, 9, 0), rgba(20, 13, 9, .92) 30%);
+}
+.sticky-foot .inner { width: min(720px, 100%); margin: 0 auto; display: flex; gap: 10px; }
+.sticky-foot .inner > * { flex: 1; }
+
+/* ---------- Préparation ---------- */
+.bag-slots { display: flex; gap: 8px; flex-wrap: wrap; }
+.bag-slots img { width: 44px; height: 44px; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .5)); }
+.bag-count { font-family: var(--f-label); color: var(--brass-hi); }
+.die-list { display: grid; gap: 6px; }
+.die-row {
+  display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center;
+  padding: 8px 10px; border-radius: var(--r-s); background: rgba(0, 0, 0, .22); border: 1px solid rgba(90, 59, 34, .6);
+}
+.die-row img { width: 40px; height: 40px; }
+.die-row .meta { min-width: 0; display: grid; gap: 2px; }
+.die-row .nm { font-weight: 700; font-size: 16px; line-height: 1.2; }
+.die-row .ds { font-size: 14px; color: var(--bone-dim); line-height: 1.3; }
+.probs { display: flex; gap: 3px; align-items: flex-end; height: 22px; margin-top: 2px; }
+.probs span { width: 14px; background: var(--brass); border-radius: 2px 2px 0 0; position: relative; min-height: 1px; opacity: .85; }
+.probs span i { position: absolute; bottom: -15px; left: 0; right: 0; text-align: center; font-style: normal; font-size: 11px; color: var(--bone-faint); }
+.probs-wrap { padding-bottom: 14px; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--oak-line); background: rgba(0, 0, 0, .3); font-size: 20px; line-height: 1; }
+.stepper button[disabled] { opacity: .3; }
+.stepper b { width: 22px; text-align: center; font-family: var(--f-label); font-size: 18px; }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; }
+.badge-card {
+  display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; align-items: center; text-align: left;
+  padding: 8px 10px; border-radius: var(--r-s); background: rgba(0, 0, 0, .22); border: 1px solid rgba(90, 59, 34, .6);
+}
+.badge-card[aria-pressed="true"] { border-color: var(--brass); background: rgba(214, 165, 76, .12); box-shadow: 0 0 0 1px var(--brass) inset; }
+.badge-card .medal { width: 30px; height: 30px; }
+.badge-card .bn { font-weight: 700; line-height: 1.15; font-size: 14.5px; hyphens: auto; -webkit-hyphens: auto; }
+.badge-card .bt { font-family: var(--f-label); font-size: 12.5px; color: var(--bone-faint); }
+.badge-detail { font-size: 15px; color: var(--bone-dim); min-height: 2.9em; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* Médaillons d'insigne */
+.medal {
+  width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  color: #20160d; position: relative;
+  box-shadow: inset 0 2px 2px rgba(255, 255, 255, .5), inset 0 -3px 4px rgba(0, 0, 0, .35), 0 2px 4px rgba(0, 0, 0, .5);
+}
+.medal svg { width: 58%; height: 58%; }
+.medal.t1 { background: radial-gradient(circle at 35% 30%, #d9dcdf, #8d9398 60%, #5d6267); }
+.medal.t2 { background: radial-gradient(circle at 35% 30%, #ffffff, #c4ccd3 55%, #7e8890); }
+.medal.t3 { background: radial-gradient(circle at 35% 30%, #fff1b8, #e1b04a 55%, #8f6418); }
+.medal.off { filter: grayscale(1) brightness(.6); }
+.medal.off::after { content: ""; position: absolute; inset: 45% -6% auto; height: 3px; background: var(--blood); transform: rotate(-35deg); border-radius: 2px; }
+.medal .uses { position: absolute; right: -4px; bottom: -4px; min-width: 19px; height: 19px; border-radius: 10px; background: var(--ink); color: var(--brass-hi); font: 700 12px/19px var(--f-label); text-align: center; border: 1px solid var(--brass-deep); padding: 0 4px; }
+.medal.none { background: rgba(0, 0, 0, .3); box-shadow: inset 0 0 0 1px var(--oak-line); color: var(--bone-faint); }
+
+/* ---------- Jeu ---------- */
+#game { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100%; }
+.main { display: grid; gap: 10px; align-content: start; padding-block: 8px calc(var(--dock-h) + 16px + env(safe-area-inset-bottom, 0px)); width: min(640px, 100%); margin: 0 auto; }
+.topbar { display: flex; align-items: center; gap: 8px; }
+.topbar .brand-s { font-family: var(--f-display); font-size: 30px; line-height: 1; color: var(--bone); }
+.topbar .goal { flex: 1; min-width: 0; font-family: var(--f-label); color: var(--bone-dim); font-size: 14.5px; line-height: 1.2; }
+.topbar .goal b { color: var(--brass-hi); font-weight: 700; }
+
+/* Ardoise des scores */
+.slate {
+  background: linear-gradient(170deg, var(--slate-hi), var(--slate));
+  border-radius: 8px; padding: 8px;
+  border: 5px solid #4a3020; border-image: none;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .5), inset 0 0 30px rgba(0, 0, 0, .35), 0 6px 16px rgba(0, 0, 0, .45);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px;
+}
+.pl {
+  position: relative; padding: 6px 8px 8px; border-radius: 5px; color: var(--chalk);
+  display: grid; gap: 0; min-width: 0; border: 1px solid transparent;
+}
+.pl.cur { border-color: rgba(241, 207, 124, .55); background: rgba(241, 207, 124, .07); }
+.pl .nm { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 5px; align-items: center; color: rgba(236, 232, 220, .85); }
+.pl .nm .flame { color: var(--brass-hi); flex: none; }
+.pl .sc { font-size: 26px; line-height: 1.05; font-weight: 500; text-shadow: 0 0 1px rgba(236, 232, 220, .6); }
+.pl .bar { height: 3px; border-radius: 2px; background: rgba(236, 232, 220, .12); margin-top: 3px; overflow: hidden; }
+.pl .bar i { display: block; height: 100%; background: rgba(236, 232, 220, .75); border-radius: 2px; transition: width .5s; }
+.pl .nm .t { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pl .tags { margin-left: auto; display: flex; gap: 3px; align-items: center; flex: none; }
+.pl .tags .medal { width: 18px; height: 18px; box-shadow: 0 1px 1px rgba(0, 0, 0, .6); }
+.pl .tags .medal svg { width: 62%; height: 62%; }
+.pl .tags .medal .uses { display: none; }
+.pl .tag-t { font-family: var(--f-label); font-size: 12px; color: rgba(236, 232, 220, .5); line-height: 1; margin-top: 3px; }
+.pl.away .nm { text-decoration: line-through; text-decoration-color: rgba(208, 74, 51, .7); }
+.pl.done-final { opacity: .55; }
+
+/* Bandeau du tour */
+.turnline { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 0 2px; min-height: 52px; }
+.turnline .who { font-size: 17px; color: var(--bone-dim); line-height: 1.2; min-width: 0; }
+.turnline .who b { color: var(--bone); font-weight: 700; font-size: 21px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.turnline .pot { text-align: right; flex: none; }
+.turnline .pot .label { display: block; }
+.turnline .pot .v { font-size: 34px; line-height: 1; color: var(--brass-hi); font-weight: 700; }
+.turnline .pot .v small { font-size: 15px; color: var(--moss); font-weight: 500; margin-left: 4px; }
+
+/* Plateau */
+.tray-stage { display: grid; place-items: center; perspective: 900px; perspective-origin: 50% 0%; padding: 4px 0 calc(var(--tray) * .06); overflow-x: clip; overflow-clip-margin: 0px; }
+/* Plateau carré : cadre de chêne clair, fond de noyer. */
+.tray {
+  width: var(--tray); height: var(--tray); border-radius: 3px; position: relative;
+  transform: rotateX(24deg); transform-style: preserve-3d;
+  background: #6b4424 var(--tray-img) center / 100% 100%;
+  box-shadow: 0 5px 0 #6e4a26, 0 9px 0 #3b2411, 0 16px 18px rgba(0, 0, 0, .55);
+}
+.tray::before { /* creux du plateau */
+  content: ""; position: absolute; inset: 7.5%; pointer-events: none;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(0, 0, 0, .45);
+}
+:root:not(.tex) .tray::before { background: radial-gradient(circle at 50% 40%, #5c3519, #2e180a); box-shadow: inset 0 6px 16px rgba(0, 0, 0, .6); }
+
+.die-pos { position: absolute; left: 0; top: 0; width: var(--ds); height: var(--ds); transform-style: preserve-3d; cursor: pointer; }
+.die-pos .shadow {
+  position: absolute; inset: 8%; border-radius: 22%; background: rgba(0, 0, 0, .55); filter: blur(5px);
+  transform: translate3d(10%, 12%, 0); transition: opacity .3s;
+}
+.die-pos .ring {
+  position: absolute; inset: -14%; border-radius: 26%; border: 3px solid var(--brass-hi);
+  box-shadow: 0 0 14px rgba(241, 207, 124, .65), inset 0 0 10px rgba(241, 207, 124, .45);
+  opacity: 0; transition: opacity .15s;
+}
+.die-pos.sel .ring { opacity: 1; }
+.die-pos.bsel .ring { opacity: 1; border-color: #8fd0ff; box-shadow: 0 0 14px rgba(143, 208, 255, .6); }
+.die-pos.peek .ring { opacity: .8; border-style: dashed; }
+.cube {
+  position: absolute; inset: 0; transform-style: preserve-3d;
+}
+.cube .f {
+  position: absolute; inset: 0; background-size: 100% 100%; backface-visibility: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .25);
+}
+.cube .f.shd { filter: brightness(.68); }
+.die-pos.dim .cube .f { filter: brightness(.5) saturate(.5); }
+.die-pos.dim .cube .f.shd { filter: brightness(.36) saturate(.5); }
+.tray.bust .cube .f { filter: brightness(.55) saturate(.3); }
+.tray.bust .cube .f.shd { filter: brightness(.4) saturate(.3); }
+.die-pos.extra .ring { border-color: var(--moss); }
+.tray-cta { position: absolute; inset: 7.5%; display: grid; place-items: center; transform: translateZ(2px); }
+.tray-cta .msg { text-align: center; color: var(--bone); max-width: 80%; text-shadow: 0 1px 3px rgba(0, 0, 0, .8); display: grid; gap: 10px; justify-items: center; }
+.tray-cta .msg .big { font-family: var(--f-display); font-size: 40px; line-height: 1; color: var(--bone); text-shadow: 0 2px 0 rgba(0, 0, 0, .5); }
+.stamp {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) translateZ(60px) rotate(-12deg) scale(1);
+  font-family: var(--f-display); font-size: calc(var(--tray) * .15); line-height: 1; white-space: nowrap;
+  padding: 6px 18px; border: 4px double currentColor; border-radius: 8px; pointer-events: none;
+  background: rgba(20, 13, 9, .78); text-shadow: 0 2px 0 rgba(0, 0, 0, .6);
+  animation: stampIn .35s cubic-bezier(.2, 1.6, .4, 1) both;
+}
+.stamp.bust { color: var(--blood); }
+.stamp.hot { color: var(--brass-hi); rotate: 8deg; }
+.stamp.bank { color: var(--moss); font-family: var(--f-label); font-weight: 700; letter-spacing: .04em; rotate: 6deg; }
+.stamp.out { animation: stampOut .5s ease-in both; }
+.tray.picking .stamp.bust { opacity: .12; }
+@keyframes stampIn { from { opacity: 0; transform: translate(-50%, -50%) translateZ(60px) rotate(-12deg) scale(1.6); } to { opacity: 1; } }
+@keyframes stampOut { to { opacity: 0; transform: translate(-50%, -60%) translateZ(60px) rotate(-12deg) scale(.9); } }
+
+/* Dés mis de côté */
+.kept { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; min-height: 58px; scrollbar-width: thin; align-items: stretch; }
+.kept .grp {
+  display: grid; gap: 3px; justify-items: center; padding: 5px 8px; border-radius: var(--r-s);
+  background: rgba(0, 0, 0, .28); border: 1px solid rgba(90, 59, 34, .7); flex: none;
+}
+.kept .grp .dd { display: flex; gap: 3px; }
+.kept .grp img { width: 24px; height: 24px; }
+.kept .grp .pt { font-family: var(--f-label); font-size: 13px; color: var(--brass-hi); line-height: 1; }
+.kept .grp.dbl .pt::after { content: " ×2"; color: var(--moss); }
+.kept .empty { color: var(--bone-faint); font-size: 14.5px; align-self: center; padding-left: 4px; }
+
+/* Dock d'action */
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(42, 26, 17, .97), rgba(24, 15, 9, .99));
+  border-top: 1px solid var(--oak-line); box-shadow: 0 -10px 30px rgba(0, 0, 0, .45);
+}
+.dock .inner { width: min(640px, 100%); margin: 0 auto; display: grid; gap: 8px; }
+.dock .info { display: flex; align-items: center; gap: 10px; min-height: 42px; }
+.dock .info .txt { flex: 1; min-width: 0; font-size: 16px; line-height: 1.3; }
+.dock .info .txt b { color: var(--brass-hi); }
+.dock .info .txt .bad { color: #ec8a75; }
+.dock .info .txt .good { color: var(--moss); }
+.dock .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dock .acts.one { grid-template-columns: 1fr; }
+.dock .medal-btn { border: 0; padding: 0; background: none; border-radius: 50%; }
+.dock .chipbtn {
+  min-height: 34px; padding: 0 10px; border-radius: 99px; border: 1px solid var(--oak-line); background: rgba(0, 0, 0, .3);
+  font-family: var(--f-label); font-size: 14px; color: var(--bone-dim); white-space: nowrap;
+}
+.dock .chipbtn[aria-pressed="true"] { border-color: var(--moss); color: var(--moss); background: rgba(156, 193, 132, .1); }
+
+/* Journal */
+.side { display: none; }
+.sheet-bg { position: fixed; inset: 0; background: rgba(0, 0, 0, .55); z-index: 40; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-height: 78dvh; overflow: auto;
+  background: linear-gradient(180deg, #2e1d12, #1a110a); border-top: 1px solid var(--oak-line);
+  border-radius: 14px 14px 0 0; box-shadow: 0 -20px 40px rgba(0, 0, 0, .5);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 14px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.sheet .inner { width: min(640px, 100%); margin: 0 auto; display: grid; gap: 12px; }
+.sheet h3 { font-family: var(--f-display); font-size: 30px; line-height: 1; }
+.loglist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 15px; }
+.loglist li { padding: 4px 0; border-bottom: 1px solid rgba(90, 59, 34, .45); color: var(--bone-dim); line-height: 1.35; }
+.loglist li.turn { color: var(--bone-faint); font-family: var(--f-label); font-size: 13.5px; border-bottom: 0; padding-top: 8px; }
+.loglist li.bank { color: var(--moss); }
+.loglist li.bust { color: #e7826f; }
+.loglist li.hot, .loglist li.badge { color: var(--brass-hi); }
+.loglist li.win { color: var(--brass-hi); font-weight: 700; }
+
+@media (min-width: 980px) {
+  #game { grid-template-columns: minmax(0, 1fr) 320px; }
+  .side {
+    display: grid; align-content: start; gap: 10px; position: sticky; top: 0; height: 100dvh; overflow: auto;
+    padding: 14px 16px calc(var(--dock-h) + 20px); border-left: 1px solid rgba(90, 59, 34, .6); background: rgba(0, 0, 0, .18);
+  }
+  .side h3 { font-family: var(--f-display); font-size: 28px; }
+  .only-narrow { display: none !important; }
+  .dock { right: 320px; }
+}
+
+/* Superpositions (règles, fin de partie, confirmations) */
+.ov { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(8, 5, 3, .72); padding: 16px; padding-top: calc(16px + env(safe-area-inset-top, 0px)); padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+.ov .card {
+  width: min(680px, 100%); max-height: 100%; overflow: auto; border-radius: var(--r-m);
+  background: linear-gradient(180deg, #33200f, #1d1209); border: 1px solid var(--oak-line);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, .6); padding: 20px; display: grid; gap: 14px;
+}
+.ov .card.parch { background: linear-gradient(180deg, #ecdcb7, #dcc697); color: #2a1a0e; border-color: #a8884f; }
+.ov .card.parch a { color: #7b3415; }
+.ov .card.parch h2, .ov .card.parch h3 { color: #3d1f0d; }
+.ov .card.parch .hint, .ov .card.parch .muted { color: #5e4a30; }
+.ov .card.parch table td, .ov .card.parch table th { border-color: rgba(90, 59, 34, .3); }
+.ov .card.parch .icon-btn { color: #3d1f0d; border-color: rgba(90, 59, 34, .45); background: rgba(255, 248, 230, .55); }
+.ov .card h2 { font-family: var(--f-display); font-size: 44px; line-height: 1; }
+.ov .card h3 { font-family: var(--f-label); font-weight: 700; font-size: 20px; letter-spacing: .03em; margin-top: 6px; }
+.ov .card p { margin: 0; }
+.rules { display: grid; gap: 10px; font-size: 16.5px; }
+.rules ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.tbl-wrap { overflow-x: auto; }
+.rules table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+.rules td, .rules th { border-bottom: 1px solid; padding: 6px 6px; text-align: left; vertical-align: middle; }
+.rules th { font-family: var(--f-label); font-weight: 700; }
+.rules td.pts { text-align: right; font-weight: 700; white-space: nowrap; }
+.mini { display: inline-flex; gap: 2px; vertical-align: middle; }
+.mini img { width: 22px; height: 22px; }
+.close-x { position: sticky; top: 0; justify-self: end; margin: -8px -8px -40px 0; z-index: 2; }
+.win-head { text-align: center; display: grid; gap: 6px; }
+.win-head .crown { color: var(--brass-hi); }
+.win-head h2 { color: var(--brass-hi); font-size: 54px; }
+.statt { width: 100%; border-collapse: collapse; font-size: 15px; }
+.statt th, .statt td { padding: 6px 4px; border-bottom: 1px solid rgba(90, 59, 34, .6); text-align: right; }
+.statt th { font-size: 13px; line-height: 1.15; vertical-align: bottom; }
+.statt th:first-child, .statt td:first-child { text-align: left; }
+.statt th { font-family: var(--f-label); color: var(--bone-dim); font-weight: 500; }
+.statt tr.w td { color: var(--brass-hi); font-weight: 700; }
+
+/* Notifications */
+#toasts { position: fixed; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top, 0px)); z-index: 90; display: grid; gap: 6px; width: min(460px, calc(100% - 32px)); pointer-events: none; }
+.toast { background: #2a1a10; border: 1px solid var(--oak-line); border-left: 4px solid var(--brass); padding: 10px 12px; border-radius: var(--r-s); box-shadow: 0 10px 24px rgba(0, 0, 0, .5); font-size: 15.5px; animation: tIn .25s ease-out; }
+.toast.bad { border-left-color: var(--blood); }
+@keyframes tIn { from { opacity: 0; transform: translateY(-8px); } }
+#netbanner { position: fixed; left: 0; right: 0; top: 0; z-index: 80; background: #6b1d12; color: var(--bone); text-align: center; font-size: 15px; padding: 6px 12px; padding-top: calc(6px + env(safe-area-inset-top, 0px)); }
+
+@media (max-width: 420px) {
+  body { font-size: 16px; }
+  .turnline .pot .v { font-size: 30px; }
+  .pl .sc { font-size: 23px; }
+  .btn.big { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::after { animation: none; }
+  .cube { transition-duration: 1ms !important; }
+  .stamp { animation: none; }
+}
+
+
+/* ── confort mobile et application installée ── */
+html,body{overscroll-behavior:none}
+body{touch-action:manipulation;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img{-webkit-user-drag:none}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+</style>
+</head>
+<body>
+<div id="home" class="screen wrap hidden"></div>
+<div id="lobby" class="screen wrap hidden"></div>
+<div id="setup" class="screen wrap hidden"></div>
+<div id="game" class="screen hidden">
+  <div class="wrap"><main class="main" id="main">
+    <header class="topbar" id="topbar"></header>
+    <section class="slate num" id="slate" aria-label="Scores"></section>
+    <section class="turnline" id="turnline" aria-live="polite"></section>
+    <section class="tray-stage" id="trayStage"><div class="tray" id="tray"></div></section>
+    <section class="kept" id="kept" aria-label="Dés mis de côté ce tour"></section>
+  </main></div>
+  <aside class="side" id="side"></aside>
+  <div class="dock" id="dock"></div>
+</div>
+<div id="ov" class="ov hidden"></div>
+<div id="sheet" class="hidden"></div>
+<div id="toasts" aria-live="polite"></div>
+<div id="netbanner" class="hidden"></div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+/* Kostky — moteur de règles (Farkle façon Kingdom Come: Deliverance II).
+   Pur et sans DOM : tourne dans le navigateur (window.KEngine) et sous Node (tests). */
+(function (root) {
+'use strict';
+
+/* ---------- Dés ----------
+   Probabilités des faces 1→6 relevées sur le wiki KCD2 (Dice (KCD2), tableau des dés).
+   v = 0 désigne la tête du diable (face « 1 » du dé du diable) : un joker. */
+const DICE = {
+  ordinary:   { name: 'Dé ordinaire', short: 'Ordinaire', p: [1, 1, 1, 1, 1, 1], max: 6, body: '#e2c48c', pip: '#3a2414', edge: '#a98a52', mat: 'bone', hint: 'Équilibré.' },
+  devil:      { name: 'Dé à tête du diable', short: 'Diable', p: [1, 1, 1, 1, 1, 1], max: 2, joker: true, body: '#2b1e17', pip: '#d0402c', edge: '#140d09', mat: 'wood', hint: 'Le 1 est remplacé par une tête de diable : un joker qui complète une combinaison, sans rien valoir seul.' },
+  weighted:   { name: 'Dé lesté', short: 'Lesté', p: [66.7, 6.7, 6.7, 6.7, 6.7, 6.7], max: 2, body: '#d3a75c', pip: '#3a2210', edge: '#9c7438', mat: 'wood', hint: 'Tombe sur 1 deux fois sur trois.' },
+  favourable: { name: 'Dé favorable', short: 'Favorable', p: [33.3, 0, 5.6, 5.6, 33.3, 22.2], max: 2, body: '#dcb46a', pip: '#4a2610', edge: '#a7823f', mat: 'wood', hint: 'Surtout des 1 et des 5, jamais de 2.' },
+  cautious:   { name: 'Dé du tricheur prudent', short: 'Tricheur prudent', p: [23.8, 14.3, 9.5, 14.3, 23.8, 14.3], max: 2, body: '#e9d3a0', pip: '#2c2a38', edge: '#b39b68', mat: 'bone', hint: 'Un peu plus de 1 et de 5. Discret.' },
+  lucky:      { name: 'Dé chanceux', short: 'Chanceux', p: [27.3, 4.5, 9.1, 13.6, 18.2, 27.3], max: 2, body: '#e6c071', pip: '#5a300c', edge: '#ad8a42', mat: 'bone', hint: 'Favorise le 1 et le 6.' },
+  painted:    { name: 'Dé peint', short: 'Peint', p: [18.7, 6.2, 6.2, 6.2, 43.7, 18.7], max: 2, body: '#b4532e', pip: '#f4e7c9', edge: '#7c3519', mat: 'paint', hint: 'Tombe souvent sur 5.' },
+  odd:        { name: 'Dé impair', short: 'Impair', p: [26.7, 6.7, 26.7, 6.7, 26.7, 6.7], max: 2, body: '#b98a52', pip: '#21140a', edge: '#83602f', mat: 'wood', hint: 'Favorise 1, 3 et 5.' },
+  even:       { name: 'Dé pair', short: 'Pair', p: [6.7, 26.7, 6.7, 26.7, 6.7, 26.7], max: 2, body: '#94673a', pip: '#f0dfb8', edge: '#5f3f1f', mat: 'wood', hint: 'Favorise 2, 4 et 6.' },
+  trinity:    { name: 'Dé de la Sainte Trinité', short: 'Trinité', p: [18.2, 22.7, 45.4, 4.5, 4.5, 4.5], max: 2, body: '#efdfb6', pip: '#a5741f', edge: '#c2aa76', mat: 'bone', hint: 'Tombe sur 3 près d\'une fois sur deux.' },
+  antiochus:  { name: 'Dé de saint Antiochus', short: 'St Antiochus', p: [0, 0, 1, 0, 0, 0], max: 1, body: '#2e3a63', pip: '#e3bb63', edge: '#1a2340', mat: 'paint', hint: 'Tombe toujours sur 3.' },
+  demonic:    { name: 'Dé démoniaque', short: 'Démoniaque', p: [13, 13, 13, 13, 13, 34.8], max: 2, body: '#6b2a1c', pip: '#eedcb8', edge: '#3e140c', mat: 'wood', hint: 'Favorise le 6 (comme les dés Lu, Ci et Fer).' },
+  king:       { name: 'Dé du roi', short: 'Roi', p: [12.5, 18.7, 21.9, 25, 12.5, 9.4], max: 2, body: '#4b2c58', pip: '#e6c063', edge: '#2e1838', mat: 'paint', hint: 'Favorise 2, 3 et 4. Pas un cadeau.' },
+  misfortune: { name: 'Dé de la malchance', short: 'Malchance', p: [4.5, 27.7, 27.7, 27.7, 27.7, 4.5], max: 2, body: '#8b8680', pip: '#1e1e1e', edge: '#5f5a55', mat: 'paint', hint: 'Presque jamais de 1. À offrir à un ennemi.' },
+};
+const DICE_ORDER = Object.keys(DICE);
+
+/* ---------- Insignes ----------
+   Effets et nombre d'utilisations relevés sur le wiki KCD2. Les valeurs non publiées
+   (avances, points du Gibet et de l'Œil) sont des choix de cette adaptation. */
+const TIERS = { 1: 'étain', 2: 'argent', 3: 'or' };
+const BADGES = {
+  tin_sosie:         { tier: 1, name: 'Sosie', kind: 'double', uses: 1, desc: 'Double les points d\'un lot que tu mets de côté. 1 fois par partie.' },
+  tin_avance:        { tier: 1, name: 'Avance', kind: 'headstart', val: 250, desc: 'Tu commences la partie avec 250 points.' },
+  tin_defense:       { tier: 1, name: 'Défense', kind: 'defense', desc: 'Annule les insignes d\'étain de tes adversaires.' },
+  tin_fortune:       { tier: 1, name: 'Fortune', kind: 'reroll', n: 1, uses: 1, desc: 'Après un lancer, relance 1 dé de ton choix. 1 fois par partie.' },
+  tin_puissance:     { tier: 1, name: 'Puissance', kind: 'might', uses: 1, desc: 'Ajoute un dé ordinaire à ton prochain lancer. 1 fois par partie.' },
+  tin_transmutation: { tier: 1, name: 'Transmutation', kind: 'transmute', to: 3, uses: 1, desc: 'Après un lancer, change un dé en 3. 1 fois par partie.' },
+  tin_charpentier:   { tier: 1, name: 'Charpentier', kind: 'form', form: 'cut', desc: 'Nouvelle combinaison, l\'Entaille : 3 + 5 = 200 points. Sans limite.' },
+  tin_seigneur:      { tier: 1, name: 'Seigneur de guerre', kind: 'warlord', mult: 0.25, uses: 1, desc: '+25 % sur les points de ce tour. 1 fois par partie.' },
+  tin_resurrection:  { tier: 1, name: 'Résurrection', kind: 'resurrect', uses: 1, desc: 'Après un lancer bredouille, relance les mêmes dés. 1 fois par partie.' },
+
+  silver_sosie:         { tier: 2, name: 'Sosie', kind: 'double', uses: 2, desc: 'Double les points d\'un lot que tu mets de côté. 2 fois par partie.' },
+  silver_avance:        { tier: 2, name: 'Avance', kind: 'headstart', val: 500, desc: 'Tu commences la partie avec 500 points.' },
+  silver_defense:       { tier: 2, name: 'Défense', kind: 'defense', desc: 'Annule les insignes d\'argent de tes adversaires.' },
+  silver_echange:       { tier: 2, name: 'Échange', kind: 'reroll', n: 1, uses: 1, desc: 'Après un lancer, relance 1 dé de ton choix. 1 fois par partie.' },
+  silver_fortune:       { tier: 2, name: 'Fortune', kind: 'reroll', n: 2, uses: 1, desc: 'Après un lancer, relance jusqu\'à 2 dés. 1 fois par partie.' },
+  silver_puissance:     { tier: 2, name: 'Puissance', kind: 'might', uses: 2, desc: 'Ajoute un dé ordinaire à ton prochain lancer. 2 fois par partie.' },
+  silver_transmutation: { tier: 2, name: 'Transmutation', kind: 'transmute', to: 5, uses: 1, desc: 'Après un lancer, change un dé en 5. 1 fois par partie.' },
+  silver_bourreau:      { tier: 2, name: 'Bourreau', kind: 'form', form: 'gallows', desc: 'Nouvelle combinaison, le Gibet : 4 + 5 + 6 = 400 points. Sans limite.' },
+  silver_seigneur:      { tier: 2, name: 'Seigneur de guerre', kind: 'warlord', mult: 0.5, uses: 1, desc: '+50 % sur les points de ce tour. 1 fois par partie.' },
+  silver_resurrection:  { tier: 2, name: 'Résurrection', kind: 'resurrect', uses: 2, desc: 'Après un lancer bredouille, relance les mêmes dés. 2 fois par partie.' },
+
+  gold_sosie:         { tier: 3, name: 'Sosie', kind: 'double', uses: 3, desc: 'Double les points d\'un lot que tu mets de côté. 3 fois par partie.' },
+  gold_avance:        { tier: 3, name: 'Avance', kind: 'headstart', val: 750, desc: 'Tu commences la partie avec 750 points.' },
+  gold_defense:       { tier: 3, name: 'Défense', kind: 'defense', desc: 'Annule les insignes d\'or de tes adversaires.' },
+  gold_echange:       { tier: 3, name: 'Échange', kind: 'pair', uses: 1, desc: 'Après un lancer, relance deux dés de même valeur. 1 fois par partie.' },
+  gold_fortune:       { tier: 3, name: 'Fortune', kind: 'reroll', n: 3, uses: 1, desc: 'Après un lancer, relance jusqu\'à 3 dés. 1 fois par partie.' },
+  gold_puissance:     { tier: 3, name: 'Puissance', kind: 'might', uses: 3, desc: 'Ajoute un dé ordinaire à ton prochain lancer. 3 fois par partie.' },
+  gold_transmutation: { tier: 3, name: 'Transmutation', kind: 'transmute', to: 1, uses: 1, desc: 'Après un lancer, change un dé en 1. 1 fois par partie.' },
+  gold_pretre:        { tier: 3, name: 'Prêtre', kind: 'form', form: 'eye', desc: 'Nouvelle combinaison, l\'Œil : 1 + 3 + 5 = 600 points. Sans limite.' },
+  gold_seigneur:      { tier: 3, name: 'Seigneur de guerre', kind: 'warlord', mult: 1, uses: 1, desc: 'Double les points de ce tour. 1 fois par partie.' },
+  gold_resurrection:  { tier: 3, name: 'Résurrection', kind: 'resurrect', uses: 3, desc: 'Après un lancer bredouille, relance les mêmes dés. 3 fois par partie.' },
+  gold_empereur:      { tier: 3, name: 'Empereur', kind: 'emperor', desc: 'Triple les points du brelan de 1 (3 000 au lieu de 1 000). Sans limite.' },
+};
+const BADGE_ORDER = Object.keys(BADGES);
+
+/* ---------- Combinaisons ---------- */
+const STRAIGHTS = [
+  { key: 'full', f: [1, 2, 3, 4, 5, 6], pts: 1500, name: 'Suite complète' },
+  { key: 'high', f: [2, 3, 4, 5, 6], pts: 750, name: 'Grande suite' },
+  { key: 'low', f: [1, 2, 3, 4, 5], pts: 500, name: 'Petite suite' },
+];
+const FORMS = {
+  cut: { key: 'cut', f: [3, 5], pts: 200, name: 'Entaille' },
+  gallows: { key: 'gallows', f: [4, 5, 6], pts: 400, name: 'Gibet' },
+  eye: { key: 'eye', f: [1, 3, 5], pts: 600, name: 'Œil' },
+};
+const KIND_NAME = { 3: 'Brelan', 4: 'Carré', 5: 'Cinq', 6: 'Six', 7: 'Sept' };
+
+function setName(n, v) {
+  if (n === 3) return 'Brelan de ' + v;
+  if (n === 4) return 'Carré de ' + v;
+  return (KIND_NAME[n] || n) + ' × ' + v;
+}
+
+/* Meilleur score en utilisant TOUS les dés (counts[0] = jokers). null si impossible. */
+function bestCounts(c, ctx, memo) {
+  const key = c.join('');
+  if (memo.has(key)) return memo.get(key);
+  let v = 1;
+  while (v <= 6 && !c[v]) v++;
+  let res = null;
+  if (v > 6) {
+    res = c[0] ? null : { pts: 0, combos: [] };
+  } else {
+    const consider = (pts, name, used) => {
+      const nc = c.slice();
+      for (let i = 0; i < 7; i++) nc[i] -= used[i];
+      const sub = bestCounts(nc, ctx, memo);
+      if (sub && (!res || pts + sub.pts > res.pts)) res = { pts: pts + sub.pts, combos: [{ name, pts, used }].concat(sub.combos) };
+    };
+    const U = () => [0, 0, 0, 0, 0, 0, 0];
+    if (v === 1) { const u = U(); u[1] = 1; consider(100, 'Un', u); }
+    if (v === 5) { const u = U(); u[5] = 1; consider(50, 'Cinq', u); }
+    for (let r = 1; r <= c[v]; r++) {
+      for (let j = 0; j <= c[0]; j++) {
+        const n = r + j;
+        if (n < 3) continue;
+        const base = v === 1 ? 1000 : v * 100;
+        let pts = base * Math.pow(2, n - 3);
+        let name = setName(n, v);
+        if (ctx && ctx.emperor && v === 1 && n === 3) { pts *= 3; name += ' (Empereur)'; }
+        const u = U(); u[v] = r; u[0] = j;
+        consider(pts, name, u);
+      }
+    }
+    const shapes = STRAIGHTS.slice();
+    if (ctx) for (const k of ['cut', 'gallows', 'eye']) if (ctx[k]) shapes.push(FORMS[k]);
+    for (const S of shapes) {
+      if (S.f.indexOf(v) < 0) continue;
+      const others = S.f.filter(x => x !== v);
+      const m = others.length;
+      for (let mask = 0; mask < (1 << m); mask++) {
+        const u = U(); u[v] = 1;
+        let ok = true;
+        for (let i = 0; i < m; i++) {
+          if (mask & (1 << i)) u[0]++;
+          else { if (c[others[i]] < 1) { ok = false; break; } u[others[i]]++; }
+        }
+        if (!ok || u[0] > c[0]) continue;
+        consider(S.pts, S.name, u);
+      }
+    }
+  }
+  memo.set(key, res);
+  return res;
+}
+
+function countsOf(vals) {
+  const c = [0, 0, 0, 0, 0, 0, 0];
+  for (const v of vals) c[v]++;
+  return c;
+}
+/* Score d'une sélection : toutes les valeurs doivent compter. */
+function scoreVals(vals, ctx) {
+  if (!vals.length) return null;
+  return bestCounts(countsOf(vals), ctx || {}, new Map());
+}
+/* Toutes les sous-sélections qui comptent (indices) avec leur score. */
+function scoringSubsets(vals, ctx) {
+  const n = vals.length, out = [], memo = new Map();
+  for (let mask = 1; mask < (1 << n); mask++) {
+    const sel = [];
+    for (let i = 0; i < n; i++) if (mask & (1 << i)) sel.push(i);
+    const r = bestCounts(countsOf(sel.map(i => vals[i])), ctx || {}, memo);
+    if (r) out.push({ sel, pts: r.pts, combos: r.combos });
+  }
+  return out;
+}
+function hasScore(vals, ctx) {
+  if (!vals.length) return false;
+  const memo = new Map(), n = vals.length;
+  for (let mask = 1; mask < (1 << n); mask++) {
+    const sv = [];
+    for (let i = 0; i < n; i++) if (mask & (1 << i)) sv.push(vals[i]);
+    if (bestCounts(countsOf(sv), ctx || {}, memo)) return true;
+  }
+  return false;
+}
+/* Dés qui peuvent faire partie d'une combinaison (aide visuelle). */
+function scoringMask(vals, ctx) {
+  const m = vals.map(() => false);
+  for (const s of scoringSubsets(vals, ctx)) for (const i of s.sel) m[i] = true;
+  return m;
+}
+
+/* ---------- Hasard ---------- */
+function rnd() {
+  if (root.crypto && root.crypto.getRandomValues) {
+    const a = new Uint32Array(1); root.crypto.getRandomValues(a); return a[0] / 4294967296;
+  }
+  return Math.random();
+}
+function rollFace(type, R) {
+  const d = DICE[type] || DICE.ordinary;
+  const tot = d.p.reduce((a, b) => a + b, 0);
+  let x = (R || rnd)() * tot;
+  let f = 6;
+  for (let i = 0; i < 6; i++) { if (x < d.p[i]) { f = i + 1; break; } x -= d.p[i]; }
+  if (d.p[f - 1] === 0) { // garde-fou (arrondi)
+    f = d.p.findIndex(p => p > 0) + 1;
+  }
+  return (d.joker && f === 1) ? 0 : f;
+}
+function shuffle(a, R) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor((R || rnd)() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+/* ---------- Partie ---------- */
+const MIN_PLAYERS = 2, MAX_PLAYERS = 6;
+const TARGETS = [2000, 3000, 4000, 5000, 8000];
+const DEFAULT_OPTS = { target: 4000, dice: 'plain', badges: 0, finalRound: false, hints: true };
+
+function newGame(code) {
+  return {
+    v: 1, code: code || '', phase: 'lobby', opts: Object.assign({}, DEFAULT_OPTS),
+    hostId: null, players: [], order: [], cur: 0, T: null, final: null, winner: null,
+    log: [], seq: 0, rollSeq: 0, flash: null, round: 0, gameNo: 0,
+  };
+}
+const P = (S, id) => S.players.find(p => p.id === id);
+function log(S, s, k, pid) {
+  S.log.push({ i: ++S.seq, k: k || 'sys', s, pid: pid || null });
+  if (S.log.length > 120) S.log.splice(0, S.log.length - 120);
+}
+function flash(S, k, pid, extra) { S.flash = Object.assign({ id: ++S.seq, k, pid }, extra || {}); }
+
+function addPlayer(S, o) {
+  const p = {
+    id: o.id, name: o.name, bot: !!o.bot, token: o.token || null, local: !!o.local,
+    connected: o.bot ? true : (o.connected !== false), autopilot: false,
+    bag: ['ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary'], badge: null, ready: false,
+    score: 0, uses: 0, badgeOff: false, stats: blankStats(),
+  };
+  S.players.push(p);
+  return p;
+}
+function blankStats() { return { turns: 0, busts: 0, best: 0, hot: 0, banked: 0 }; }
+
+function badgeOf(S, p) {
+  if (!p || !p.badge || !BADGES[p.badge] || p.badgeOff || !S.opts.badges) return null;
+  return BADGES[p.badge];
+}
+function ctxFor(S, p) {
+  const b = badgeOf(S, p), ctx = {};
+  if (b && b.kind === 'form') ctx[b.form] = true;
+  if (b && b.kind === 'emperor') ctx.emperor = true;
+  return ctx;
+}
+
+function validBag(bag, opts) {
+  if (!Array.isArray(bag) || bag.length !== 6) return 'La bourse doit contenir 6 dés.';
+  const n = {};
+  for (const t of bag) {
+    if (!DICE[t]) return 'Dé inconnu.';
+    if (opts.dice !== 'loaded' && t !== 'ordinary') return 'Les dés pipés sont interdits dans cette partie.';
+    n[t] = (n[t] || 0) + 1;
+    if (n[t] > DICE[t].max) return `Au plus ${DICE[t].max} « ${DICE[t].short} » par bourse.`;
+  }
+  return null;
+}
+function validBadge(id, opts) {
+  if (id == null) return null;
+  const b = BADGES[id];
+  if (!b) return 'Insigne inconnu.';
+  if (!opts.badges) return 'Les insignes sont interdits dans cette partie.';
+  if (b.tier > opts.badges) return 'Cet insigne dépasse le métal autorisé.';
+  return null;
+}
+const needsSetup = S => S.opts.dice === 'loaded' || S.opts.badges > 0;
+
+function startGame(S, R) {
+  S.gameNo++;
+  S.final = null; S.winner = null; S.round = 1; S.flash = null;
+  S.order = S.players.map(p => p.id);
+  for (const p of S.players) {
+    p.score = 0; p.stats = blankStats(); p.ready = false;
+    if (S.opts.dice !== 'loaded') p.bag = p.bag.map(() => 'ordinary');
+    if (!S.opts.badges || (p.badge && BADGES[p.badge] && BADGES[p.badge].tier > S.opts.badges)) p.badge = null;
+    const b = p.badge && BADGES[p.badge];
+    p.uses = b && b.uses ? b.uses : 0;
+    p.badgeOff = false;
+  }
+  // Défense : annule les insignes adverses du même métal.
+  for (const p of S.players) {
+    const b = p.badge && BADGES[p.badge];
+    if (!b) continue;
+    if (S.players.some(q => q !== p && q.badge && BADGES[q.badge] && BADGES[q.badge].kind === 'defense' && BADGES[q.badge].tier === b.tier)) p.badgeOff = true;
+  }
+  for (const p of S.players) {
+    const b = badgeOf(S, p);
+    if (b && b.kind === 'headstart') { p.score = b.val; }
+  }
+  S.cur = Math.floor((R || rnd)() * S.order.length);
+  S.phase = 'play';
+  log(S, `Nouvelle partie en ${S.opts.target} points.`, 'sys');
+  for (const p of S.players) {
+    const b = p.badge && BADGES[p.badge];
+    if (b) log(S, `${p.name} porte l'insigne ${b.name} (${TIERS[b.tier]})${p.badgeOff ? ', annulé par une Défense' : ''}.`, 'badge', p.id);
+    if (badgeOf(S, p) && badgeOf(S, p).kind === 'headstart') log(S, `${p.name} part avec ${p.score} points d'avance.`, 'badge', p.id);
+  }
+  beginTurn(S);
+}
+
+function beginTurn(S) {
+  const pid = S.order[S.cur];
+  S.T = { pid, pts: 0, avail: [0, 1, 2, 3, 4, 5], extra: 0, dice: [], kept: [], phase: 'start', warlord: 0, rollId: 0, n: 0, preview: [], wasHot: false };
+  const p = P(S, pid);
+  if (p) p.stats.turns++;
+  log(S, `Au tour de ${p ? p.name : '?'}.`, 'turn', pid);
+}
+
+function doRoll(S, R) {
+  const T = S.T, p = P(S, T.pid);
+  const dice = T.avail.map(s => ({ s, t: p.bag[s] || 'ordinary', v: 0 }));
+  if (T.extra) { dice.push({ s: -1, t: 'ordinary', v: 0 }); T.extra = 0; }
+  for (const d of dice) d.v = rollFace(d.t, R);
+  T.dice = dice; T.n++; T.rollId = ++S.rollSeq; T.preview = [];
+  evaluateThrow(S);
+}
+function evaluateThrow(S) {
+  const T = S.T, p = P(S, T.pid);
+  const vals = T.dice.map(d => d.v);
+  if (hasScore(vals, ctxFor(S, p))) { T.phase = 'pick'; }
+  else {
+    T.phase = 'bust';
+    log(S, `${p.name} lance ${fmtVals(vals)} : rien ne compte.`, 'bust', p.id);
+  }
+}
+function fmtVals(vals) { return vals.map(v => v === 0 ? '☠' : v).join(' '); }
+
+/* Ce que le joueur peut encore faire pendant un lancer bredouille. */
+function rescueKinds(S, p) {
+  const b = badgeOf(S, p);
+  if (!b || p.uses <= 0) return [];
+  if (['resurrect', 'reroll', 'transmute', 'pair'].indexOf(b.kind) >= 0) return [b.kind];
+  return [];
+}
+
+function endTurn(S, banked) {
+  const T = S.T, p = P(S, T.pid);
+  if (banked) {
+    let pts = T.pts;
+    if (T.warlord) pts = Math.round(pts * (1 + T.warlord) / 5) * 5;
+    p.score += pts; p.stats.banked += pts;
+    if (pts > p.stats.best) p.stats.best = pts;
+    log(S, `${p.name} inscrit ${pts} points${T.warlord ? ' (Seigneur de guerre)' : ''} : ${p.score}.`, 'bank', p.id);
+    flash(S, 'bank', p.id, { pts, total: p.score });
+    if (p.score >= S.opts.target) {
+      if (!S.opts.finalRound) return finish(S, p.id);
+      if (!S.final) {
+        S.final = { by: p.id, left: S.order.filter(id => id !== p.id) };
+        log(S, `${p.name} atteint ${S.opts.target} ! Chacun des autres joue un dernier tour.`, 'sys', p.id);
+      }
+    }
+  } else {
+    p.stats.busts++;
+    flash(S, 'bust', p.id, { pts: T.pts });
+    log(S, `${p.name} repart bredouille${T.pts ? ` et perd ${T.pts} points` : ''}.`, 'bust', p.id);
+  }
+  if (S.final) {
+    S.final.left = S.final.left.filter(id => id !== p.id);
+    if (!S.final.left.length) {
+      let best = null;
+      for (const id of S.order) { const q = P(S, id); if (!best || q.score > best.score) best = q; }
+      const by = P(S, S.final.by);
+      return finish(S, (by && by.score >= best.score) ? by.id : best.id);
+    }
+  }
+  const prev = S.cur;
+  S.cur = (S.cur + 1) % S.order.length;
+  if (S.final) { while (S.final.left.indexOf(S.order[S.cur]) < 0) S.cur = (S.cur + 1) % S.order.length; }
+  if (S.cur <= prev) S.round++;
+  beginTurn(S);
+  return null;
+}
+function finish(S, pid) {
+  S.phase = 'over'; S.winner = pid;
+  const p = P(S, pid);
+  log(S, `${p.name} remporte la partie avec ${p.score} points !`, 'win', pid);
+  flash(S, 'win', pid, { total: p.score });
+  if (S.T) S.T.phase = 'done';
+  return null;
+}
+
+function cleanSel(sel, n) {
+  if (!Array.isArray(sel)) return null;
+  const out = [];
+  for (const x of sel) {
+    if (!Number.isInteger(x) || x < 0 || x >= n || out.indexOf(x) >= 0) return null;
+    out.push(x);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+/* ---------- Actions ----------
+   Renvoie null si l'action est acceptée, sinon un message d'erreur en français. */
+function act(S, pid, a, R) {
+  if (!a || typeof a !== 'object') return 'Action invalide.';
+  const p = P(S, pid);
+  if (!p && pid !== 'sys') return 'Joueur inconnu.';
+  const host = pid === S.hostId;
+  switch (a.type) {
+    case 'opt': {
+      if (!host || S.phase !== 'lobby') return 'Réservé à l\'hôte, dans le salon.';
+      const k = a.key, v = a.val;
+      if (k === 'target' && TARGETS.indexOf(v) >= 0) S.opts.target = v;
+      else if (k === 'dice' && (v === 'plain' || v === 'loaded')) S.opts.dice = v;
+      else if (k === 'badges' && [0, 1, 2, 3].indexOf(v) >= 0) S.opts.badges = v;
+      else if (k === 'finalRound') S.opts.finalRound = !!v;
+      else if (k === 'hints') S.opts.hints = !!v;
+      else return 'Option inconnue.';
+      return null;
+    }
+    case 'kick': {
+      if (!host || S.phase !== 'lobby') return 'Réservé à l\'hôte, dans le salon.';
+      const q = P(S, a.target);
+      if (!q || q.id === S.hostId) return 'Joueur introuvable.';
+      S.players = S.players.filter(x => x.id !== q.id);
+      log(S, `${q.name} quitte la table.`, 'sys');
+      return null;
+    }
+    case 'move': {
+      if (!host || S.phase !== 'lobby') return 'Réservé à l\'hôte, dans le salon.';
+      const i = S.players.findIndex(x => x.id === a.target), j = i + (a.dir < 0 ? -1 : 1);
+      if (i < 0 || j < 0 || j >= S.players.length) return 'Déplacement impossible.';
+      [S.players[i], S.players[j]] = [S.players[j], S.players[i]];
+      return null;
+    }
+    case 'start': {
+      if (!host || S.phase !== 'lobby') return 'Réservé à l\'hôte, dans le salon.';
+      if (S.players.length < MIN_PLAYERS) return 'Il faut au moins 2 joueurs (ajoute un robot pour jouer seul).';
+      if (S.players.length > MAX_PLAYERS) return 'Six joueurs au plus autour de la table.';
+      if (needsSetup(S)) {
+        S.phase = 'setup';
+        for (const q of S.players) {
+          q.ready = false;
+          if (S.opts.dice !== 'loaded') q.bag = q.bag.map(() => 'ordinary');
+          if (validBag(q.bag, S.opts)) q.bag = q.bag.map(() => 'ordinary');
+          if (validBadge(q.badge, S.opts)) q.badge = null;
+        }
+        log(S, 'Chacun prépare sa bourse.', 'sys');
+      } else startGame(S, R);
+      return null;
+    }
+    case 'loadout': {
+      if (S.phase !== 'setup') return 'Pas de préparation en cours.';
+      const e1 = validBag(a.bag, S.opts); if (e1) return e1;
+      const e2 = validBadge(a.badge == null ? null : a.badge, S.opts); if (e2) return e2;
+      p.bag = a.bag.slice(); p.badge = a.badge == null ? null : a.badge;
+      if (a.ready != null) p.ready = !!a.ready;
+      if (S.players.every(q => q.ready)) startGame(S, R);
+      return null;
+    }
+    case 'forceStart': {
+      if (!host || S.phase !== 'setup') return 'Réservé à l\'hôte, pendant la préparation.';
+      startGame(S, R); return null;
+    }
+    case 'rematch': {
+      if (!host || S.phase !== 'over') return 'Réservé à l\'hôte, en fin de partie.';
+      S.phase = 'lobby';
+      return act(S, pid, { type: 'start' }, R);
+    }
+    case 'toLobby': {
+      if (!host) return 'Réservé à l\'hôte.';
+      S.phase = 'lobby'; S.T = null; S.final = null; S.winner = null; S.flash = null;
+      for (const q of S.players) { q.ready = false; q.autopilot = false; q.score = 0; }
+      log(S, 'Retour au salon.', 'sys');
+      return null;
+    }
+  }
+
+  // --- Actions de jeu ---
+  if (S.phase !== 'play' || !S.T) return 'Aucune partie en cours.';
+  const T = S.T;
+  if (a.type === 'accept' && pid === 'sys') {
+    if (T.phase !== 'bust') return 'Rien à valider.';
+    return endTurn(S, false);
+  }
+  if (pid !== T.pid) return 'Ce n\'est pas ton tour.';
+  const ctx = ctxFor(S, p), b = badgeOf(S, p);
+
+  switch (a.type) {
+    case 'roll':
+      if (T.phase !== 'start') return 'Les dés sont déjà lancés.';
+      doRoll(S, R);
+      log(S, `${p.name} lance ${fmtVals(T.dice.map(d => d.v))}.`, 'roll', p.id);
+      return null;
+    case 'preview': {
+      if (T.phase !== 'pick') return null;
+      const sel = cleanSel(a.sel || [], T.dice.length);
+      if (!sel) return null;
+      T.preview = sel; return null;
+    }
+    case 'take': {
+      if (T.phase !== 'pick') return 'Il faut d\'abord lancer les dés.';
+      const sel = cleanSel(a.sel, T.dice.length);
+      if (!sel || !sel.length) return 'Choisis au moins un dé qui compte.';
+      const r = scoreVals(sel.map(i => T.dice[i].v), ctx);
+      if (!r) return 'Chaque dé mis de côté doit faire partie d\'une combinaison.';
+      let pts = r.pts, dbl = false;
+      if (a.dbl) {
+        if (!b || b.kind !== 'double' || p.uses <= 0) return 'Pas d\'insigne du Sosie disponible.';
+        p.uses--; pts *= 2; dbl = true;
+      }
+      T.pts += pts;
+      T.kept.push({ dice: sel.map(i => ({ t: T.dice[i].t, v: T.dice[i].v })), pts, names: r.combos.map(c => c.name), dbl });
+      const keptSlots = sel.map(i => T.dice[i].s);
+      const nextAvail = T.dice.map(d => d.s).filter(s => s >= 0 && keptSlots.indexOf(s) < 0);
+      const names = r.combos.map(c => c.name).join(' + ');
+      log(S, `${p.name} garde ${fmtVals(sel.map(i => T.dice[i].v))} (${names}${dbl ? ', doublé' : ''}) : +${pts}, ${T.pts} ce tour.`, 'take', p.id);
+      T.preview = [];
+      if (!nextAvail.length) {
+        T.avail = [0, 1, 2, 3, 4, 5]; T.wasHot = true; p.stats.hot++;
+        flash(S, 'hot', p.id);
+        log(S, `Dés brûlants ! ${p.name} reprend les six dés.`, 'hot', p.id);
+      } else { T.avail = nextAvail; T.wasHot = false; }
+      if (a.go === 'bank') return endTurn(S, true);
+      doRoll(S, R);
+      log(S, `${p.name} relance ${fmtVals(T.dice.map(d => d.v))}.`, 'roll', p.id);
+      return null;
+    }
+    case 'bank': // passer sans rien garder : interdit (il faut mettre un dé de côté)
+      return 'Mets au moins un dé de côté avant de passer.';
+    case 'accept':
+      if (T.phase !== 'bust') return 'Rien à valider.';
+      return endTurn(S, false);
+    case 'badge': {
+      if (!b) return 'Tu n\'as pas d\'insigne actif.';
+      if (b.uses && p.uses <= 0) return 'Ton insigne est épuisé.';
+      switch (b.kind) {
+        case 'might':
+          if (T.extra) return 'Le dé supplémentaire est déjà prêt.';
+          if (T.phase === 'bust' && rescueKinds(S, p).indexOf('resurrect') < 0) return 'Trop tard pour ce lancer.';
+          if (T.phase !== 'start' && T.phase !== 'pick') return 'Pas maintenant.';
+          p.uses--; T.extra = 1;
+          log(S, `${p.name} brandit l'insigne de Puissance : un dé de plus au prochain lancer.`, 'badge', p.id);
+          return null;
+        case 'warlord':
+          if (T.warlord) return 'Déjà actif pour ce tour.';
+          if (T.phase !== 'start' && T.phase !== 'pick') return 'Pas maintenant.';
+          p.uses--; T.warlord = b.mult;
+          log(S, `${p.name} brandit l'insigne du Seigneur de guerre : +${Math.round(b.mult * 100)} % ce tour.`, 'badge', p.id);
+          return null;
+        case 'resurrect':
+          if (T.phase !== 'bust') return 'Seulement après un lancer bredouille.';
+          p.uses--;
+          T.avail = T.dice.map(d => d.s).filter(s => s >= 0);
+          if (!T.avail.length) T.avail = [0, 1, 2, 3, 4, 5];
+          doRoll(S, R);
+          log(S, `${p.name} ressuscite son lancer : ${fmtVals(T.dice.map(d => d.v))}.`, 'badge', p.id);
+          return null;
+        case 'reroll': case 'pair': {
+          if (T.phase !== 'pick' && T.phase !== 'bust') return 'Seulement juste après un lancer.';
+          const sel = cleanSel(a.sel, T.dice.length);
+          if (!sel || !sel.length) return 'Choisis les dés à relancer.';
+          if (b.kind === 'reroll' && sel.length > b.n) return `Au plus ${b.n} dé${b.n > 1 ? 's' : ''}.`;
+          if (b.kind === 'pair' && (sel.length !== 2 || T.dice[sel[0]].v !== T.dice[sel[1]].v)) return 'Choisis deux dés de même valeur.';
+          p.uses--;
+          const before = fmtVals(sel.map(i => T.dice[i].v));
+          for (const i of sel) T.dice[i].v = rollFace(T.dice[i].t, R);
+          T.rerollId = ++S.rollSeq; T.rerolled = sel; T.preview = [];
+          log(S, `${p.name} brandit l'insigne ${b.name} : ${before} → ${fmtVals(sel.map(i => T.dice[i].v))}.`, 'badge', p.id);
+          evaluateThrow(S);
+          return null;
+        }
+        case 'transmute': {
+          if (T.phase !== 'pick' && T.phase !== 'bust') return 'Seulement juste après un lancer.';
+          const sel = cleanSel(a.sel, T.dice.length);
+          if (!sel || sel.length !== 1) return 'Choisis un dé à transformer.';
+          p.uses--;
+          const i = sel[0], before = T.dice[i].v;
+          T.dice[i].v = b.to;
+          T.rerollId = ++S.rollSeq; T.rerolled = [i]; T.preview = [];
+          log(S, `${p.name} transmute un ${before === 0 ? '☠' : before} en ${b.to}.`, 'badge', p.id);
+          evaluateThrow(S);
+          return null;
+        }
+        default:
+          return 'Cet insigne agit tout seul.';
+      }
+    }
+  }
+  return 'Action inconnue.';
+}
+
+/* Vue publique : pas de jetons de reconnexion. */
+function view(S) {
+  const V = JSON.parse(JSON.stringify(S));
+  for (const p of V.players) delete p.token;
+  return V;
+}
+
+const api = {
+  DICE, DICE_ORDER, BADGES, BADGE_ORDER, TIERS, STRAIGHTS, FORMS, TARGETS, MIN_PLAYERS, MAX_PLAYERS,
+  newGame, addPlayer, act, view, scoreVals, scoringSubsets, scoringMask, hasScore, rollFace, shuffle, rnd,
+  badgeOf, ctxFor, rescueKinds, needsSetup, validBag, validBadge, fmtVals, P, log,
+};
+root.KEngine = api;
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Kostky — textures dessinées au chargement (canvas) : table de taverne en planches,
+   plateau carré en bois, faces des dés en os ou en bois. Aucune image externe. */
+(function (root) {
+'use strict';
+
+function hash(i, j, s) {
+  let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(s, 1274126177);
+  h = Math.imul(h ^ (h >>> 13), 1103515245);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+// Bruit de valeur 2D ; px = période horizontale en mailles (0 = aucune).
+function vn(x, y, s, px) {
+  let xi = Math.floor(x), yi = Math.floor(y);
+  let xf = x - xi, yf = y - yi;
+  xf = xf * xf * (3 - 2 * xf); yf = yf * yf * (3 - 2 * yf);
+  let x1 = xi + 1;
+  if (px) { xi = ((xi % px) + px) % px; x1 = ((x1 % px) + px) % px; }
+  const a = hash(xi, yi, s), b = hash(x1, yi, s), c = hash(xi, yi + 1, s), d = hash(x1, yi + 1, s);
+  return a + (b - a) * xf + (c - a) * yf + (a - b - c + d) * xf * yf;
+}
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const rnd = s => { let t = s >>> 0; return () => { t = (t + 0x6D2B79F5) >>> 0; let r = Math.imul(t ^ (t >>> 15), 1 | t); r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r; return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; };
+
+/* Fil du bois : u le long des fibres, v en travers. Renvoie 0 (clair) → 1 (foncé). */
+function grain(u, v, s, pw, o) {
+  const per = sc => pw ? Math.round(pw / sc) : 0;
+  const warp = vn(u / 256, v / 40, s, per(256)) * 0.7 + vn(u / 64, v / 12, s + 11, per(64)) * 0.3;
+  const r = v * o.ring + warp * o.warp;
+  const ring = r - Math.floor(r);
+  const late = ring > 0.7 ? Math.pow((ring - 0.7) / 0.3, 1.6) : 0;
+  const fib = vn(u / 64, v / 1.5, s + 5, per(64));
+  const tone = vn(u / 512, v / 90, s + 9, per(512));
+  return clamp(0.16 + 0.5 * late + 0.22 * (fib - 0.5) + 0.42 * (tone - 0.5) + 0.12, 0, 1);
+}
+function mix(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+
+/* ---------- Table de taverne : planches horizontales, motif qui se répète ---------- */
+function tableTile() {
+  const W = 1024, PH = 160, N = 5, H = PH * N;
+  const c = canvas(W, H), ctx = c.getContext('2d'), img = ctx.createImageData(W, H), D = img.data;
+  const R = rnd(1403);
+  const light = [116, 74, 42], dark = [42, 24, 12];
+  for (let k = 0; k < N; k++) {
+    const seed = 100 + k * 17, tint = 0.82 + R() * 0.3, joint = Math.floor(R() * W), shift = R() * 600;
+    const o = { ring: 0.035 + R() * 0.03, warp: 3 + R() * 3 };
+    for (let v = 0; v < PH; v++) {
+      const y = k * PH + v;
+      let edge = 1;
+      if (v < 2 || v > PH - 3) edge = 0.32; else if (v === 2) edge = 1.18; else if (v < 6) edge = 0.85;
+      for (let x = 0; x < W; x++) {
+        const g = grain(x, v + shift, seed, W, o);
+        let col = mix(light, dark, g), f = tint * edge;
+        const dj = Math.abs(x - joint);
+        if (dj < 2) f *= 0.35; else if (dj < 3) f *= 1.12;
+        const i = (y * W + x) * 4;
+        D[i] = clamp(col[0] * f, 0, 255); D[i + 1] = clamp(col[1] * f, 0, 255); D[i + 2] = clamp(col[2] * f, 0, 255); D[i + 3] = 255;
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return c.toDataURL('image/jpeg', 0.86);
+}
+
+/* ---------- Plateau carré : cadre en chêne clair à coupes d'onglet, fond en noyer ---------- */
+const TRAY_RIM = 0.075;
+function trayImage() {
+  const S = 768, Rm = Math.round(S * TRAY_RIM);
+  const c = canvas(S, S), ctx = c.getContext('2d'), img = ctx.createImageData(S, S), D = img.data;
+  const rimL = [206, 154, 92], rimD = [112, 70, 34];
+  const flL = [118, 70, 38], flD = [40, 22, 11];
+  const FN = 4, FPH = (S - 2 * Rm) / FN;
+  const R = rnd(7);
+  const planks = [];
+  for (let k = 0; k < FN; k++) planks.push({ tint: 0.85 + R() * 0.25, shift: R() * 500, o: { ring: 0.04 + R() * 0.03, warp: 3 + R() * 3 } });
+  const rimO = { ring: 0.05, warp: 4 };
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      const dT = y, dB = S - 1 - y, dL = x, dR = S - 1 - x;
+      const m = Math.min(dT, dB, dL, dR);
+      let col, f = 1;
+      if (m < Rm) {
+        let u, v, s;
+        if (m === dT) { u = x; v = dT; s = 501; } else if (m === dB) { u = x; v = dB; s = 502; }
+        else if (m === dL) { u = y; v = dL; s = 503; } else { u = y; v = dR; s = 504; }
+        col = mix(rimL, rimD, grain(u, v * 1.4, s, 0, rimO));
+        // bombé du cadre, arêtes et coupes d'onglet
+        f = 0.9 + 0.2 * Math.sin(Math.PI * v / Rm);
+        if (v < 2) f *= 0.55; else if (v > Rm - 3) f *= 0.5; else if (v > Rm - 6) f *= 0.82;
+        const mit = Math.min(Math.abs(dT - dL), Math.abs(dT - dR), Math.abs(dB - dL), Math.abs(dB - dR));
+        if (mit < 1.2) f *= 0.5;
+        if (m === dT) f *= 1.08; else if (m === dB) f *= 0.86; else if (m === dL) f *= 0.97; else f *= 0.92;
+      } else {
+        const fy = y - Rm, k = Math.min(FN - 1, Math.floor(fy / FPH)), v = fy - k * FPH, P = planks[k];
+        col = mix(flL, flD, grain(x, v + P.shift, 300 + k * 13, 0, P.o));
+        f = P.tint;
+        if (v < 1.5 || v > FPH - 2) f *= 0.4;
+        // ombre portée du cadre (lumière venant du haut)
+        const dIn = Math.min(dT - Rm, dB - Rm, dL - Rm, dR - Rm);
+        const top = dT - Rm;
+        if (dIn < 26) f *= 0.6 + 0.4 * (dIn / 26);
+        if (top < 34) f *= 0.72 + 0.28 * (top / 34);
+      }
+      const i = (y * S + x) * 4;
+      D[i] = clamp(col[0] * f, 0, 255); D[i + 1] = clamp(col[1] * f, 0, 255); D[i + 2] = clamp(col[2] * f, 0, 255); D[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return c.toDataURL('image/jpeg', 0.88);
+}
+
+/* ---------- Faces des dés ---------- */
+const PIPS = {
+  1: [[50, 50]], 2: [[29, 29], [71, 71]], 3: [[27, 27], [50, 50], [73, 73]],
+  4: [[29, 29], [71, 29], [29, 71], [71, 71]], 5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
+  6: [[29, 25], [71, 25], [29, 50], [71, 50], [29, 75], [71, 75]],
+};
+const DEVIL = [
+  'M31 33C24 22 25 12 33 7C31 17 36 25 43 30Z', 'M69 33C76 22 75 12 67 7C69 17 64 25 57 30Z',
+  'M50 25C34 25 27 37 28 51C29 66 39 78 50 89C61 78 71 66 72 51C73 37 66 25 50 25Z',
+];
+const DEVIL_EYES = ['M35 45L46 50L37 54Z', 'M65 45L54 50L63 54Z', 'M39 64Q50 71 61 64Q55 74 50 75Q45 74 39 64Z'];
+function rgb(hex) { const n = parseInt(hex.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+function css(c, a) { return `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a == null ? 1 : a})`; }
+function shade(c, k) { return k > 0 ? c.map(v => v + (255 - v) * k) : c.map(v => v * (1 + k)); }
+
+function face(d, type, v, flat) {
+  const S = flat ? 112 : 160;
+  const c = canvas(S, S), ctx = c.getContext('2d');
+  const body = rgb(d.body), pip = rgb(d.pip), mat = d.mat || 'paint';
+  const g = ctx.createRadialGradient(S * 0.32, S * 0.26, 0, S * 0.45, S * 0.45, S * 0.82);
+  g.addColorStop(0, css(shade(body, 0.22))); g.addColorStop(0.55, css(body)); g.addColorStop(1, css(shade(body, -0.2)));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, S, S);
+  // matière
+  const img = ctx.getImageData(0, 0, S, S), D = img.data;
+  const seed = (type.length * 131 + v * 17 + (flat ? 7 : 0)) | 0;
+  const k = S / 100;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    let f = 1;
+    if (mat === 'bone') {
+      const n = vn(x / (40 * k), y / (3.5 * k), seed) * 0.6 + vn(x / (9 * k), y / (1.3 * k), seed + 3) * 0.4;
+      f = 1 + (n - 0.5) * 0.2;
+      const sp = hash(x, y, seed + 9);
+      if (sp > 0.9965) f *= 0.72; else if (sp < 0.002) f *= 1.08;
+      f *= 1 - 0.07 * vn(x / (30 * k), y / (30 * k), seed + 21);
+    } else if (mat === 'wood') {
+      const r = (y / S) * 5.5 + vn(x / (45 * k), y / (25 * k), seed) * 2.4;
+      const ring = r - Math.floor(r);
+      const late = ring > 0.66 ? (ring - 0.66) / 0.34 : 0;
+      f = 1 - late * 0.15 + (vn(x / (14 * k), y / (1.2 * k), seed + 4) - 0.5) * 0.1;
+    } else {
+      f = 1 + (vn(x / (6 * k), y / (6 * k), seed) - 0.5) * 0.06;
+    }
+    if (!flat) { // arêtes du cube
+      const e = Math.min(x, y, S - 1 - x, S - 1 - y) / S;
+      if (e < 0.05) f *= 0.72 + 0.28 * (e / 0.05);
+      else if (e < 0.075) f *= 1.04;
+    }
+    const i = (y * S + x) * 4;
+    D[i] = clamp(D[i] * f, 0, 255); D[i + 1] = clamp(D[i + 1] * f, 0, 255); D[i + 2] = clamp(D[i + 2] * f, 0, 255);
+  }
+  ctx.putImageData(img, 0, 0);
+  // points creusés, ou tête du diable
+  if (v === 0) {
+    ctx.save(); ctx.scale(k, k);
+    ctx.fillStyle = css(pip); DEVIL.forEach(p => ctx.fill(new Path2D(p)));
+    ctx.fillStyle = css(shade(body, 0.1)); DEVIL_EYES.forEach(p => ctx.fill(new Path2D(p)));
+    ctx.restore();
+  } else {
+    for (const [px, py] of PIPS[v]) {
+      const x = px * k, y = py * k, r = (v === 1 ? 10.5 : 8.4) * k;
+      const pg = ctx.createRadialGradient(x + r * 0.35, y + r * 0.4, r * 0.1, x, y, r);
+      pg.addColorStop(0, css(shade(pip, 0.28))); pg.addColorStop(0.55, css(pip)); pg.addColorStop(1, css(shade(pip, -0.45)));
+      ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = Math.max(1, 1.3 * k);
+      ctx.strokeStyle = 'rgba(255,246,220,.45)'; ctx.beginPath(); ctx.arc(x, y, r + 0.6 * k, 0.05 * Math.PI, 0.95 * Math.PI); ctx.stroke();
+      ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.arc(x, y, r + 0.4 * k, 1.05 * Math.PI, 1.95 * Math.PI); ctx.stroke();
+    }
+  }
+  if (flat) { // coins arrondis
+    const rr = S * 0.19, m = 2;
+    const path = new Path2D();
+    path.moveTo(m + rr, m); path.arcTo(S - m, m, S - m, S - m, rr); path.arcTo(S - m, S - m, m, S - m, rr); path.arcTo(m, S - m, m, m, rr); path.arcTo(m, m, S - m, m, rr); path.closePath();
+    ctx.lineWidth = 3; ctx.strokeStyle = css(shade(body, -0.32), 0.9); ctx.stroke(path);
+    ctx.globalCompositeOperation = 'destination-in'; ctx.fill(path);
+    return c.toDataURL('image/png');
+  }
+  return c.toDataURL('image/jpeg', 0.9);
+}
+
+const CACHE_KEY = 'kostky-tex-v3';
+function load(cb) {
+  let t = null;
+  try { t = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { }
+  if (t && t.table && t.tray) { cb(t); return; }
+  setTimeout(() => {
+    try {
+      t = { table: tableTile(), tray: trayImage() };
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(t)); } catch (e) { }
+      cb(t);
+    } catch (e) { cb(null); }
+  }, 30);
+}
+
+root.KTex = { load, face, TRAY_RIM };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Kostky — robots. Une stratégie simple : garder peu de dés quand ça vaut le coup,
+   passer quand le risque de repartir bredouille devient trop grand. */
+(function (root) {
+'use strict';
+const E = root.KEngine;
+// Valeur approximative d'avoir n dés à relancer (n = 6 : dés brûlants).
+const W = [0, 30, 60, 110, 190, 300, 450];
+// Seuil de points du tour au-delà duquel on passe, selon les dés qui resteraient.
+const BANK = [0, 300, 300, 450, 1000, 2000, 1e9];
+
+function situation(S, p) {
+  const others = S.order.filter(id => id !== p.id).map(id => E.P(S, id));
+  const lead = Math.max.apply(null, others.map(q => q.score));
+  return { lead, others };
+}
+
+function planTake(S, p) {
+  const T = S.T, ctx = E.ctxFor(S, p), b = E.badgeOf(S, p);
+  const vals = T.dice.map(d => d.v);
+  const regular = T.dice.filter(d => d.s >= 0).length;
+  const subs = E.scoringSubsets(vals, ctx);
+  if (!subs.length) return null;
+  let best = null;
+  for (const s of subs) {
+    const keptRegular = s.sel.filter(i => T.dice[i].s >= 0).length;
+    let rem = regular - keptRegular;
+    if (rem <= 0) rem = 6;
+    const val = s.pts + W[rem];
+    if (!best || val > best.val || (val === best.val && s.pts > best.s.pts)) best = { s, rem, val };
+  }
+  const s = best.s, rem = best.rem;
+  const dbl = !!(b && b.kind === 'double' && p.uses > 0 && s.pts >= 300);
+  const gain = s.pts * (dbl ? 2 : 1);
+  const mult = 1 + (T.warlord || 0);
+  const turn = T.pts + gain;
+  const { lead } = situation(S, p);
+  let go = 'roll';
+  const reach = p.score + Math.round(turn * mult) >= S.opts.target;
+  let thr = BANK[rem];
+  if (lead >= S.opts.target - 600 && lead > p.score + turn) thr *= 1.8; // l'adversaire va gagner : on force
+  if (S.final && S.final.by !== p.id) {
+    // dernier tour : il faut dépasser le meneur
+    const top = Math.max.apply(null, S.order.map(id => E.P(S, id).score));
+    go = (p.score + Math.round(turn * mult) > top) ? 'bank' : 'roll';
+  } else if (reach || turn >= thr) go = 'bank';
+  return { sel: s.sel, go, dbl, turn };
+}
+
+function decide(S, pid) {
+  const p = E.P(S, pid), T = S.T;
+  if (!p || !T || S.phase !== 'play' || T.pid !== pid) return null;
+  const b = E.badgeOf(S, p);
+  const canBadge = b && (!b.uses || p.uses > 0);
+  if (T.phase === 'start') {
+    if (canBadge && b.kind === 'might' && b.uses && !T.extra && Math.random() < 0.45) return { type: 'badge' };
+    return { type: 'roll' };
+  }
+  if (T.phase === 'bust') {
+    if (canBadge && b.uses) {
+      if (b.kind === 'resurrect') return { type: 'badge' };
+      if (b.kind === 'reroll') {
+        const idx = T.dice.map((d, i) => i).slice(0, b.n);
+        return { type: 'badge', sel: idx };
+      }
+      if (b.kind === 'pair') {
+        for (let i = 0; i < T.dice.length; i++) for (let j = i + 1; j < T.dice.length; j++)
+          if (T.dice[i].v === T.dice[j].v) return { type: 'badge', sel: [i, j] };
+      }
+      if (b.kind === 'transmute') {
+        const i = bestTransmute(S, p);
+        if (i >= 0) return { type: 'badge', sel: [i] };
+      }
+    }
+    return { type: 'accept' };
+  }
+  if (T.phase === 'pick') {
+    if (canBadge && b.kind === 'transmute' && p.uses > 0) {
+      const ctx = E.ctxFor(S, p), vals = T.dice.map(d => d.v);
+      const now = maxScore(vals, ctx);
+      const i = bestTransmute(S, p);
+      if (i >= 0) {
+        const v2 = vals.slice(); v2[i] = b.to;
+        if (maxScore(v2, ctx) - now >= 250) return { type: 'badge', sel: [i] };
+      }
+    }
+    const plan = planTake(S, p);
+    if (!plan) return { type: 'accept' };
+    if (canBadge && b.kind === 'warlord' && p.uses > 0 && !T.warlord && plan.go === 'bank' && plan.turn >= 450) return { type: 'badge' };
+    return { type: 'take', sel: plan.sel, go: plan.go, dbl: plan.dbl };
+  }
+  return null;
+}
+function maxScore(vals, ctx) {
+  let m = 0;
+  for (const s of E.scoringSubsets(vals, ctx)) if (s.pts > m) m = s.pts;
+  return m;
+}
+function bestTransmute(S, p) {
+  const b = E.badgeOf(S, p), ctx = E.ctxFor(S, p), T = S.T;
+  const vals = T.dice.map(d => d.v);
+  let bi = -1, bv = -1;
+  for (let i = 0; i < vals.length; i++) {
+    if (vals[i] === b.to) continue;
+    const v2 = vals.slice(); v2[i] = b.to;
+    const m = maxScore(v2, ctx);
+    if (m > bv) { bv = m; bi = i; }
+  }
+  return bv > 0 ? bi : -1;
+}
+
+const BAGS = [
+  ['weighted', 'weighted', 'favourable', 'favourable', 'cautious', 'cautious'],
+  ['lucky', 'lucky', 'odd', 'odd', 'cautious', 'ordinary'],
+  ['demonic', 'demonic', 'devil', 'painted', 'painted', 'ordinary'],
+  ['trinity', 'trinity', 'antiochus', 'cautious', 'cautious', 'ordinary'],
+  ['favourable', 'favourable', 'painted', 'painted', 'lucky', 'lucky'],
+  ['ordinary', 'ordinary', 'ordinary', 'ordinary', 'devil', 'devil'],
+];
+function loadout(S) {
+  let bag = ['ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary'];
+  if (S.opts.dice === 'loaded') bag = BAGS[Math.floor(Math.random() * BAGS.length)].slice();
+  let badge = null;
+  if (S.opts.badges) {
+    const pool = E.BADGE_ORDER.filter(id => E.BADGES[id].tier <= S.opts.badges && E.BADGES[id].tier >= Math.max(1, S.opts.badges - 1));
+    badge = pool[Math.floor(Math.random() * pool.length)];
+  }
+  return { bag, badge };
+}
+
+const NAMES = ['Kunhuta', 'Ondřej', 'Bětka', 'Zbyněk', 'Václav', 'Johanka', 'Radovan', 'Dorota', 'Prokop', 'Markéta', 'Vojtěch', 'Ludmila'];
+root.KBots = { decide, loadout, NAMES, planTake };
+if (typeof module !== 'undefined' && module.exports) module.exports = root.KBots;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Kostky — interface, robots et réseau (PeerJS : un hôte, des invités ; ou partie sur un seul appareil). */
+(function () {
+'use strict';
+const E = window.KEngine, BOTS = window.KBots;
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => Number(n || 0).toLocaleString('fr-FR');
+const Q = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })();
+const TIME = Math.max(0.05, +(Q.get('speed') || 1));
+const ROLL_MS = 950;
+const PREFIX = 'kostky-v1-';
+const LS = store(() => window.localStorage), SS = store(() => window.sessionStorage);
+function store(get) {
+  return {
+    get(k) { try { return get().getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { get().setItem(k, v); } catch (e) { } },
+    del(k) { try { get().removeItem(k); } catch (e) { } },
+    json(k) { try { return JSON.parse(get().getItem(k) || 'null'); } catch (e) { return null; } },
+  };
+}
+const rid = () => Math.floor(E.rnd() * 1e9).toString(36) + Math.floor(E.rnd() * 1e9).toString(36);
+let TOKEN = LS.get('kostky-token');
+if (!TOKEN) { TOKEN = rid() + rid(); LS.set('kostky-token', TOKEN); }
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NO_RTC = typeof window.RTCPeerConnection === 'undefined';
+const OFFLINE_MSG = 'Impossible de joindre le serveur de connexion. Vérifie ta connexion internet ou change de réseau. Dans l\'aperçu de Claude, le jeu en ligne est bloqué : ouvre le fichier kostky.html dans ton navigateur.';
+
+/* ================= Dessins ================= */
+const PIPS = {
+  1: [[50, 50]], 2: [[29, 29], [71, 71]], 3: [[27, 27], [50, 50], [73, 73]],
+  4: [[29, 29], [71, 29], [29, 71], [71, 71]], 5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
+  6: [[29, 25], [71, 25], [29, 50], [71, 50], [29, 75], [71, 75]],
+};
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const f = v => Math.max(0, Math.min(255, Math.round(amt > 0 ? v + (255 - v) * amt : v * (1 + amt))));
+  return '#' + [f(r), f(g), f(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function devilHead(fill, eye) {
+  return `<path d='M31 33C24 22 25 12 33 7C31 17 36 25 43 30Z' fill='${fill}'/><path d='M69 33C76 22 75 12 67 7C69 17 64 25 57 30Z' fill='${fill}'/>` +
+    `<path d='M50 25C34 25 27 37 28 51C29 66 39 78 50 89C61 78 71 66 72 51C73 37 66 25 50 25Z' fill='${fill}'/>` +
+    `<path d='M35 45L46 50L37 54Z' fill='${eye}'/><path d='M65 45L54 50L63 54Z' fill='${eye}'/>` +
+    `<path d='M39 64Q50 71 61 64Q55 74 50 75Q45 74 39 64Z' fill='${eye}'/>`;
+}
+const FACE_CACHE = new Map();
+function faceURL(type, v, flat) {
+  const key = type + v + (flat ? 'f' : 'c');
+  if (FACE_CACHE.has(key)) return FACE_CACHE.get(key);
+  const d = E.DICE[type] || E.DICE.ordinary;
+  let url = null;
+  try { if (window.KTex) url = window.KTex.face(d, type, v, flat); } catch (e) { url = null; }
+  if (!url) url = svgFace(d, v, flat);
+  FACE_CACHE.set(key, url);
+  return url;
+}
+function svgFace(d, v, flat) {
+  const hi = shade(d.body, .35), lo = shade(d.body, -.18), pipLo = shade(d.pip, -.35), pipHi = shade(d.pip, .25);
+  let inner = '';
+  if (v === 0) inner = devilHead(d.pip, d.body);
+  else for (const [x, y] of PIPS[v]) {
+    const r = v === 1 ? 11 : 8.6;
+    inner += `<circle cx='${x}' cy='${y + .8}' r='${r}' fill='${lo}' opacity='.6'/><circle cx='${x}' cy='${y}' r='${r}' fill='url(%23p)'/>`;
+  }
+  const shape = flat
+    ? `<rect x='2' y='2' width='96' height='96' rx='19' fill='url(%23g)' stroke='${d.edge}' stroke-width='3'/>`
+    : `<rect width='100' height='100' fill='url(%23g)'/><rect x='1.5' y='1.5' width='97' height='97' rx='14' fill='none' stroke='${d.edge}' stroke-width='3' opacity='.85'/>`;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='34%' cy='28%' r='85%'><stop offset='0' stop-color='${hi}'/><stop offset='.55' stop-color='${d.body}'/><stop offset='1' stop-color='${lo}'/></radialGradient><radialGradient id='p' cx='60%' cy='65%' r='70%'><stop offset='0' stop-color='${pipHi}'/><stop offset='1' stop-color='${pipLo}'/></radialGradient></defs>${shape}${inner}</svg>`;
+  return 'data:image/svg+xml,' + svg.replace(/</g, '%3C').replace(/>/g, '%3E').replace(/#(?=[0-9a-f]{6})/gi, '%23');
+}
+function favFace(type) {
+  const d = E.DICE[type] || E.DICE.ordinary;
+  if (d.joker) return 0;
+  let m = 0;
+  d.p.forEach((p, i) => { if (p > d.p[m]) m = i; });
+  return d.p.every(p => p === d.p[0]) ? 5 : m + 1;
+}
+const dieImg = (t, v, cls) => `<img src="${faceURL(t, v, true)}" alt="${v === 0 ? 'tête du diable' : v}" class="${cls || ''}" draggable="false">`;
+
+const ICON = {
+  double: '<circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/>',
+  headstart: '<path d="M6 21V4"/><path d="M6 4h11l-2.5 4L17 12H6"/>',
+  defense: '<path d="M12 3l7 3v6c0 4.6-3 7.6-7 9-4-1.4-7-4.4-7-9V6z"/>',
+  reroll: '<path d="M19.5 13a7.5 7.5 0 1 1-2.2-6.3"/><path d="M19.5 4v5h-5"/>',
+  pair: '<path d="M19.5 13a7.5 7.5 0 1 1-2.2-6.3"/><path d="M19.5 4v5h-5"/><path d="M10 12h4"/>',
+  might: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/>',
+  transmute: '<path d="M12 4l8.5 15h-17z"/><path d="M7.2 14h9.6"/>',
+  cut: '<path d="M5 20l9-9"/><path d="M12.5 4.5c3.5-.5 7 2.5 7 6.5l-4.5-1.5-3-3z"/>',
+  gallows: '<path d="M4 21h10M7 21V4h10v3M7 9l5-5"/><circle cx="17" cy="10" r="2"/>',
+  eye: '<path d="M2 12s4-6.5 10-6.5S22 12 22 12s-4 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  warlord: '<path d="M14.5 3.5H20.5V9.5L9.5 20.5L3.5 14.5Z"/><path d="M6 12l6 6"/>',
+  resurrect: '<path d="M12 3v18M7 8h10"/>',
+  emperor: '<path d="M3 18h18l-1.5-10-4.5 4-3-6.5L9 12 4.5 8z"/><path d="M4 21h16"/>',
+};
+function badgeIconKey(b) {
+  if (b.kind === 'form') return b.form;
+  return b.kind;
+}
+function medal(id, o) {
+  o = o || {};
+  if (!id) return `<span class="medal none" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6"/></svg></span>`;
+  const b = E.BADGES[id];
+  const uses = o.uses != null && b.uses ? `<span class="uses">${o.uses}</span>` : '';
+  return `<span class="medal t${b.tier}${o.off ? ' off' : ''}" title="${esc(b.name)} (${E.TIERS[b.tier]})" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[badgeIconKey(b)] || ''}</svg>${uses}</span>`;
+}
+const I = {
+  log: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>',
+  rules: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.6V14"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>',
+  sound: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
+  flame: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-3 2-4 2-7 1.5 1 2 2.5 2 4 1.5-2 1.7-5 1-8z"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  crown: '<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 18h18l-1.5-10-4.5 4-3-6.5L9 12 4.5 8z"/><path d="M4 21h16"/></svg>',
+};
+
+/* ================= Sons =================
+   Tout est synthétisé : dés secoués dans un cornet de cuir, puis chocs sur le plateau de bois. */
+const SND = { ctx: null, on: LS.get('kostky-sound') !== '0', noise: null, white: null, out: null };
+function audio() {
+  if (!SND.ctx) { try { SND.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  const c = SND.ctx;
+  if (c.state === 'suspended') c.resume().catch(() => { });
+  if (!SND.noise) {
+    const mk = (sec, env) => { const len = Math.floor(c.sampleRate * sec), buf = c.createBuffer(1, len, c.sampleRate), ch = buf.getChannelData(0); for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * env(i / len); return buf; };
+    SND.noise = mk(.05, x => Math.pow(1 - x, 4));
+    SND.white = mk(.6, () => 1);
+    const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4;
+    const g = c.createGain(); g.gain.value = .9;
+    comp.connect(g); g.connect(c.destination);
+    SND.out = comp;
+  }
+  return c;
+}
+// Choc d'un dé sur le bois : un « toc » résonant et un bref coup sourd.
+function woodHit(at, g, f) {
+  const c = SND.ctx;
+  const s = c.createBufferSource(), bp = c.createBiquadFilter(), lp = c.createBiquadFilter(), gn = c.createGain();
+  s.buffer = SND.noise; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 9;
+  lp.type = 'lowpass'; lp.frequency.value = 3200;
+  gn.gain.setValueAtTime(g * 1.6, at); gn.gain.exponentialRampToValueAtTime(.0008, at + .055);
+  s.connect(bp); bp.connect(lp); lp.connect(gn); gn.connect(SND.out); s.start(at); s.stop(at + .06);
+  const o = c.createOscillator(), og = c.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(140 + f * .06, at); o.frequency.exponentialRampToValueAtTime(70, at + .05);
+  og.gain.setValueAtTime(g * .5, at); og.gain.exponentialRampToValueAtTime(.0008, at + .06);
+  o.connect(og); og.connect(SND.out); o.start(at); o.stop(at + .07);
+}
+// Cornet de cuir secoué : un froissement étouffé et des petits chocs assourdis.
+function leatherShake(at, dur, n) {
+  const c = SND.ctx;
+  const s = c.createBufferSource(), lp = c.createBiquadFilter(), bp = c.createBiquadFilter(), gn = c.createGain();
+  s.buffer = SND.white; lp.type = 'lowpass'; lp.frequency.value = 900; bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = .8;
+  gn.gain.setValueAtTime(0, at);
+  for (let k = 0; k < 3; k++) { const t = at + k * dur / 3; gn.gain.linearRampToValueAtTime(.16, t + .04); gn.gain.linearRampToValueAtTime(.03, t + dur / 3); }
+  gn.gain.linearRampToValueAtTime(0, at + dur);
+  s.connect(lp); lp.connect(bp); bp.connect(gn); gn.connect(SND.out); s.start(at); s.stop(at + dur + .02);
+  for (let i = 0; i < n * 2; i++) {
+    const t = at + Math.random() * dur, b = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    b.buffer = SND.noise; f.type = 'lowpass'; f.frequency.value = 700 + Math.random() * 500;
+    g.gain.setValueAtTime(.25 + Math.random() * .2, t); g.gain.exponentialRampToValueAtTime(.0008, t + .04);
+    b.connect(f); f.connect(g); g.connect(SND.out); b.start(t); b.stop(t + .05);
+  }
+}
+// Un dé qui tombe, rebondit puis se pose (calé sur l'animation du plateau).
+function dieLand(at, g, pitch, bounce) {
+  woodHit(at, g, pitch);
+  let t = at + bounce, a = g * .45;
+  for (let k = 0; k < 3; k++) { woodHit(t, a, pitch * (1 + (Math.random() - .5) * .12)); t += .045 * Math.pow(.6, k) + .01; a *= .4; }
+}
+function sRoll(n, reroll) {
+  if (!SND.on || !audio()) return;
+  const t0 = SND.ctx.currentTime + .02, ms = ROLL_MS / 1000;
+  if (!reroll) leatherShake(t0, .32, n);
+  for (let i = 0; i < n; i++) {
+    const pitch = 750 + Math.random() * 900;
+    if (reroll) dieLand(t0 + ms * .8 - .02 + i * .03, .5, pitch, .05);
+    else dieLand(t0 + ms * .58 + i * .04 + (Math.random() - .5) * .02, .6 + Math.random() * .25, pitch, ms * .42 - .02);
+  }
+}
+// Coups de poing sur la table : pour inscrire ses points.
+function knock(at, g) {
+  const c = SND.ctx;
+  const s = c.createBufferSource(), bp = c.createBiquadFilter(), gn = c.createGain();
+  s.buffer = SND.noise; bp.type = 'bandpass'; bp.frequency.value = 260; bp.Q.value = 4;
+  gn.gain.setValueAtTime(g * 3, at); gn.gain.exponentialRampToValueAtTime(.0008, at + .12);
+  s.connect(bp); bp.connect(gn); gn.connect(SND.out); s.start(at); s.stop(at + .13);
+  const o = c.createOscillator(), og = c.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(115, at); o.frequency.exponentialRampToValueAtTime(65, at + .1);
+  og.gain.setValueAtTime(g, at); og.gain.exponentialRampToValueAtTime(.0008, at + .14);
+  o.connect(og); og.connect(SND.out); o.start(at); o.stop(at + .15);
+}
+function sBank() { if (!SND.on || !audio()) return; const t = SND.ctx.currentTime + .02; knock(t, .55); knock(t + .13, .45); }
+function sBust() {
+  if (!SND.on || !audio()) return;
+  const c = SND.ctx, t = c.currentTime + .02;
+  knock(t, .7);
+  const o = c.createOscillator(), g = c.createGain(), lp = c.createBiquadFilter();
+  o.type = 'triangle'; o.frequency.setValueAtTime(150, t + .05); o.frequency.exponentialRampToValueAtTime(70, t + .6);
+  lp.type = 'lowpass'; lp.frequency.value = 400;
+  g.gain.setValueAtTime(0, t + .05); g.gain.linearRampToValueAtTime(.16, t + .1); g.gain.exponentialRampToValueAtTime(.0008, t + .65);
+  o.connect(lp); lp.connect(g); g.connect(SND.out); o.start(t + .05); o.stop(t + .7);
+}
+// Dés brûlants : on rassemble les six dés sur le bois.
+function sHot() {
+  if (!SND.on || !audio()) return;
+  const t = SND.ctx.currentTime + .02;
+  for (let i = 0; i < 9; i++) woodHit(t + i * .035 + Math.random() * .015, .3 + Math.random() * .2, 900 + Math.random() * 900);
+}
+function sWin() { if (!SND.on || !audio()) return; const t = SND.ctx.currentTime + .02; knock(t, .55); knock(t + .16, .55); knock(t + .32, .7); }
+function sTick() { if (!SND.on || !audio()) return; woodHit(SND.ctx.currentTime + .005, .18, 1700); }
+
+/* ================= État ================= */
+let S = null, MODE = null, ME = null;
+const UI = {
+  sel: [], bsel: [], badgeMode: null, dbl: false, selKey: '', screen: null,
+  overHidden: false, lastFlash: null, drafts: {}, setupFor: null, confirm: null,
+  sheet: null, rulesOpen: false, seenGame: false, prevTimer: null, netState: '',
+};
+const P = id => S && S.players.find(p => p.id === id);
+const isHost = () => MODE === 'host' || MODE === 'local';
+function actor() {
+  if (MODE === 'local') {
+    if (S && S.phase === 'play' && S.T) { const p = P(S.T.pid); if (p && !p.bot) return p.id; }
+    return S ? S.hostId : null;
+  }
+  return ME;
+}
+function myTurn() {
+  if (!S || S.phase !== 'play' || !S.T) return false;
+  const p = P(S.T.pid);
+  if (!p || p.bot || p.autopilot) return false;
+  return MODE === 'local' ? true : S.T.pid === ME;
+}
+
+/* ================= Hôte : arbitrage ================= */
+function hlog(s, k) { E.log(S, s, k || 'sys'); }
+function cleanName(n) { return String(n || '').replace(/\s+/g, ' ').trim().slice(0, 18) || 'Voyageur'; }
+function uniqueName(n) {
+  let base = cleanName(n), name = base, k = 2;
+  while (S.players.some(p => p.name.toLowerCase() === name.toLowerCase())) name = base + ' ' + (k++);
+  return name;
+}
+function hostApply(pid, a) {
+  if (!S || !a) return 'Action invalide.';
+  let err = null;
+  const host = pid === S.hostId;
+  switch (a.type) {
+    case 'addBot': {
+      if (!host || S.phase !== 'lobby') { err = 'Réservé à l\'hôte, dans le salon.'; break; }
+      if (S.players.length >= E.MAX_PLAYERS) { err = 'Six joueurs au plus autour de la table.'; break; }
+      const free = BOTS.NAMES.filter(n => !S.players.some(p => p.name === n));
+      const p = E.addPlayer(S, { id: 'b_' + rid(), name: free[Math.floor(E.rnd() * free.length)] || uniqueName('Robot'), bot: true });
+      hlog(`${p.name} (robot) s'assoit à la table.`);
+      break;
+    }
+    case 'addLocal': {
+      if (!host || S.phase !== 'lobby' || MODE !== 'local') { err = 'Réservé au salon local.'; break; }
+      if (S.players.length >= E.MAX_PLAYERS) { err = 'Six joueurs au plus autour de la table.'; break; }
+      const p = E.addPlayer(S, { id: 'l_' + rid(), name: uniqueName(a.name), local: true });
+      hlog(`${p.name} s'assoit à la table.`);
+      break;
+    }
+    case 'autopilot': {
+      if (!host) { err = 'Réservé à l\'hôte.'; break; }
+      const q = P(a.target);
+      if (!q || q.bot) { err = 'Joueur introuvable.'; break; }
+      q.autopilot = !!a.on; q.autoAbs = false;
+      hlog(q.autopilot ? `Un robot joue à la place de ${q.name}.` : `${q.name} reprend la main.`);
+      break;
+    }
+    default:
+      err = E.act(S, pid, a);
+  }
+  if (!err) afterChange(a);
+  return err;
+}
+function afterChange(a) {
+  if (!S) return;
+  if (!a || a.type !== 'preview') saveHost();
+  broadcast();
+  render();
+  scheduleAuto();
+}
+function saveHost() {
+  if (!isHost() || !S) return;
+  LS.set('kostky-save', JSON.stringify({ mode: MODE, me: ME, code: S.code, S, t: Date.now() }));
+}
+
+const AUTO = { t: null, previewFor: '', guard: 0, guardKey: '' };
+function scheduleAuto() {
+  clearTimeout(AUTO.t);
+  if (!S || !isHost()) return;
+  if (S.phase === 'setup') {
+    const bot = S.players.find(p => p.bot && !p.ready);
+    if (bot) AUTO.t = setTimeout(() => {
+      const lo = BOTS.loadout(S);
+      hostApply(bot.id, { type: 'loadout', bag: lo.bag, badge: lo.badge, ready: true });
+    }, 450 * TIME);
+    return;
+  }
+  if (S.phase !== 'play' || !S.T) return;
+  const T = S.T, p = P(T.pid);
+  if (!p) return;
+  if (p.bot || p.autopilot) {
+    let d = 900;
+    if (T.phase === 'start') d = 1300;
+    else if (T.phase === 'bust') d = 1900;
+    else if (T.phase === 'pick') d = AUTO.previewFor === pickKey(T) ? 950 : ROLL_MS + 750;
+    AUTO.t = setTimeout(botStep, d * TIME);
+    return;
+  }
+  if (T.phase === 'bust' && !E.rescueKinds(S, p).length) {
+    AUTO.t = setTimeout(() => hostApply('sys', { type: 'accept' }), (ROLL_MS + 1700) * TIME);
+    return;
+  }
+  if (MODE === 'host' && !p.connected) {
+    AUTO.t = setTimeout(() => {
+      if (!S || !S.T || S.T.pid !== p.id || p.connected) return;
+      p.autopilot = true; p.autoAbs = true;
+      hlog(`${p.name} est absent : un robot joue à sa place.`);
+      afterChange();
+    }, 25000 * TIME);
+  }
+}
+const pickKey = T => T.rollId + ':' + (T.rerollId || 0);
+function botStep() {
+  if (!S || S.phase !== 'play' || !S.T) return;
+  const T = S.T, pid = T.pid;
+  const k = pickKey(T) + T.phase;
+  if (AUTO.guardKey === k) AUTO.guard++; else { AUTO.guardKey = k; AUTO.guard = 0; }
+  if (AUTO.guard > 6) { hostApply('sys', { type: 'accept' }); return; }
+  const a = BOTS.decide(S, pid);
+  if (!a) return;
+  if (a.type === 'take' && AUTO.previewFor !== pickKey(T)) {
+    AUTO.previewFor = pickKey(T);
+    E.act(S, pid, { type: 'preview', sel: a.sel });
+    afterChange({ type: 'preview' });
+    return;
+  }
+  const err = hostApply(pid, a);
+  if (err) {
+    console.warn('robot :', err, a);
+    if (T.phase === 'bust') hostApply('sys', { type: 'accept' });
+    else if (T.phase === 'pick') {
+      const subs = E.scoringSubsets(T.dice.map(d => d.v), E.ctxFor(S, P(pid)));
+      if (subs.length) hostApply(pid, { type: 'take', sel: subs[0].sel, go: 'bank' });
+    } else if (T.phase === 'start') hostApply(pid, { type: 'roll' });
+  }
+}
+
+/* ================= Réseau ================= */
+const NET = { peer: null, role: null, code: null, conns: new Map(), seen: {}, closed: false, joined: false, open: false, retryT: null, lastMsg: 0, hb: null, openT: null, name: '', conn: null };
+function peerOpts() {
+  const o = { debug: 0 };
+  if (Q.get('peerhost')) { o.host = Q.get('peerhost'); o.port = +(Q.get('peerport') || 9000); o.path = Q.get('peerpath') || '/'; o.secure = Q.get('peersecure') === '1'; }
+  return o;
+}
+function newCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < 5; i++) s += A[Math.floor(E.rnd() * A.length)]; return s; }
+function safeSend(conn, m) { try { if (conn && conn.open) conn.send(m); } catch (e) { } }
+function netBanner(msg) { const b = $('#netbanner'); b.textContent = msg || ''; b.classList.toggle('hidden', !msg); }
+function setNetState(s) { UI.netState = s || ''; const el = $('#netState'); if (el) el.textContent = UI.netState; }
+const NETERR = ['network', 'server-error', 'socket-error', 'socket-closed', 'ssl-unavailable'];
+
+function broadcast() {
+  if (MODE !== 'host' || !S) return;
+  const v = E.view(S);
+  for (const conn of NET.conns.values()) safeSend(conn, { t: 'state', v });
+}
+function hostOpen(code, resume, tries) {
+  tries = tries || 0;
+  NET.role = 'host'; NET.code = code; NET.closed = false; NET.open = false;
+  if (!window.Peer) { netBanner(OFFLINE_MSG); return; }
+  let peer;
+  try { peer = new window.Peer(PREFIX + code, peerOpts()); } catch (e) { netBanner(OFFLINE_MSG); return; }
+  NET.peer = peer;
+  clearTimeout(NET.openT);
+  NET.openT = setTimeout(() => { if (!NET.open && NET.peer === peer) netBanner(OFFLINE_MSG); }, 12000);
+  peer.on('open', () => { if (NET.peer !== peer) return; NET.open = true; clearTimeout(NET.openT); netBanner(''); render(); });
+  peer.on('connection', conn => {
+    conn.on('data', d => onHostData(conn, d));
+    conn.on('close', () => onHostClose(conn));
+    conn.on('error', () => { });
+  });
+  peer.on('disconnected', () => { if (!NET.closed && NET.peer === peer) setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch (e) { } }, 2000); });
+  peer.on('error', err => {
+    const t = err && err.type;
+    if (NET.peer !== peer) return;
+    if (t === 'unavailable-id') {
+      try { peer.destroy(); } catch (e) { }
+      if (resume && tries < 30) { netBanner('Récupération du code de la partie…'); setTimeout(() => { if (NET.peer === peer && !NET.closed) hostOpen(code, true, tries + 1); }, 3000); }
+      else if (!resume && S && S.phase === 'lobby') { const c = newCode(); S.code = c; hostOpen(c, false); afterChange(); }
+      else netBanner('Ce code de partie est encore pris. Patiente une minute puis recharge la page.');
+    } else if (NETERR.indexOf(t) >= 0) {
+      netBanner(NET.open ? 'Connexion au serveur perdue. Nouvelle tentative…' : OFFLINE_MSG);
+      if (NET.open) setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch (e) { } }, 3000);
+    } else if (t === 'browser-incompatible') netBanner('Ce navigateur ne permet pas le jeu en ligne.');
+  });
+  if (!NET.hb) NET.hb = setInterval(hostBeat, 4000);
+}
+function hostBeat() {
+  if (MODE !== 'host' || !S) return;
+  const now = Date.now();
+  let changed = false;
+  for (const [pid, conn] of NET.conns) {
+    safeSend(conn, { t: 'ping' });
+    if (now - (NET.seen[pid] || 0) > 16000) {
+      NET.conns.delete(pid); try { conn._replaced = true; conn.close(); } catch (e) { }
+      const p = P(pid); if (p && p.connected) { p.connected = false; hlog(`${p.name} a perdu la connexion.`); changed = true; }
+    }
+  }
+  if (changed) afterChange();
+}
+function onHostData(conn, d) {
+  if (!d || typeof d !== 'object' || !S) return;
+  if (d.t === 'hello') {
+    const token = String(d.token || '').slice(0, 64);
+    let p = token ? S.players.find(x => x.token === token) : null;
+    if (!p) {
+      if (S.phase !== 'lobby') { safeSend(conn, { t: 'fatal', msg: 'La partie a déjà commencé. Demande à l\'hôte de revenir au salon.' }); setTimeout(() => conn.close(), 500); return; }
+      if (S.players.length >= E.MAX_PLAYERS) { safeSend(conn, { t: 'fatal', msg: 'La table est complète : six joueurs au plus.' }); setTimeout(() => conn.close(), 500); return; }
+      p = E.addPlayer(S, { id: 'g_' + rid(), name: uniqueName(d.name), token });
+      hlog(`${p.name} s'assoit à la table.`);
+    } else {
+      if (!p.connected) hlog(`${p.name} est de retour.`);
+      p.connected = true;
+      if (p.autoAbs) { p.autopilot = false; p.autoAbs = false; }
+    }
+    const old = NET.conns.get(p.id);
+    if (old && old !== conn) { old._replaced = true; try { old.close(); } catch (e) { } }
+    conn._pid = p.id; NET.conns.set(p.id, conn); NET.seen[p.id] = Date.now();
+    safeSend(conn, { t: 'welcome', pid: p.id, code: S.code });
+    afterChange();
+    return;
+  }
+  const pid = conn._pid;
+  if (!pid || NET.conns.get(pid) !== conn) return;
+  NET.seen[pid] = Date.now();
+  if (d.t === 'act') {
+    const err = hostApply(pid, d.a);
+    if (err && d.a && d.a.type !== 'preview') safeSend(conn, { t: 'err', msg: err });
+  } else if (d.t === 'bye') {
+    const p = P(pid);
+    NET.conns.delete(pid);
+    if (p && S.phase === 'lobby') { S.players = S.players.filter(x => x.id !== pid); hlog(`${p.name} quitte la table.`); }
+    else if (p) { p.connected = false; hlog(`${p.name} a quitté la partie.`); }
+    afterChange();
+  }
+}
+function onHostClose(conn) {
+  if (conn._replaced || !S) return;
+  const pid = conn._pid;
+  if (pid && NET.conns.get(pid) === conn) {
+    NET.conns.delete(pid);
+    const p = P(pid);
+    if (p && p.connected) { p.connected = false; hlog(`${p.name} a perdu la connexion.`); }
+    afterChange();
+  }
+}
+
+function joinOnline(code, name, silent) {
+  code = String(code || '').toUpperCase().replace(/[^A-Z]/g, '');
+  if (code.length !== 5) { toast('Le code fait 5 lettres.', true); return; }
+  if (!window.Peer) { toast(OFFLINE_MSG, true); return; }
+  MODE = 'guest'; NET.role = 'guest'; NET.code = code; NET.name = cleanName(name); NET.joined = false; NET.closed = false;
+  S = null; ME = null;
+  UI.joining = code;
+  render();
+  setNetState('Connexion à la table ' + code + '…');
+  guestPeer(connectToHost);
+  if (!NET.hb) NET.hb = setInterval(guestBeat, 4000);
+}
+function guestPeer(cb) {
+  if (NET.peer && !NET.peer.destroyed && NET.peer.open) { cb(); return; }
+  try { if (NET.peer) NET.peer.destroy(); } catch (e) { }
+  let peer;
+  try { peer = new window.Peer(peerOpts()); } catch (e) { fail(OFFLINE_MSG); return; }
+  NET.peer = peer;
+  const to = setTimeout(() => { if (NET.peer === peer && !peer.open) { if (!NET.joined) fail(OFFLINE_MSG); else scheduleRetry(); } }, 12000);
+  peer.on('open', () => { clearTimeout(to); if (NET.peer === peer) cb(); });
+  peer.on('error', err => {
+    if (NET.peer !== peer || NET.closed) return;
+    const t = err && err.type;
+    if (t === 'peer-unavailable') {
+      if (!NET.joined) fail('Aucune table ouverte avec ce code. Vérifie les lettres, ou demande à l\'hôte si sa page est toujours ouverte.');
+      else { netBanner('L\'hôte est injoignable. Nouvelle tentative…'); scheduleRetry(); }
+    } else if (NETERR.indexOf(t) >= 0) {
+      if (!NET.joined) fail(OFFLINE_MSG); else scheduleRetry();
+    }
+  });
+  peer.on('disconnected', () => { if (!NET.closed && NET.peer === peer) setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch (e) { } }, 1500); });
+}
+function connectToHost() {
+  clearTimeout(NET.retryT);
+  if (NET.closed) return;
+  guestPeer(() => {
+    if (NET.closed) return;
+    const conn = NET.peer.connect(PREFIX + NET.code, { reliable: true, serialization: 'json' });
+    NET.conn = conn;
+    const to = setTimeout(() => {
+      if (conn.open || NET.conn !== conn) return;
+      try { conn.close(); } catch (e) { }
+      if (!NET.joined) fail('L\'hôte ne répond pas. Vérifie le code, ou essaie un autre réseau : certains bloquent les connexions directes.');
+      else scheduleRetry();
+    }, 14000);
+    conn.on('open', () => { clearTimeout(to); NET.lastMsg = Date.now(); safeSend(conn, { t: 'hello', name: NET.name, token: TOKEN }); });
+    conn.on('data', d => { if (NET.conn === conn) onGuestData(d); });
+    conn.on('close', () => { if (NET.conn === conn && !NET.closed) lost(); });
+    conn.on('error', () => { });
+  });
+}
+function onGuestData(d) {
+  if (!d || typeof d !== 'object') return;
+  NET.lastMsg = Date.now();
+  if (d.t === 'welcome') {
+    ME = d.pid; NET.joined = true; netBanner(''); setNetState('');
+    SS.set('kostky-guest', JSON.stringify({ code: NET.code, name: NET.name }));
+    LS.set('kostky-rejoin', JSON.stringify({ code: NET.code, name: NET.name, t: Date.now() }));
+  } else if (d.t === 'state') { S = d.v; render(); }
+  else if (d.t === 'err') toast(d.msg, true);
+  else if (d.t === 'fatal') fail(d.msg);
+}
+function guestBeat() {
+  if (MODE !== 'guest' || NET.closed || !NET.joined) return;
+  safeSend(NET.conn, { t: 'ping' });
+  if (Date.now() - NET.lastMsg > 15000) lost();
+}
+function lost() {
+  if (NET.closed || MODE !== 'guest' || !NET.joined) return;
+  netBanner('Connexion à l\'hôte perdue. Reconnexion…');
+  NET.lastMsg = Date.now();
+  scheduleRetry();
+}
+function scheduleRetry() { clearTimeout(NET.retryT); NET.retryT = setTimeout(connectToHost, 2500); }
+function fail(msg) { leave(true); toast(msg, true); }
+function leave(silent) {
+  if (MODE === 'guest' && NET.conn) safeSend(NET.conn, { t: 'bye' });
+  if (MODE === 'host') for (const c of NET.conns.values()) safeSend(c, { t: 'fatal', msg: 'L\'hôte a fermé la table.' });
+  NET.closed = true; clearTimeout(NET.retryT); clearTimeout(NET.openT); clearInterval(NET.hb); NET.hb = null;
+  const peer = NET.peer; NET.peer = null;
+  setTimeout(() => { try { if (peer) peer.destroy(); } catch (e) { } }, 300);
+  NET.conns.clear(); NET.conn = null; NET.joined = false; NET.open = false;
+  clearTimeout(AUTO.t);
+  if (isHost()) LS.del('kostky-save');
+  SS.del('kostky-guest'); SS.del('kostky-live');
+  if (MODE === 'guest') LS.del('kostky-rejoin');
+  S = null; MODE = null; ME = null; UI.joining = null;
+  netBanner('');
+  closeOverlay(); closeSheet();
+  render();
+}
+
+/* ================= Actions ================= */
+let previewT = null;
+function doAct(a) {
+  if (!S) return;
+  if (isHost()) {
+    const pid = a.as || actor();
+    delete a.as;
+    const err = hostApply(pid, a);
+    if (err && a.type !== 'preview') toast(err, true);
+  } else if (MODE === 'guest') {
+    if (!NET.conn || !NET.conn.open) { if (a.type !== 'preview') toast('Pas de connexion à l\'hôte pour le moment.', true); return; }
+    delete a.as;
+    safeSend(NET.conn, { t: 'act', a });
+  }
+}
+function sendPreview() {
+  clearTimeout(previewT);
+  previewT = setTimeout(() => { if (myTurn() && S.T.phase === 'pick') doAct({ type: 'preview', sel: UI.sel.slice() }); }, 120);
+}
+
+/* ================= Affichage ================= */
+function setHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+function show(id) {
+  for (const s of ['home', 'lobby', 'setup', 'game']) $('#' + s).classList.toggle('hidden', s !== id);
+  if (UI.screen !== id) { UI.screen = id; window.scrollTo(0, 0); }
+}
+function render() {
+  if (!S) {
+    if (MODE === 'guest') { show('home'); renderJoining(); return; }
+    show('home'); renderHome(); return;
+  }
+  if (S.phase === 'lobby') { show('lobby'); keepInputs($('#lobby'), renderLobby); }
+  else if (S.phase === 'setup') { show('setup'); keepInputs($('#setup'), renderSetup); }
+  else { show('game'); renderGame(); }
+  if (UI.sheet) renderSheet();
+  if (UI.ovKind) renderOverlay();
+}
+function keepInputs(root, fn) {
+  const a = document.activeElement, id = a && root.contains(a) && a.id;
+  const vals = {};
+  $$('input[id]', root).forEach(i => { vals[i.id] = i.value; });
+  const ss = a && a.selectionStart;
+  fn();
+  for (const k in vals) { const el = document.getElementById(k); if (el) el.value = vals[k]; }
+  if (id) { const el = document.getElementById(id); if (el) { el.focus(); try { el.setSelectionRange(ss, ss); } catch (e) { } } }
+}
+
+/* ---------- Accueil ---------- */
+function renderHome() {
+  const name = LS.get('kostky-name') || '';
+  const save = LS.json('kostky-save');
+  const rejoin = LS.json('kostky-rejoin');
+  let resume = '';
+  if (save && save.S && Date.now() - save.t < 864e5 && save.S.phase !== 'over') {
+    resume += `<div class="resume"><div class="hint">${save.mode === 'host' ? `Ta table en ligne <b>${esc(save.code)}</b> est restée ouverte.` : 'Ta partie sur cet appareil n\'est pas finie.'}</div>
+      <div class="row"><button class="btn gold grow" data-act="resume">Reprendre la partie</button><button class="btn ghost" data-act="dropSave">Oublier</button></div></div>`;
+  }
+  if (rejoin && Date.now() - rejoin.t < 432e5) {
+    resume += `<div class="resume"><div class="hint">Tu étais assis à la table <b>${esc(rejoin.code)}</b>.</div>
+      <div class="row"><button class="btn grow" data-act="rejoin">Revenir à la table</button><button class="btn ghost" data-act="dropRejoin">Oublier</button></div></div>`;
+  }
+  const join = (Q.get('join') || '').toUpperCase();
+  $('#home').innerHTML = `
+  <div class="home-card">
+    <div class="brand">
+      <div class="home-dice">${dieImg('ordinary', 1)}${dieImg('devil', 0)}${dieImg('ordinary', 5)}</div>
+      <h1>Kostky</h1>
+      <div class="tag">les dés des tavernes de Bohême</div>
+    </div>
+    ${resume}
+    <div class="panel">
+      <div class="field"><label class="label" for="nameIn">ton nom à table</label><input id="nameIn" maxlength="18" autocomplete="nickname" placeholder="Henri de Skalitz" value="${esc(name)}"></div>
+      ${NO_RTC ? '<div class="hint">Le jeu en ligne n\'est pas disponible dans cette page. Ouvre le fichier kostky.html dans ton navigateur pour jouer avec tes amis.</div>' : ''}
+      <button class="btn gold big full" data-act="host" ${NO_RTC ? 'disabled' : ''}>Ouvrir une table en ligne</button>
+      <div class="field"><label class="label" for="joinCode">rejoindre une table avec son code</label>
+        <div class="row"><input id="joinCode" class="txt code-input grow" maxlength="5" autocomplete="off" autocapitalize="characters" placeholder="ABCDE" value="${esc(join)}"><button class="btn" data-act="join" ${NO_RTC ? 'disabled' : ''}>Rejoindre</button></div>
+      </div>
+      <div class="sep">ou</div>
+      <button class="btn full" data-act="local">Jouer sur cet appareil</button>
+      <div class="hint" style="font-size:14.5px">Contre des robots, ou à plusieurs en se passant le téléphone.</div>
+    </div>
+    <div class="row" style="justify-content:space-between"><button class="btn ghost" data-act="rules">Règles du jeu</button><span class="hint" id="netState">${esc(UI.netState)}</span></div>
+    <div class="credit">Adaptation libre et non officielle du jeu de dés de <i>Kingdom Come: Deliverance II</i> (Warhorse Studios), lui-même tiré du Farkle. Aucune image du jeu vidéo n'est utilisée.</div>
+  </div>`;
+}
+function renderJoining() {
+  $('#home').innerHTML = `<div class="home-card"><div class="brand"><h1>Kostky</h1></div>
+    <div class="panel"><div style="text-align:center;font-size:18px">Connexion à la table <b class="num" style="color:var(--brass-hi);letter-spacing:.2em">${esc(UI.joining || NET.code || '')}</b>…</div>
+    <div class="hint" id="netState" style="text-align:center">${esc(UI.netState)}</div>
+    <button class="btn full" data-act="leave">Annuler</button></div></div>`;
+}
+
+/* ---------- Salon ---------- */
+function optSeg(key, vals, cur, labels, can) {
+  return `<div class="seg" role="group">${vals.map((v, i) => `<button ${can ? '' : 'disabled'} aria-pressed="${v === cur}" data-act="opt" data-k="${key}" data-v="${esc(JSON.stringify(v))}">${labels[i]}</button>`).join('')}</div>`;
+}
+function renderLobby() {
+  const host = isHost(), online = MODE !== 'local';
+  const me = P(ME);
+  const seats = S.players.map((p, i) => `<li class="seat">
+      <span class="n">${i + 1}</span><span class="who">${esc(p.name)}</span>
+      ${p.id === S.hostId && online ? '<span class="chip host">hôte</span>' : ''}${p.bot ? '<span class="chip">robot</span>' : ''}${p.id === ME && MODE === 'guest' ? '<span class="chip ok">toi</span>' : ''}${online && !p.bot && !p.connected ? '<span class="chip off">absent</span>' : ''}
+      ${host ? `<button class="btn ghost sm" data-act="move" data-t="${p.id}" data-d="-1" aria-label="Monter" ${i ? '' : 'disabled'}>↑</button><button class="btn ghost sm" data-act="move" data-t="${p.id}" data-d="1" aria-label="Descendre" ${i < S.players.length - 1 ? '' : 'disabled'}>↓</button>${p.id !== S.hostId ? `<button class="btn ghost sm" data-act="kick" data-t="${p.id}" aria-label="Retirer ${esc(p.name)}">✕</button>` : ''}` : ''}
+    </li>`).join('');
+  const o = S.opts, full = S.players.length >= E.MAX_PLAYERS;
+  const link = shareLink();
+  setHTML($('#lobby'), `<div class="page">
+    <div class="page-head">
+      <div><h2>La table</h2><div class="hint">${online ? (host ? 'Donne le code à tes amis : ils l\'entrent sur l\'écran d\'accueil.' : 'L\'hôte lancera la partie.') : 'Partie sur cet appareil.'}</div></div>
+      ${online ? `<div class="code-box"><span class="label">code de la table</span><span class="code num">${esc(S.code)}</span><button class="btn sm" data-act="copy">Copier ${link ? 'le lien' : 'le code'}</button></div>` : ''}
+    </div>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><span class="label">joueurs · ${S.players.length}/6</span>${online && host && !NET.open ? '<span class="hint">ouverture de la table…</span>' : ''}</div>
+      <ol class="seat-list">${seats}</ol>
+      ${host ? `<div class="row">
+        ${MODE === 'local' ? `<input id="localName" class="txt grow" maxlength="18" placeholder="Nom d'un autre joueur" ${full ? 'disabled' : ''}><button class="btn" data-act="addLocal" ${full ? 'disabled' : ''}>Ajouter</button>` : ''}
+        <button class="btn" data-act="addBot" ${full ? 'disabled' : ''}>Ajouter un robot</button>
+      </div>` : ''}
+      <div class="opt-note">L'ordre de la liste est l'ordre de passage. Le premier joueur est tiré au sort.</div>
+    </div>
+    <div class="panel">
+      <div class="opt"><span class="label">objectif</span>${optSeg('target', E.TARGETS, o.target, E.TARGETS.map(fmt), host)}</div>
+      <div class="opt"><span class="label">dés</span>${optSeg('dice', ['plain', 'loaded'], o.dice, ['Six dés ordinaires', 'Dés pipés au choix'], host)}
+        <span class="opt-note">Avec les dés pipés, chacun compose sa bourse de six dés (probabilités du jeu vidéo).</span></div>
+      <div class="opt"><span class="label">insignes</span>${optSeg('badges', [0, 1, 2, 3], o.badges, ['Aucun', 'Étain', 'Jusqu\'à l\'argent', 'Jusqu\'à l\'or'], host)}
+        <span class="opt-note">Chaque joueur choisit un insigne avant la partie.</span></div>
+      <div class="opt"><span class="label">fin de partie</span>${optSeg('finalRound', [false, true], o.finalRound, ['Le premier arrivé gagne', 'Un dernier tour pour les autres'], host)}</div>
+      <div class="opt"><span class="label">aide</span>${optSeg('hints', [true, false], o.hints, ['Assombrir les dés qui ne comptent pas', 'Sans aide'], host)}</div>
+    </div>
+    <div class="row"><button class="btn ghost" data-act="rules">Règles du jeu</button><span class="grow"></span><button class="btn ghost" data-act="askLeave">${host && online ? 'Fermer la table' : 'Quitter'}</button></div>
+  </div>
+  <div class="sticky-foot"><div class="inner">${host
+    ? `<button class="btn gold big" data-act="start" ${S.players.length < 2 ? 'disabled' : ''}>${S.players.length < 2 ? 'Ajoute au moins un joueur' : (E.needsSetup(S) ? 'Préparer les bourses' : 'Commencer la partie')}</button>`
+    : `<div class="hint" style="text-align:center;align-self:center">En attente de l'hôte…</div>`}</div></div>`);
+}
+function shareLink() {
+  if (!/^https?:/.test(location.protocol)) return '';
+  if (/claude|anthropic|usercontent/i.test(location.hostname)) return '';
+  return location.origin + location.pathname + '?join=' + S.code;
+}
+
+/* ---------- Préparation (bourse et insigne) ---------- */
+function setupPlayers() {
+  if (MODE === 'local') return S.players.filter(p => !p.bot);
+  return S.players.filter(p => p.id === ME);
+}
+function draftFor(p) {
+  if (!UI.drafts[p.id]) UI.drafts[p.id] = { bag: p.bag.slice(), badge: p.badge };
+  const d = UI.drafts[p.id];
+  if (E.validBag(d.bag, S.opts)) d.bag = ['ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary', 'ordinary'];
+  if (E.validBadge(d.badge, S.opts)) d.badge = null;
+  return d;
+}
+function renderSetup() {
+  const mine = setupPlayers();
+  if (!UI.setupFor || !mine.some(p => p.id === UI.setupFor)) UI.setupFor = (mine.find(p => !p.ready) || mine[0] || {}).id;
+  const p = P(UI.setupFor);
+  const status = S.players.map(q => `<span class="chip ${q.ready ? 'ok' : ''}">${esc(q.name)}${q.ready ? ' · prêt' : ''}</span>`).join(' ');
+  let body = '';
+  if (p) {
+    const dr = draftFor(p);
+    const ready = p.ready;
+    if (S.opts.dice === 'loaded') {
+      const cnt = {}; dr.bag.forEach(t => { cnt[t] = (cnt[t] || 0) + 1; });
+      const rows = E.DICE_ORDER.map(t => {
+        const d = E.DICE[t], n = cnt[t] || 0, mx = Math.max.apply(null, d.p);
+        const bars = d.p.map((x, i) => `<span style="height:${Math.max(2, Math.round(22 * x / mx))}px" title="${i + 1} : ${Math.round(x * 100 / d.p.reduce((a, b) => a + b, 0))} %"><i>${d.joker && i === 0 ? '☠' : i + 1}</i></span>`).join('');
+        const step = t === 'ordinary' ? `<b class="num" aria-label="${n} dés ordinaires">${n}</b>` :
+          `<div class="stepper"><button data-act="bag" data-t="${t}" data-d="-1" ${n && !ready ? '' : 'disabled'} aria-label="Retirer un ${esc(d.short)}">−</button><b class="num">${n}</b><button data-act="bag" data-t="${t}" data-d="1" ${n < d.max && (cnt.ordinary || 0) > 0 && !ready ? '' : 'disabled'} aria-label="Ajouter un ${esc(d.short)}">+</button></div>`;
+        return `<div class="die-row">${dieImg(t, favFace(t))}<div class="meta"><span class="nm">${esc(d.name)}</span><span class="ds">${esc(d.hint)}${t !== 'ordinary' ? ` · ${d.max} max.` : ''}</span><div class="probs-wrap"><div class="probs">${bars}</div></div></div>${step}</div>`;
+      }).join('');
+      body += `<div class="panel"><div class="row" style="justify-content:space-between"><span class="label">ta bourse</span><span class="bag-count num">6 dés</span></div>
+        <div class="bag-slots">${dr.bag.slice().sort((a, b) => E.DICE_ORDER.indexOf(b) - E.DICE_ORDER.indexOf(a)).map(t => dieImg(t, favFace(t))).join('')}</div>
+        <div class="opt-note">Les dés non choisis sont des dés ordinaires. Les barres montrent la chance de chaque face.</div>
+        <div class="die-list">${rows}</div></div>`;
+    }
+    if (S.opts.badges) {
+      const ids = E.BADGE_ORDER.filter(id => E.BADGES[id].tier <= S.opts.badges);
+      const cards = [`<button class="badge-card" lang="fr" data-act="pickBadge" data-b="" aria-pressed="${!dr.badge}" ${ready ? 'disabled' : ''}>${medal(null)}<span><span class="bn">Aucun</span><br><span class="bt">sans insigne</span></span></button>`]
+        .concat(ids.map(id => { const b = E.BADGES[id]; return `<button class="badge-card" lang="fr" data-act="pickBadge" data-b="${id}" aria-pressed="${dr.badge === id}" ${ready ? 'disabled' : ''}>${medal(id)}<span><span class="bn">${esc(b.name)}</span><br><span class="bt">${E.TIERS[b.tier]}</span></span></button>`; }));
+      const sb = dr.badge && E.BADGES[dr.badge];
+      body += `<div class="panel"><span class="label">ton insigne</span>
+        <div class="badge-detail">${sb ? `<b>${esc(sb.name)} (${E.TIERS[sb.tier]}).</b> ${esc(sb.desc)}` : 'Choisis un insigne pour pimenter la partie, ou joue sans.'}</div>
+        <div class="badge-grid">${cards.join('')}</div></div>`;
+    }
+  }
+  const tabs = MODE === 'local' && mine.length > 1 ? `<div class="tabs">${mine.map(q => `<button class="btn sm ${q.id === UI.setupFor ? 'gold' : ''}" data-act="setupFor" data-t="${q.id}">${esc(q.name)}${q.ready ? ' ✓' : ''}</button>`).join('')}</div>` : '';
+  const host = isHost();
+  setHTML($('#setup'), `<div class="page">
+    <div class="page-head"><div><h2>${p ? (MODE === 'local' && mine.length > 1 ? 'Bourse de ' + esc(p.name) : 'Ta bourse') : 'Préparation'}</h2><div class="hint">Objectif ${fmt(S.opts.target)} points.</div></div></div>
+    ${tabs}
+    <div class="row">${status}</div>
+    ${body}
+  </div>
+  <div class="sticky-foot"><div class="inner">
+    ${p ? (p.ready ? `<button class="btn big" data-act="unready">Modifier</button>` : `<button class="btn gold big" data-act="ready">${MODE === 'local' && mine.filter(q => !q.ready).length > 1 ? 'Valider et passer au suivant' : 'Je suis prêt'}</button>`) : ''}
+    ${MODE === 'host' && S.players.some(q => !q.ready && !q.bot && q.id !== ME) ? `<button class="btn big" data-act="forceStart">Lancer sans attendre</button>` : ''}
+  </div></div>`);
+}
+
+/* ---------- Jeu ---------- */
+function renderGame() {
+  if (!UI.seenGame) { UI.seenGame = true; Tray.key = null; requestWake(); }
+  const T = S.T;
+  // remise à zéro de la sélection à chaque nouveau lancer
+  const k = T ? T.pid + ':' + pickKey(T) + ':' + T.phase : '';
+  if (k !== UI.selKey) {
+    UI.selKey = k; UI.sel = []; UI.bsel = []; UI.badgeMode = null;
+    if (!T || T.phase !== 'pick') UI.dbl = false;
+  }
+  renderTop(); renderSlate(); renderTurnline(); Tray.update(); renderKept(); renderDock(); renderSide();
+  handleFlash();
+  if (S.phase === 'over' && !UI.overHidden && !UI.ovKind && !UI.overT) UI.overT = setTimeout(() => { UI.overT = null; if (S && S.phase === 'over' && !UI.overHidden && !UI.ovKind) openOverlay('over'); }, 1600);
+  if (S.phase !== 'over') UI.overHidden = false;
+}
+function renderTop() {
+  setHTML($('#topbar'), `<span class="brand-s">Kostky</span>
+    <span class="goal num">Objectif <b>${fmt(S.opts.target)}</b><br>${S.final ? '<b>dernier tour</b>' : `manche ${S.round || 1}`}</span>
+    <button class="icon-btn only-narrow" data-act="log" aria-label="Journal">${I.log}</button>
+    <button class="icon-btn" data-act="rules" aria-label="Règles">${I.rules}</button>
+    <button class="icon-btn" data-act="sound" aria-label="Son" aria-pressed="${SND.on}">${I.sound}</button>
+    <button class="icon-btn" data-act="menu" aria-label="Menu">${I.menu}</button>`);
+}
+function renderSlate() {
+  const cur = S.T && S.phase === 'play' ? S.T.pid : null;
+  setHTML($('#slate'), S.order.map(id => {
+    const p = P(id); if (!p) return '';
+    const pct = Math.min(100, Math.round(100 * p.score / S.opts.target));
+    const away = MODE !== 'local' && !p.bot && !p.connected;
+    const doneFinal = S.final && S.final.left.indexOf(id) < 0 && S.final.by !== id;
+    return `<button class="pl ${id === cur ? 'cur' : ''} ${away ? 'away' : ''} ${doneFinal ? 'done-final' : ''}" data-act="who" data-t="${id}" style="text-align:left;background:${id === cur ? '' : 'transparent'}">
+      <span class="nm">${id === cur ? `<span class="flame">${I.flame}</span>` : ''}<span class="t">${esc(p.name)}</span>${p.badge && S.opts.badges ? `<span class="tags">${medal(p.badge, { off: p.badgeOff })}</span>` : ''}</span>
+      <span class="sc num">${fmt(p.score)}</span>
+      <span class="bar"><i style="width:${pct}%"></i></span>
+      ${p.bot || p.autopilot ? `<span class="tag-t">${p.bot ? 'robot' : 'robot à sa place'}</span>` : ''}
+    </button>`;
+  }).join(''));
+}
+function renderTurnline() {
+  const T = S.T;
+  if (!T) { setHTML($('#turnline'), ''); return; }
+  const p = P(T.pid);
+  const mine = myTurn();
+  let who = mine ? (MODE === 'local' ? `au tour de<b>${esc(p.name)}</b>` : `à toi de jouer<b>${esc(p.name)}</b>`) : `au tour de<b>${esc(p.name)}</b>`;
+  if (S.phase === 'over') who = `partie terminée<b>${esc(P(S.winner).name)} l'emporte</b>`;
+  const extra = [];
+  if (T.warlord) extra.push(`+${Math.round(T.warlord * 100)} %`);
+  if (T.extra) extra.push('+1 dé');
+  setHTML($('#turnline'), `<div class="who">${who}</div>
+    <div class="pot"><span class="label">ce tour</span><span class="v num">${fmt(T.pts)}${extra.length ? `<small>${extra.join(' · ')}</small>` : ''}</span></div>`);
+}
+function renderKept() {
+  const T = S.T;
+  if (!T || !T.kept.length) { setHTML($('#kept'), `<span class="empty">${T && T.phase !== 'start' ? 'Aucun dé mis de côté pour l\'instant.' : ''}</span>`); return; }
+  const el = $('#kept');
+  const h = T.kept.map(g => `<div class="grp ${g.dbl ? 'dbl' : ''}" title="${esc(g.names.join(' + '))}"><span class="dd">${g.dice.map(d => dieImg(d.t, d.v)).join('')}</span><span class="pt num">+${fmt(g.pts / (g.dbl ? 2 : 1))}</span></div>`).join('');
+  if (el._h !== h) { setHTML(el, h); el.scrollLeft = el.scrollWidth; }
+}
+function selInfo() {
+  const T = S.T, p = P(T.pid), ctx = E.ctxFor(S, p), b = E.badgeOf(S, p);
+  const sel = UI.sel.filter(i => i < T.dice.length);
+  if (!sel.length) return { state: 'empty' };
+  const r = E.scoreVals(sel.map(i => T.dice[i].v), ctx);
+  if (!r) return { state: 'bad' };
+  const dbl = !!(UI.dbl && b && b.kind === 'double' && p.uses > 0);
+  const pts = r.pts * (dbl ? 2 : 1);
+  const regular = T.dice.filter(d => d.s >= 0).length;
+  const keptReg = sel.filter(i => T.dice[i].s >= 0).length;
+  let rem = regular - keptReg; const hot = rem <= 0; if (hot) rem = 6;
+  let total = T.pts + pts;
+  if (T.warlord) total = Math.round(total * (1 + T.warlord) / 5) * 5;
+  return { state: 'ok', r, pts, rem, hot, total, dbl };
+}
+function renderDock() {
+  const T = S.T, dock = $('#dock');
+  let info = '', acts = '', one = false;
+  const p = T && P(T.pid);
+  const meP = MODE === 'local' ? (T && p && !p.bot ? p : null) : P(ME);
+  const myBadge = meP && E.badgeOf(S, meP);
+  const medalBtn = meP && meP.badge && S.opts.badges ? `<button class="medal-btn" data-act="badgeSheet" aria-label="Mon insigne">${medal(meP.badge, { uses: meP.uses, off: meP.badgeOff })}</button>` : '';
+  if (S.phase === 'over') {
+    info = `<div class="txt"><b>${esc(P(S.winner).name)}</b> remporte la partie avec ${fmt(P(S.winner).score)} points.</div>`;
+    acts = `<button class="btn gold" data-act="results">Voir les résultats</button>`; one = true;
+  } else if (!T) {
+    info = '<div class="txt">…</div>';
+  } else if (myTurn()) {
+    if (T.phase === 'start') {
+      const n = T.avail.length + (T.extra ? 1 : 0);
+      info = `${medalBtn}<div class="txt">${T.wasHot ? '<b>Dés brûlants !</b> ' : ''}Lance tes dés. Tu peux aussi toucher le plateau.</div>`;
+      acts = `<button class="btn gold big" data-act="roll">Lancer ${n} dé${n > 1 ? 's' : ''}</button>`; one = true;
+    } else if ((T.phase === 'pick' || T.phase === 'bust') && UI.badgeMode) {
+      const bm = UI.badgeMode, b = myBadge;
+      const n = UI.bsel.length;
+      let txt = '', ok = false, lbl = '';
+      if (bm === 'reroll') { txt = `<b>${esc(b.name)}</b> : touche jusqu'à ${b.n} dé${b.n > 1 ? 's' : ''} à relancer.`; ok = n >= 1 && n <= b.n; lbl = `Relancer ${n || ''}`; }
+      if (bm === 'pair') { txt = `<b>${esc(b.name)}</b> : touche deux dés de même valeur.`; ok = n === 2 && T.dice[UI.bsel[0]].v === T.dice[UI.bsel[1]].v; lbl = 'Relancer la paire'; }
+      if (bm === 'transmute') { txt = `<b>${esc(b.name)}</b> : touche le dé à changer en ${b.to}.`; ok = n === 1; lbl = `Changer en ${b.to}`; }
+      info = `${medalBtn}<div class="txt">${txt}</div>`;
+      acts = `<button class="btn" data-act="cancelBadge">Annuler</button><button class="btn gold" data-act="useBadgeSel" ${ok ? '' : 'disabled'}>${lbl}</button>`;
+    } else if (T.phase === 'pick') {
+      const si = selInfo();
+      let txt;
+      if (si.state === 'empty') txt = `Touche les dés à mettre de côté. <button class="chipbtn" data-act="selAll">Tout ce qui compte</button>`;
+      else if (si.state === 'bad') txt = `<span class="bad">Chaque dé gardé doit faire partie d'une combinaison.</span>`;
+      else txt = `${esc(si.r.combos.map(c => c.name).join(' + '))} · <b class="num">+${fmt(si.pts)}</b>${si.dbl ? ' <span class="good">(Sosie ×2)</span>' : ''}`;
+      const dblChip = myBadge && myBadge.kind === 'double' && meP.uses > 0 ? `<button class="chipbtn" data-act="toggleDbl" aria-pressed="${UI.dbl}">Sosie ×2</button>` : '';
+      info = `${medalBtn}<div class="txt">${txt}</div>${dblChip}`;
+      const ok = si.state === 'ok';
+      acts = `<button class="btn" data-act="take" data-go="roll" ${ok ? '' : 'disabled'}>${ok ? (si.hot ? 'Garder et relancer les 6' : `Garder et relancer ${si.rem}`) : 'Garder et relancer'}</button>
+        <button class="btn gold" data-act="take" data-go="bank" ${ok ? '' : 'disabled'}>${ok ? `Passer · +${fmt(si.total)}` : 'Garder et passer'}</button>`;
+    } else if (T.phase === 'bust') {
+      const rk = E.rescueKinds(S, p);
+      info = `${medalBtn}<div class="txt"><span class="bad">Bredouille !</span> ${T.pts ? `Les ${fmt(T.pts)} points de ce tour sont perdus.` : 'Aucun dé ne compte.'}</div>`;
+      if (rk.length) {
+        const b = myBadge;
+        const lbl = rk[0] === 'resurrect' ? `${b.name} : relancer` : (rk[0] === 'transmute' ? `${b.name} : changer un dé` : `${b.name} : relancer des dés`);
+        acts = `<button class="btn" data-act="accept">Accepter</button><button class="btn gold" data-act="rescue">${esc(lbl)}</button>`;
+      } else { acts = ''; }
+    }
+  } else {
+    const nm = p ? esc(p.name) : '';
+    if (T.phase === 'start') info = `<div class="txt">${nm} ${p && p.bot ? 'secoue le cornet' : 'va lancer'}…</div>`;
+    else if (T.phase === 'pick') info = `<div class="txt">${nm} choisit ses dés…</div>`;
+    else if (T.phase === 'bust') info = `<div class="txt"><span class="bad">${nm} repart bredouille</span>${T.pts ? ` et perd ${fmt(T.pts)} points` : ''}.</div>`;
+    if (medalBtn) info = medalBtn + info;
+    if (isHost() && p && !p.bot && MODE === 'host' && !p.connected && !p.autopilot) acts = `<button class="btn" data-act="autopilot" data-t="${p.id}" data-on="1">Faire jouer un robot à sa place</button>`, one = true;
+  }
+  setHTML(dock, `<div class="inner"><div class="info">${info}</div>${acts ? `<div class="acts ${one ? 'one' : ''}">${acts}</div>` : ''}</div>`);
+  const h = dock.offsetHeight;
+  if (h) document.documentElement.style.setProperty('--dock-h', h + 'px');
+}
+function logHTML() {
+  return `<ol class="loglist">${S.log.slice(-80).reverse().map(l => `<li class="${l.k}">${esc(l.s)}</li>`).join('')}</ol>`;
+}
+function renderSide() {
+  if (window.innerWidth < 980) return;
+  setHTML($('#side'), `<h3>Journal</h3>${logHTML()}`);
+}
+
+/* ---------- Plateau 3D ---------- */
+const FACE_T = {
+  1: 'translateZ(calc(var(--ds) / 2))', 6: 'rotateY(180deg) translateZ(calc(var(--ds) / 2))',
+  2: 'rotateY(90deg) translateZ(calc(var(--ds) / 2))', 5: 'rotateY(-90deg) translateZ(calc(var(--ds) / 2))',
+  3: 'rotateX(90deg) translateZ(calc(var(--ds) / 2))', 4: 'rotateX(-90deg) translateZ(calc(var(--ds) / 2))',
+};
+const ROT = { 1: [0, 0], 6: [0, 180], 2: [0, -90], 5: [0, 90], 3: [-90, 0], 4: [90, 0] };
+const SLOTS = (() => { const s = [[.5, .5]]; for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + .35; s.push([.5 + .275 * Math.cos(a), .5 + .275 * Math.sin(a)]); } return s; })();
+function seeded(n) { let a = (n * 2654435761) >>> 0 || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const faceOf = v => v === 0 ? 1 : v;
+const Tray = {
+  key: null, rkey: 0, stampEl: null, stampT: null, bustShown: null, landT: null,
+  el() { return $('#tray'); },
+  clearDice() { $$('.die-pos', this.el()).forEach(e => e.remove()); },
+  cta(html) {
+    let c = $('.tray-cta', this.el());
+    if (!html) { if (c) c.remove(); return; }
+    if (!c) { c = document.createElement('div'); c.className = 'tray-cta'; this.el().appendChild(c); }
+    if (c._h !== html) { c.innerHTML = html; c._h = html; }
+  },
+  update() {
+    const T = S.T, tray = this.el();
+    if (!T) { this.clearDice(); this.cta(''); return; }
+    if (T.phase === 'start' || !T.dice.length) {
+      if (this.key !== 'start' + T.pid + T.n) { this.clearDice(); this.key = 'start' + T.pid + T.n; this.unstamp('bust'); }
+      tray.classList.remove('bust');
+      const p = P(T.pid);
+      this.cta(myTurn() ? `<div class="msg"><span class="big">À toi</span><span class="hint">${MODE === 'local' ? esc(p.name) + ', touche' : 'Touche'} le plateau pour lancer.</span></div>`
+        : `<div class="msg"><span class="hint">${esc(p.name)} va lancer…</span></div>`);
+      return;
+    }
+    this.cta('');
+    const key = 'r' + T.rollId;
+    let fresh = false;
+    if (key !== this.key) { this.build(T, !!this.key); this.key = key; this.rkey = T.rerollId || 0; fresh = true; }
+    else if ((T.rerollId || 0) !== this.rkey) { this.reroll(T); this.rkey = T.rerollId || 0; fresh = true; }
+    // états
+    const mine = myTurn() && T.phase === 'pick';
+    const mineB = myTurn() && (T.phase === 'pick' || T.phase === 'bust');
+    const vals = T.dice.map(d => d.v);
+    const mask = S.opts.hints && T.phase === 'pick' ? E.scoringMask(vals, E.ctxFor(S, P(T.pid))) : null;
+    $$('.die-pos', tray).forEach(el => {
+      const i = +el.dataset.i;
+      el.classList.toggle('sel', mine && !UI.badgeMode && UI.sel.indexOf(i) >= 0);
+      el.classList.toggle('bsel', mineB && !!UI.badgeMode && UI.bsel.indexOf(i) >= 0);
+      el.classList.toggle('peek', !mine && T.phase === 'pick' && (T.preview || []).indexOf(i) >= 0);
+      el.classList.toggle('dim', !!(mask && !mask[i]) && !UI.badgeMode);
+      el.setAttribute('aria-pressed', el.classList.contains('sel') || el.classList.contains('bsel'));
+    });
+    tray.classList.toggle('picking', !!UI.badgeMode);
+    if (T.phase === 'bust') {
+      const id = key + ':' + (T.rerollId || 0);
+      if (this.bustShown !== id) {
+        this.bustShown = id;
+        const delay = fresh && this.animated ? ROLL_MS + 150 : 0;
+        clearTimeout(this.bustT);
+        this.bustT = setTimeout(() => { if (S && S.T && S.T.phase === 'bust') { tray.classList.add('bust'); this.stamp('bust', 'Bredouille !', 0); sBust(); } }, delay);
+      }
+    } else { tray.classList.remove('bust'); this.unstamp('bust'); this.bustShown = null; }
+  },
+  build(T, anim) {
+    const tray = this.el();
+    this.clearDice(); this.unstamp(); tray.classList.remove('bust');
+    const R = seeded(T.rollId);
+    const order = SLOTS.map((s, i) => [s, R()]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+    const W = tray.offsetWidth || 320, ds = W * .158;
+    anim = anim && !REDUCED;
+    this.animated = anim;
+    T.dice.forEach((d, i) => {
+      const [x0, y0] = order[i];
+      const x = x0 + (R() - .5) * .05, y = y0 + (R() - .5) * .05, rz = Math.round((R() * 2 - 1) * 30);
+      const el = document.createElement('div');
+      el.className = 'die-pos' + (d.s < 0 ? ' extra' : '');
+      el.dataset.i = i; el.setAttribute('role', 'button'); el.tabIndex = 0;
+      el.setAttribute('aria-label', `Dé ${d.v === 0 ? 'tête du diable' : d.v}${d.s < 0 ? ' (supplémentaire)' : ''}`);
+      el.style.left = `calc(${(x * 100).toFixed(2)}% - var(--ds) / 2)`;
+      el.style.top = `calc(${(y * 100).toFixed(2)}% - var(--ds) / 2)`;
+      el.innerHTML = `<div class="shadow" style="transform:translate3d(10%,12%,calc(var(--ds) / -2 + 1px))"></div><div class="ring" style="transform:translateZ(calc(var(--ds) / -2 + 2px))"></div><div class="cube">${[1, 2, 3, 4, 5, 6].map(f => `<div class="f" data-f="${f}" style="transform:${FACE_T[f]}"></div>`).join('')}</div>`;
+      this.paint(el, d);
+      const [rx, ry] = ROT[faceOf(d.v)];
+      el._rz = rz;
+      el.style.transform = `translateZ(calc(var(--ds) / 2)) rotateZ(${rz}deg)`;
+      const cube = $('.cube', el);
+      cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      tray.appendChild(el);
+      if (anim) {
+        $('.shadow', el).animate([{ opacity: 0 }, { opacity: 0, offset: .55 }, { opacity: 1 }], { duration: ROLL_MS, delay: i * 40, fill: 'backwards' });
+        const sx = (.5 - x) * W + (R() - .5) * 60, sy = (1.12 - y) * W;
+        const delay = i * 40;
+        el.animate([
+          { transform: `translate3d(${sx}px,${sy}px,${W * .5}px) rotateZ(${rz - 220}deg)`, offset: 0 },
+          { transform: `translate3d(${sx * .12}px,${sy * .1}px,${ds * .5 + 4}px) rotateZ(${rz - 40}deg)`, offset: .58 },
+          { transform: `translate3d(0px,0px,${ds * .85}px) rotateZ(${rz - 10}deg)`, offset: .78 },
+          { transform: `translate3d(0px,0px,${ds * .5}px) rotateZ(${rz}deg)`, offset: 1 },
+        ], { duration: ROLL_MS, delay, easing: 'cubic-bezier(.3,.55,.4,1)', fill: 'backwards' });
+        const spx = 360 * (2 + Math.floor(R() * 2)) * (R() < .5 ? -1 : 1), spy = 360 * (1 + Math.floor(R() * 2)) * (R() < .5 ? -1 : 1);
+        cube.animate([{ transform: `rotateX(${rx + spx}deg) rotateY(${ry + spy}deg)` }, { transform: `rotateX(${rx}deg) rotateY(${ry}deg)` }],
+          { duration: ROLL_MS * .82, delay, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards' });
+      }
+    });
+    if (anim) sRoll(T.dice.length);
+    clearTimeout(this.landT);
+    this.landT = setTimeout(() => this.sideShade(), anim ? ROLL_MS + 200 : 0);
+  },
+  paint(el, d) {
+    const jk = (E.DICE[d.t] || {}).joker;
+    $$('.f', el).forEach(f => {
+      const n = +f.dataset.f;
+      f.style.backgroundImage = `url("${faceURL(d.t, (jk && n === 1 && d.v !== 1) ? 0 : n, false)}")`;
+    });
+    el._v = d.v;
+  },
+  sideShade() {
+    $$('.die-pos', this.el()).forEach(el => {
+      const up = faceOf(el._v);
+      $$('.f', el).forEach(f => { f.classList.toggle('shd', +f.dataset.f !== up); });
+    });
+  },
+  reroll(T) {
+    const idx = T.rerolled || [];
+    const W = this.el().offsetWidth || 320, ds = W * .158;
+    idx.forEach(i => {
+      const el = $(`.die-pos[data-i="${i}"]`, this.el()); if (!el) return;
+      const d = T.dice[i]; this.paint(el, d);
+      $$('.f', el).forEach(f => { f.classList.remove('shd'); });
+      const [rx, ry] = ROT[faceOf(d.v)], cube = $('.cube', el);
+      cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      if (!REDUCED) {
+        cube.animate([{ transform: `rotateX(${rx + 720}deg) rotateY(${ry - 360}deg)` }, { transform: `rotateX(${rx}deg) rotateY(${ry}deg)` }], { duration: ROLL_MS * .8, easing: 'cubic-bezier(.2,.7,.3,1)' });
+        el.animate([{ transform: `translate3d(0,0,${ds * .5}px) rotateZ(${el._rz}deg)` }, { transform: `translate3d(0,0,${ds * 2.2}px) rotateZ(${el._rz + 90}deg)`, offset: .4 }, { transform: `translate3d(0,0,${ds * .5}px) rotateZ(${el._rz}deg)` }], { duration: ROLL_MS * .8, easing: 'ease-out' });
+      }
+    });
+    if (idx.length) sRoll(idx.length, true);
+    clearTimeout(this.landT);
+    this.landT = setTimeout(() => this.sideShade(), ROLL_MS);
+    this.animated = true;
+  },
+  stamp(kind, text, dur) {
+    this.unstamp(kind === 'bust' ? null : 'temp');
+    const s = document.createElement('div');
+    s.className = 'stamp ' + kind; s.textContent = text; s.dataset.k = kind === 'bust' ? 'bust' : 'temp';
+    this.el().appendChild(s);
+    if (dur) setTimeout(() => { s.classList.add('out'); setTimeout(() => s.remove(), 500); }, dur);
+  },
+  unstamp(k) { $$('.stamp', this.el()).forEach(s => { if (!k || s.dataset.k === k) s.remove(); }); },
+};
+function handleFlash() {
+  const f = S.flash;
+  if (!f) return;
+  if (UI.lastFlash === null) { UI.lastFlash = f.id; return; }
+  if (f.id === UI.lastFlash) return;
+  UI.lastFlash = f.id;
+  const p = P(f.pid);
+  if (f.k === 'bank') { Tray.stamp('bank', `+${fmt(f.pts)}`, 1600); sBank(); }
+  else if (f.k === 'hot') { setTimeout(() => { Tray.stamp('hot', 'Dés brûlants !', 1300); sHot(); }, 80); }
+  else if (f.k === 'win') { sWin(); }
+}
+
+/* ---------- Superpositions ---------- */
+function openOverlay(kind, data) { UI.ovKind = kind; UI.ovData = data || null; renderOverlay(); }
+function closeOverlay() { UI.ovKind = null; UI.ovData = null; const o = $('#ov'); o.classList.add('hidden'); o.innerHTML = ''; document.body.style.overflow = ''; }
+function renderOverlay() {
+  const o = $('#ov'), k = UI.ovKind;
+  if (!k) { closeOverlay(); return; }
+  let html = '';
+  if (k === 'rules') html = `<div class="card parch rules" role="dialog" aria-label="Règles">${rulesHTML()}</div>`;
+  else if (k === 'over') {
+    if (!S || S.phase !== 'over') { closeOverlay(); return; }
+    const w = P(S.winner);
+    const rows = S.order.map(id => P(id)).sort((a, b) => b.score - a.score).map(p => `<tr class="${p.id === S.winner ? 'w' : ''}"><td>${esc(p.name)}</td><td class="num">${fmt(p.score)}</td><td class="num">${fmt(p.stats.best)}</td><td class="num">${p.stats.busts}</td><td class="num">${p.stats.hot}</td></tr>`).join('');
+    html = `<div class="card" role="dialog" aria-label="Fin de partie">
+      <div class="win-head"><span class="crown">${I.crown}</span><span class="label">victoire</span><h2>${esc(w.name)}</h2><div class="hint">${fmt(w.score)} points · ${S.round} manche${S.round > 1 ? 's' : ''}</div></div>
+      <div class="tbl-wrap"><table class="statt"><thead><tr><th>Joueur</th><th>Score</th><th>Meilleur tour</th><th>Bredouille</th><th>Dés brûlants</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="row">${isHost() ? `<button class="btn gold grow" data-act="rematch">Revanche</button><button class="btn grow" data-act="toLobby">Retour au salon</button>` : `<div class="hint grow">L'hôte peut lancer une revanche.</div>`}</div>
+      <div class="row"><button class="btn ghost" data-act="hideOver">Voir la table</button><span class="grow"></span><button class="btn ghost" data-act="askLeave">Quitter</button></div>
+    </div>`;
+  } else if (k === 'confirm') {
+    const c = UI.ovData;
+    html = `<div class="card" role="alertdialog" style="width:min(420px,100%)"><h3>${esc(c.title)}</h3><p>${esc(c.text)}</p>
+      <div class="row"><button class="btn grow" data-act="closeOv">Annuler</button><button class="btn blood grow" data-act="${c.act}">${esc(c.ok)}</button></div></div>`;
+  }
+  if (o._k !== k + JSON.stringify(UI.ovData) + (k === 'over' ? S.gameNo : '') || !o.innerHTML) { o.innerHTML = html; o._k = k + JSON.stringify(UI.ovData) + (k === 'over' ? S.gameNo : ''); }
+  o.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function openSheet(kind, data) { UI.sheet = kind; UI.sheetData = data || null; renderSheet(); }
+function closeSheet() { UI.sheet = null; const s = $('#sheet'); s.classList.add('hidden'); setHTML(s, ''); }
+function renderSheet() {
+  const k = UI.sheet, s = $('#sheet');
+  if (!k || !S) { closeSheet(); return; }
+  let body = '';
+  if (k === 'log') body = `<h3>Journal</h3>${logHTML()}`;
+  else if (k === 'who' || k === 'badge') {
+    const p = P(k === 'badge' ? (MODE === 'local' ? (S.T && P(S.T.pid) && !P(S.T.pid).bot ? S.T.pid : S.hostId) : ME) : UI.sheetData);
+    if (!p) { closeSheet(); return; }
+    const b = p.badge && E.BADGES[p.badge];
+    let acts = '';
+    if (k === 'badge' && b && !p.badgeOff && myTurn() && S.T.pid === p.id) {
+      const T = S.T, left = !b.uses || p.uses > 0;
+      if (left) {
+        if (b.kind === 'might' && (T.phase === 'start' || T.phase === 'pick') && !T.extra) acts = `<button class="btn gold" data-act="useBadge">Ajouter un dé au prochain lancer</button>`;
+        if (b.kind === 'warlord' && (T.phase === 'start' || T.phase === 'pick') && !T.warlord) acts = `<button class="btn gold" data-act="useBadge">Activer pour ce tour</button>`;
+        if (b.kind === 'double' && T.phase === 'pick') acts = `<button class="btn gold" data-act="toggleDbl">${UI.dbl ? 'Ne pas doubler' : 'Doubler le lot que je garde'}</button>`;
+        if ((b.kind === 'reroll' || b.kind === 'pair' || b.kind === 'transmute') && (T.phase === 'pick' || T.phase === 'bust')) acts = `<button class="btn gold" data-act="badgeMode">Choisir ${b.kind === 'transmute' ? 'le dé' : 'les dés'}</button>`;
+        if (b.kind === 'resurrect' && T.phase === 'bust') acts = `<button class="btn gold" data-act="useBadge">Relancer les mêmes dés</button>`;
+      }
+    }
+    const bag = S.opts.dice === 'loaded' ? `<div><span class="label">bourse</span><div class="bag-slots" style="margin-top:6px">${p.bag.slice().sort((a, c) => E.DICE_ORDER.indexOf(c) - E.DICE_ORDER.indexOf(a)).map(t => `<span title="${esc(E.DICE[t].name)}">${dieImg(t, favFace(t))}</span>`).join('')}</div><div class="hint" style="margin-top:6px">${esc(bagSummary(p.bag))}</div></div>` : '';
+    const badgeTxt = b ? `<div class="row" style="flex-wrap:nowrap;align-items:flex-start">${medal(p.badge, { uses: b.uses ? p.uses : null, off: p.badgeOff })}<div><b>${esc(b.name)} (${E.TIERS[b.tier]})</b><br><span class="hint">${esc(b.desc)}${p.badgeOff ? ' Annulé par une Défense adverse.' : ''}${b.uses ? ` Reste : ${p.uses}.` : ''}</span></div></div>` : (S.opts.badges ? '<div class="hint">Sans insigne.</div>' : '');
+    const st = p.stats || {};
+    body = `<h3>${esc(p.name)}</h3><div class="hint num">${fmt(p.score)} points · meilleur tour ${fmt(st.best)} · ${st.busts || 0} bredouille${st.busts > 1 ? 's' : ''}</div>${badgeTxt}${acts ? `<div class="row">${acts}</div>` : ''}${bag}`;
+  } else if (k === 'menu') {
+    const host = isHost();
+    const autos = host && MODE === 'host' ? S.players.filter(p => !p.bot && p.id !== S.hostId).map(p => `<div class="row"><span class="grow">${esc(p.name)}${p.connected ? '' : ' <span class="chip off">absent</span>'}</span><button class="btn sm" data-act="autopilot" data-t="${p.id}" data-on="${p.autopilot ? '' : '1'}">${p.autopilot ? 'Rendre la main' : 'Faire jouer un robot'}</button></div>`).join('') : '';
+    body = `<h3>Menu</h3>
+      ${MODE === 'host' ? `<div class="hint">Table <b class="num" style="letter-spacing:.2em;color:var(--brass-hi)">${esc(S.code)}</b> · ${NET.open ? 'ouverte' : 'connexion…'}</div>` : ''}
+      ${autos ? `<span class="label">joueurs</span>${autos}` : ''}
+      ${host ? `<button class="btn" data-act="askLobby">Arrêter la partie et revenir au salon</button>` : ''}
+      <button class="btn blood" data-act="askLeave">${MODE === 'host' ? 'Fermer la table' : 'Quitter la partie'}</button>
+      <button class="btn ghost" data-act="closeSheet">Fermer</button>`;
+  }
+  setHTML(s, `<div class="sheet-bg" data-act="closeSheet"></div><div class="sheet" role="dialog"><div class="inner">${body}</div></div>`);
+  s.classList.remove('hidden');
+}
+function bagSummary(bag) {
+  const c = {}; bag.forEach(t => { c[t] = (c[t] || 0) + 1; });
+  return Object.keys(c).sort((a, b) => E.DICE_ORDER.indexOf(a) - E.DICE_ORDER.indexOf(b)).map(t => `${c[t]} × ${E.DICE[t].short.toLowerCase()}`).join(', ');
+}
+
+function rulesHTML() {
+  const row = (vals, txt, pts) => `<tr><td><span class="mini">${vals.map(v => dieImg(v === 0 ? 'devil' : 'ordinary', v)).join('')}</span></td><td>${txt}</td><td class="pts num">${pts}</td></tr>`;
+  const diceRows = E.DICE_ORDER.filter(t => t !== 'ordinary').map(t => { const d = E.DICE[t], tot = d.p.reduce((a, b) => a + b, 0); return `<tr><td>${dieImg(t, favFace(t))}</td><td><b>${esc(d.name)}</b><br><span class="muted">${d.p.map((x, i) => `${d.joker && !i ? '☠' : i + 1} : ${Math.round(100 * x / tot)} %`).join(' · ')}</span></td></tr>`; }).join('');
+  const badges = [1, 2, 3].map(t => `<h3>Insignes ${t === 1 ? 'd\'étain' : t === 2 ? 'd\'argent' : 'd\'or'}</h3><ul>${E.BADGE_ORDER.filter(id => E.BADGES[id].tier === t).map(id => `<li><b>${esc(E.BADGES[id].name)}</b> : ${esc(E.BADGES[id].desc)}</li>`).join('')}</ul>`).join('');
+  return `<button class="icon-btn close-x" data-act="closeOv" aria-label="Fermer">${I.close}</button>
+  <h2>Règles</h2>
+  <p>Le premier à atteindre l'objectif (4 000 points par défaut) gagne. À ton tour, tu lances les six dés, puis tu mets de côté au moins un dé qui compte. Ensuite, deux choix : <b>passer</b> pour inscrire les points du tour, ou <b>relancer</b> les dés restants pour en gagner davantage.</p>
+  <p>Si un lancer ne contient aucun dé qui compte, tu repars <b>bredouille</b> : tous les points du tour sont perdus. Plus il reste peu de dés, plus le risque grandit.</p>
+  <p>Les combinaisons ne comptent qu'à l'intérieur d'un même lancer. Un 4 relancé ne complète pas les deux 4 mis de côté avant. Chaque dé mis de côté doit faire partie d'une combinaison.</p>
+  <p>Si tu as mis de côté les six dés, ce sont des <b>dés brûlants</b> : tu reprends les six et tu continues ton tour.</p>
+  <h3>Combinaisons</h3>
+  <div class="tbl-wrap"><table><tbody>
+    ${row([1], 'Un 1', '100')}${row([5], 'Un 5', '50')}
+    ${row([1, 1, 1], 'Brelan de 1', '1 000')}${row([4, 4, 4], 'Brelan d\'un autre chiffre : 100 × le chiffre', '400')}
+    ${row([4, 4, 4, 4], 'Chaque dé de plus double le brelan', '800')}${row([4, 4, 4, 4, 4], 'Cinq 4', '1 600')}
+    ${row([1, 2, 3, 4, 5], 'Petite suite', '500')}${row([2, 3, 4, 5, 6], 'Grande suite', '750')}${row([1, 2, 3, 4, 5, 6], 'Suite complète', '1 500')}
+    ${row([0, 6, 6], 'La tête du diable remplace n\'importe quel chiffre dans une combinaison, mais ne vaut rien seule', '600')}
+  </tbody></table></div>
+  <h3>Les dés pipés</h3>
+  <p class="hint">Si l'hôte les autorise, chacun compose une bourse de six dés. Les chances de chaque face viennent du tableau des dés du wiki de <i>Kingdom Come: Deliverance II</i>. Pour garder la partie disputée, une bourse contient au plus deux dés de chaque sorte, et un seul dé de saint Antiochus.</p>
+  <div class="tbl-wrap"><table><tbody>${diceRows}</tbody></table></div>
+  ${badges}
+  <p class="hint">Un insigne de Défense annule les insignes du même métal chez tous les adversaires.</p>
+  <h3>D'où vient ce jeu ?</h3>
+  <p>Le jeu de dés de <i>Kingdom Come</i> est le <b>Farkle</b>, un jeu populaire aux nombreux noms (Dix mille, Zilch, Hot Dice, Greed…). Son origine est inconnue : il est attesté au moins depuis le milieu des années 1980 et commercialisé depuis 1996 sous le nom de Pocket Farkel. Les jeux de dés étaient bien répandus dans la Bohême de 1403 où se déroule le jeu vidéo, mais le Farkle lui-même y est un anachronisme, ce que le wiki du jeu relève aussi. Les règles varient beaucoup d'une famille à l'autre ; celles-ci suivent le didacticiel du jeu vidéo.</p>
+  <h3>Choix de cette adaptation</h3>
+  <ul>
+    <li>Les points de l'Entaille (200), du Gibet (400) et de l'Œil (600), et les avances de l'insigne d'Avance (250, 500, 750), ne sont pas publiés de façon fiable : ce sont des valeurs choisies ici.</li>
+    <li>On peut jouer de 2 à 6 joueurs ; le jeu vidéo se joue à deux.</li>
+    <li>Option « dernier tour » : variante courante du Farkle, absente du jeu vidéo.</li>
+  </ul>
+  <h3>Sources</h3>
+  <ul>
+    <li><a href="https://kingdom-come-deliverance.fandom.com/wiki/Dice_(KCD)" target="_blank" rel="noopener">Kingdom Come: Deliverance Wiki, « Dice (KCD) »</a> (didacticiel du jeu, combinaisons, tête du diable)</li>
+    <li><a href="https://kingdom-come-deliverance.fandom.com/wiki/Dice_(KCD2)" target="_blank" rel="noopener">Kingdom Come: Deliverance Wiki, « Dice (KCD2) »</a> (dés pipés, insignes)</li>
+    <li><a href="https://en.wikipedia.org/wiki/Farkle" target="_blank" rel="noopener">Wikipédia (en), « Farkle »</a> (histoire et variantes)</li>
+  </ul>`;
+}
+
+/* ---------- Toasts ---------- */
+function toast(msg, bad) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (bad ? ' bad' : ''); t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.style.transition = 'opacity .4s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 450); }, bad ? 4200 : 2600);
+}
+let WAKE = null;
+function requestWake() { try { if (navigator.wakeLock && !WAKE) navigator.wakeLock.request('screen').then(w => { WAKE = w; w.addEventListener('release', () => { WAKE = null; }); }).catch(() => { }); } catch (e) { } }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S && S.phase === 'play') requestWake(); });
+
+/* ================= Interactions ================= */
+function nameIn() {
+  const v = cleanName(($('#nameIn') || {}).value);
+  LS.set('kostky-name', v);
+  return v;
+}
+function onDieTap(i) {
+  if (!S || !S.T || !myTurn()) return;
+  const T = S.T;
+  if (UI.badgeMode && (T.phase === 'pick' || T.phase === 'bust')) {
+    const b = E.badgeOf(S, P(T.pid)); if (!b) return;
+    const j = UI.bsel.indexOf(i);
+    if (j >= 0) UI.bsel.splice(j, 1);
+    else {
+      const max = UI.badgeMode === 'reroll' ? b.n : (UI.badgeMode === 'pair' ? 2 : 1);
+      if (UI.bsel.length >= max) UI.bsel.shift();
+      UI.bsel.push(i);
+    }
+    Tray.update(); renderDock(); return;
+  }
+  if (T.phase !== 'pick') return;
+  const j = UI.sel.indexOf(i);
+  if (j >= 0) UI.sel.splice(j, 1); else UI.sel.push(i);
+  sTick();
+  Tray.update(); renderDock(); sendPreview();
+}
+document.addEventListener('click', ev => {
+  const die = ev.target.closest('.die-pos');
+  if (die && die.closest('#tray')) { onDieTap(+die.dataset.i); return; }
+  if (ev.target.closest('#tray') && S && S.T && S.T.phase === 'start' && myTurn()) { if (SND.on) audio(); doAct({ type: 'roll' }); return; }
+  const btn = ev.target.closest('[data-act]');
+  if (!btn || btn.disabled) return;
+  const act = btn.dataset.act;
+  if (SND.on && ['roll', 'take', 'host', 'local', 'join', 'start'].indexOf(act) >= 0) audio();
+  switch (act) {
+    case 'host': {
+      const name = nameIn();
+      if (!window.Peer) { toast(OFFLINE_MSG, true); return; }
+      const code = newCode();
+      S = E.newGame(code); MODE = 'host'; ME = 'h_' + rid(); S.hostId = ME;
+      E.addPlayer(S, { id: ME, name, token: TOKEN, local: true });
+      hlog(`${name} ouvre la table.`);
+      SS.set('kostky-live', 'host');
+      hostOpen(code, false);
+      afterChange();
+      break;
+    }
+    case 'local': {
+      const name = nameIn();
+      S = E.newGame(''); MODE = 'local'; ME = 'l_' + rid(); S.hostId = ME;
+      E.addPlayer(S, { id: ME, name, local: true });
+      SS.set('kostky-live', 'local');
+      hostApply(ME, { type: 'addBot' });
+      break;
+    }
+    case 'join': joinOnline(($('#joinCode') || {}).value, nameIn()); break;
+    case 'resume': resumeSave(); break;
+    case 'dropSave': LS.del('kostky-save'); renderHome(); break;
+    case 'rejoin': { const r = LS.json('kostky-rejoin'); if (r) joinOnline(r.code, r.name); break; }
+    case 'dropRejoin': LS.del('kostky-rejoin'); renderHome(); break;
+    case 'leave': leave(); break;
+    case 'rules': openOverlay('rules'); break;
+    case 'closeOv': closeOverlay(); break;
+    case 'hideOver': UI.overHidden = true; closeOverlay(); break;
+    case 'results': UI.overHidden = false; openOverlay('over'); break;
+    case 'copy': {
+      const link = shareLink(), txt = link || S.code;
+      const done = () => toast(link ? 'Lien copié.' : 'Code copié : ' + S.code);
+      try { navigator.clipboard.writeText(txt).then(done, () => toast('Code de la table : ' + S.code)); } catch (e) { toast('Code de la table : ' + S.code); }
+      break;
+    }
+    case 'opt': doAct({ type: 'opt', key: btn.dataset.k, val: JSON.parse(btn.dataset.v) }); break;
+    case 'addBot': doAct({ type: 'addBot' }); break;
+    case 'addLocal': {
+      const inp = $('#localName'); const v = inp && inp.value.trim();
+      if (!v) { toast('Écris le nom du joueur.', true); if (inp) inp.focus(); return; }
+      inp.value = '';
+      doAct({ type: 'addLocal', name: v, as: S.hostId });
+      break;
+    }
+    case 'move': doAct({ type: 'move', target: btn.dataset.t, dir: +btn.dataset.d, as: S.hostId }); break;
+    case 'kick': {
+      const p = P(btn.dataset.t), conn = NET.conns.get(btn.dataset.t);
+      if (conn) { safeSend(conn, { t: 'fatal', msg: 'L\'hôte t\'a retiré de la table.' }); setTimeout(() => { try { conn._replaced = true; conn.close(); } catch (e) { } }, 300); NET.conns.delete(btn.dataset.t); }
+      doAct({ type: 'kick', target: btn.dataset.t, as: S.hostId });
+      break;
+    }
+    case 'start': doAct({ type: 'start', as: S.hostId }); break;
+    case 'setupFor': UI.setupFor = btn.dataset.t; renderSetup(); break;
+    case 'bag': {
+      const p = P(UI.setupFor); if (!p) return;
+      const dr = draftFor(p), t = btn.dataset.t;
+      if (+btn.dataset.d > 0) { const i = dr.bag.indexOf('ordinary'); if (i >= 0) dr.bag[i] = t; }
+      else { const i = dr.bag.lastIndexOf(t); if (i >= 0) dr.bag[i] = 'ordinary'; }
+      keepInputs($('#setup'), renderSetup);
+      break;
+    }
+    case 'pickBadge': { const p = P(UI.setupFor); if (!p) return; draftFor(p).badge = btn.dataset.b || null; keepInputs($('#setup'), renderSetup); break; }
+    case 'ready': {
+      const p = P(UI.setupFor); if (!p) return;
+      const dr = draftFor(p);
+      doAct({ type: 'loadout', bag: dr.bag, badge: dr.badge, ready: true, as: p.id });
+      if (MODE === 'local') { const nxt = setupPlayers().find(q => !q.ready && q.id !== p.id); if (nxt) { UI.setupFor = nxt.id; if (S.phase === 'setup') renderSetup(); window.scrollTo(0, 0); } }
+      break;
+    }
+    case 'unready': { const p = P(UI.setupFor); if (!p) return; const dr = draftFor(p); doAct({ type: 'loadout', bag: dr.bag, badge: dr.badge, ready: false, as: p.id }); break; }
+    case 'forceStart': doAct({ type: 'forceStart', as: S.hostId }); break;
+    case 'roll': doAct({ type: 'roll' }); break;
+    case 'selAll': {
+      const T = S.T; if (!T || !myTurn()) return;
+      const subs = E.scoringSubsets(T.dice.map(d => d.v), E.ctxFor(S, P(T.pid)));
+      let best = null; for (const s of subs) if (!best || s.pts > best.pts || (s.pts === best.pts && s.sel.length > best.sel.length)) best = s;
+      if (best) { UI.sel = best.sel.slice(); Tray.update(); renderDock(); sendPreview(); }
+      break;
+    }
+    case 'take': {
+      const si = selInfo(); if (si.state !== 'ok') return;
+      doAct({ type: 'take', sel: UI.sel.slice(), go: btn.dataset.go, dbl: si.dbl });
+      UI.dbl = false;
+      break;
+    }
+    case 'toggleDbl': UI.dbl = !UI.dbl; renderDock(); if (UI.sheet) closeSheet(); break;
+    case 'accept': doAct({ type: 'accept' }); break;
+    case 'rescue': {
+      const T = S.T, b = E.badgeOf(S, P(T.pid)); if (!b) return;
+      if (b.kind === 'resurrect') doAct({ type: 'badge' });
+      else { UI.badgeMode = b.kind; UI.bsel = []; renderBustPick(); }
+      break;
+    }
+    case 'badgeSheet': openSheet('badge'); break;
+    case 'badgeMode': {
+      const b = E.badgeOf(S, P(S.T.pid)); if (!b) return;
+      UI.badgeMode = b.kind; UI.bsel = []; closeSheet();
+      if (S.T.phase === 'bust') renderBustPick(); else { Tray.update(); renderDock(); }
+      break;
+    }
+    case 'cancelBadge': case 'cancelBust': UI.badgeMode = null; UI.bsel = []; Tray.update(); renderDock(); break;
+    case 'useBadgeSel': doAct({ type: 'badge', sel: UI.bsel.slice() }); UI.badgeMode = null; UI.bsel = []; break;
+    case 'useBadge': doAct({ type: 'badge' }); closeSheet(); break;
+    case 'who': openSheet('who', btn.dataset.t); break;
+    case 'log': openSheet('log'); break;
+    case 'menu': openSheet('menu'); break;
+    case 'closeSheet': closeSheet(); break;
+    case 'sound': SND.on = !SND.on; LS.set('kostky-sound', SND.on ? '1' : '0'); if (SND.on) audio(); renderTop(); break;
+    case 'autopilot': doAct({ type: 'autopilot', target: btn.dataset.t, on: !!btn.dataset.on, as: S.hostId }); if (UI.sheet) renderSheet(); break;
+    case 'rematch': closeOverlay(); doAct({ type: 'rematch', as: S.hostId }); break;
+    case 'toLobby': closeOverlay(); doAct({ type: 'toLobby', as: S.hostId }); break;
+    case 'askLobby': closeSheet(); openOverlay('confirm', { title: 'Revenir au salon ?', text: 'La partie en cours sera abandonnée pour tout le monde.', ok: 'Revenir au salon', act: 'toLobby' }); break;
+    case 'askLeave': closeSheet(); openOverlay('confirm', { title: MODE === 'host' ? 'Fermer la table ?' : 'Quitter ?', text: MODE === 'host' ? 'Les autres joueurs seront déconnectés et la partie sera perdue.' : (MODE === 'local' ? 'La partie sur cet appareil sera perdue.' : 'Tu pourras revenir avec le même code tant que l\'hôte garde la table ouverte.'), ok: MODE === 'host' ? 'Fermer la table' : 'Quitter', act: 'leave' }); break;
+  }
+});
+function renderBustPick() { Tray.update(); renderDock(); }
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Enter' || ev.key === ' ') {
+    const die = ev.target.closest && ev.target.closest('.die-pos');
+    if (die) { ev.preventDefault(); onDieTap(+die.dataset.i); }
+  }
+  if (ev.key === 'Escape') { if (UI.sheet) closeSheet(); else if (UI.ovKind && UI.ovKind !== 'over') closeOverlay(); }
+  if (ev.key === 'Enter' && ev.target && ev.target.id === 'joinCode') joinOnline(ev.target.value, nameIn());
+  if (ev.key === 'Enter' && ev.target && ev.target.id === 'localName') { const btn = $('[data-act="addLocal"]'); if (btn) btn.click(); }
+});
+window.addEventListener('resize', () => { if (S && UI.screen === 'game') renderSide(); });
+
+/* ================= Reprise ================= */
+function resumeSave() {
+  const sv = LS.json('kostky-save');
+  if (!sv || !sv.S) { toast('Aucune partie à reprendre.', true); renderHome(); return; }
+  S = sv.S; MODE = sv.mode; ME = sv.me;
+  UI.seenGame = false; UI.lastFlash = null; Tray.key = null;
+  if (MODE === 'host') {
+    for (const p of S.players) if (!p.bot && p.id !== S.hostId) p.connected = false;
+    SS.set('kostky-live', 'host');
+    hostOpen(S.code, true);
+  } else SS.set('kostky-live', 'local');
+  afterChange();
+}
+function applyTextures() {
+  if (!window.KTex) return;
+  window.KTex.load(t => {
+    if (!t) return;
+    const r = document.documentElement.style;
+    r.setProperty('--table-img', `url("${t.table}")`);
+    r.setProperty('--tray-img', `url("${t.tray}")`);
+    document.documentElement.classList.add('tex');
+  });
+}
+function boot() {
+  applyTextures();
+  const live = SS.get('kostky-live'), g = SS.json('kostky-guest');
+  if (live && LS.json('kostky-save')) { resumeSave(); return; }
+  if (g && g.code) { joinOnline(g.code, g.name, true); return; }
+  render();
+}
+window.__kostky = { state: () => S, mode: () => MODE, me: () => ME, act: a => doAct(a), sel: s => { UI.sel = s; Tray.update(); renderDock(); } };
+boot();
+})();
+
+</script>
+
+<script src="../../retour.js" data-accueil="#home"></script>
+</body>
+</html>
