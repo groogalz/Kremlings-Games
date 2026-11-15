@@ -539,11 +539,11 @@ function createGame(cfg) {
     const ja = al.filter(id => S.votes[id]).length, nein = al.length - ja;
     const passed = ja > al.length / 2;
     const votes = Object.assign({}, S.votes);
-    S.history.push({ round: S.round, pres: S.pres, chanc: S.chanc, votes, passed, special: !!S.isSpecial, policy: null });
-    event('vote', { votes, passed, pres: S.pres, chanc: S.chanc, ja, nein, tracker: passed ? S.tracker : S.tracker + 1 });
+    S.history.push({ round: S.round, pres: S.pres, chanc: S.chanc, votes, ja, nein, passed, special: !!S.isSpecial, policy: null });
+    event('vote', { passed, pres: S.pres, chanc: S.chanc, ja, nein, tracker: passed ? S.tracker : S.tracker + 1 });
     log(passed
       ? `Gouvernement élu (${ja} Ja ! contre ${nein} Nein) : ${nm(S.pres)} président, ${nm(S.chanc)} chancelier.`
-      : `Gouvernement rejeté (${ja} Ja ! contre ${nein} Nein).`, passed ? 'ok' : 'ko', { votes });
+      : `Gouvernement rejeté (${ja} Ja ! contre ${nein} Nein).`, passed ? 'ok' : 'ko');
     if (passed) {
       S.lastPres = S.pres; S.lastChanc = S.chanc;
       if (S.fas >= 3) {
@@ -778,7 +778,11 @@ function createGame(cfg) {
         voted: S.phase === 'vote' ? p.id in S.votes : undefined,
         role: over ? p.role : p.id === pid ? p.role : allyRole[p.id],
       })),
-      seats: S.seats, log: S.log.slice(-150), events: S.events, history: S.history,
+      seats: S.seats,
+      // vote secret : aucun vote nominatif ne quitte l'hôte (y compris anciennes sauvegardes)
+      log: S.log.slice(-150).map(e => { if (!e.votes) return e; const c = Object.assign({}, e); delete c.votes; return c; }),
+      events: S.events.map(e => { if (!e.votes) return e; const c = Object.assign({}, e); const vs = Object.values(e.votes); c.ja = vs.filter(Boolean).length; c.nein = vs.length - c.ja; delete c.votes; return c; }),
+      history: S.history.map(h => { if (!h.votes) return h; const c = Object.assign({}, h); const vs = Object.values(h.votes); if (c.ja == null) { c.ja = vs.filter(Boolean).length; c.nein = vs.length - c.ja; } delete c.votes; return c; }),
     };
     if (!inGame) {
       v.roleTable = ROLE_TABLE; v.boards = BOARDS;
@@ -851,7 +855,6 @@ function botAction(S, pid, rnd) {
     if (h.chaos || !h.passed) continue;
     if (h.policy === 'F') { sus[h.pres] += 1; sus[h.chanc] += 1.3; }
     if (h.policy === 'L') { sus[h.pres] -= 0.6; sus[h.chanc] -= 0.7; }
-    if (h.policy) for (const id in h.votes) if (h.votes[id]) sus[id] += h.policy === 'F' ? 0.25 : -0.1;
   }
   for (const k of myKnow) {
     if (k.type === 'inv') sus[k.target] += k.party === 'F' ? 20 : -20;
@@ -1098,7 +1101,7 @@ function soundHTML() {
 function soundFor(ev) {
   switch (ev.type) {
     case 'start': SND.play('start'); break;
-    case 'vote': SND.play('votes', Object.keys(ev.votes || {}).length, ev.passed); break;
+    case 'vote': SND.play('votes', (ev.ja || 0) + (ev.nein || 0), ev.passed); break;
     case 'policy': if (ev.chaos) SND.play('chaos', ev.card); else SND.play(ev.card === 'L' ? 'lib' : 'fas'); break;
     case 'veto': SND.play('veto'); break;
     case 'kill': SND.play('kill'); break;
@@ -1500,7 +1503,7 @@ function layoutBoards() {
 }
 function renderSeats() {
   const picks = pickList(), actor = actorId(), lg = lastGov();
-  const showLast = V.phase !== 'vote' && lg && lg.votes;
+  const showLast = false;
   const sEl = $('#seats'), n = V.seats.length, w = sEl.clientWidth || 900, minW = window.innerWidth < 760 ? 84 : 82;
   let cols = Math.max(1, Math.min(n, Math.floor((w + 8) / (minW + 8))));
   if (cols < n) cols = Math.ceil(n / Math.ceil(n / cols));
@@ -1610,7 +1613,7 @@ function actHTML() {
       const tr = V.tracker === 2 ? `<p class="warnline">Le traqueur est à 2/3 : un nouveau rejet plongera le pays dans le chaos.</p>` : '';
       return `<h3>Votez pour ce gouvernement</h3><p class="sub">Président : <b>${N(P)}</b> — Chancelier : <b>${N(C)}</b></p>
         <div class="choices"><button class="ballotbtn ${V.myVote === true ? 'on' : V.myVote === false ? 'off' : ''}" data-act="vote" data-ja="1"><img src="${art('ja')}" alt="Ja ! (oui)"></button><button class="ballotbtn ${V.myVote === false ? 'on' : V.myVote === true ? 'off' : ''}" data-act="vote" data-ja="0"><img src="${art('nein')}" alt="Nein (non)"></button></div>
-        <p class="sub">${V.votesCast}/${V.aliveCount} ont voté. ${V.myVote !== null ? 'Vous pouvez changer d\'avis tant que tout le monde n\'a pas voté.' : 'Les votes sont révélés ensemble.'}</p>${warn}${tr}`;
+        <p class="sub">${V.votesCast}/${V.aliveCount} ont voté. ${V.myVote !== null ? 'Vous pouvez changer d\'avis tant que tout le monde n\'a pas voté.' : 'Vote secret : seul le décompte sera révélé.'}</p>${warn}${tr}`;
     }
     case 'pres_discard':
       if (me === P) return `<h3>Défaussez une loi</h3><p class="sub">Vous avez pioché ces trois lois. Cliquez sur celle à <b>défausser</b> : les deux autres partent chez ${N(C)}.</p><div class="choices">${V.hand.map((c, i) => tileBtn(c, i, 'discard', 'Défausser')).join('')}</div>${tileConfirm('discard')}<p class="warnline">Session législative : aucune communication avec le chancelier tant que la loi n'est pas adoptée.</p>`;
@@ -1680,8 +1683,6 @@ function renderSide() {
   } else if (t === 'hist') {
     const rows = V.history.map((h, i) => {
       if (h.chaos) return `<tr><td>${h.round}</td><td colspan="3"><b>Chaos</b> : loi du dessus adoptée</td><td><span class="pol ${h.chaos}"></span></td></tr>`;
-      const ja = [], ne = [];
-      for (const id of V.seats) if (id in h.votes) (h.votes[id] ? ja : ne).push(N(id));
       let res = '';
       if (!h.passed) res = '<span class="ne">Rejeté</span>';
       else if (h.veto) res = 'Veto';
@@ -1689,7 +1690,7 @@ function renderSide() {
       else res = '…';
       const pw = h.power ? `<div class="vl">${POWER[h.power.type].t}${h.power.target ? ' → ' + N(h.power.target) : ''}</div>` : '';
       return `<tr><td>${h.round}${h.special ? '<div class="vl">spéc.</div>' : ''}</td><td>${N(h.pres)}</td><td>${N(h.chanc)}</td>
-        <td><details data-r="${i}" ${UI.openDet.has(i) ? 'open' : ''}><summary><span class="ja">${ja.length}</span>/<span class="ne">${ne.length}</span> ▾</summary><div class="vl"><span class="ja">Ja :</span> ${ja.join(', ') || '—'}<br><span class="ne">Nein :</span> ${ne.join(', ') || '—'}</div></details></td>
+        <td><span class="ja" title="Ja !">${h.ja || 0}</span>/<span class="ne" title="Nein">${h.nein || 0}</span></td>
         <td>${res}${pw}</td></tr>`;
     }).join('');
     body = V.history.length ? `<table class="hist"><tr><th>#</th><th>Président</th><th>Chancelier</th><th>Votes</th><th>Loi</th></tr>${rows}</table>` : '<div class="empty">Aucun gouvernement pour l\'instant.</div>';
@@ -1769,10 +1770,10 @@ function overlayContent(ev) {
     case '_modal': return { html: closeBtn + ev.html, wide: ev.wide };
     case 'start': return { html: roleRevealHTML(true), wide: false };
     case 'vote': {
-      const ids = V.seats.filter(id => id in ev.votes);
-      const cards = ids.map((id, i) => `<div class="b"><img src="${art(ev.votes[id] ? 'ja' : 'nein')}" alt="${ev.votes[id] ? 'Ja' : 'Nein'}" style="animation-delay:${i * 60}ms">${N(id)}</div>`).join('');
+      const bal = Array(ev.ja || 0).fill(true).concat(Array(ev.nein || 0).fill(false));
+      const cards = bal.map((ja, i) => `<div class="b"><img src="${art(ja ? 'ja' : 'nein')}" alt="${ja ? 'Ja' : 'Nein'}" style="animation-delay:${i * 60}ms"></div>`).join('');
       const tr = !ev.passed ? (ev.tracker >= 3 ? 'Troisième échec d\'affilée : chaos !' : `Traqueur d'élections : ${ev.tracker}/3.`) : '';
-      return { html: closeBtn + `<h2>Résultat du vote</h2><p class="sub">Président : <b>${N(ev.pres)}</b> — Chancelier : <b>${N(ev.chanc)}</b></p><div class="ballots">${cards}</div><div class="result ${ev.passed ? 'ok' : 'ko'}">${ev.passed ? `Gouvernement élu (${ev.ja} contre ${ev.nein})` : `Gouvernement rejeté (${ev.ja} contre ${ev.nein})`}</div>${tr ? `<p class="sub" style="text-align:center">${tr}</p>` : ''}`, wide: true, ms: 4200 };
+      return { html: closeBtn + `<h2>Résultat du vote</h2><p class="sub">Vote secret · Président : <b>${N(ev.pres)}</b> — Chancelier : <b>${N(ev.chanc)}</b></p><div class="ballots">${cards}</div><div class="result ${ev.passed ? 'ok' : 'ko'}">${ev.passed ? `Gouvernement élu (${ev.ja} contre ${ev.nein})` : `Gouvernement rejeté (${ev.ja} contre ${ev.nein})`}</div>${tr ? `<p class="sub" style="text-align:center">${tr}</p>` : ''}`, wide: true, ms: 4200 };
     }
     case 'policy': {
       const L = ev.card === 'L';
@@ -1815,7 +1816,7 @@ function rulesHTML() {
   <li>5 joueurs : 3 libéraux, 1 fasciste + Hitler · 6 : 4 + 1 + H · 7 : 4 + 2 + H · 8 : 5 + 2 + H · 9 : 5 + 3 + H · 10 : 6 + 3 + H.</li></ul>
   <h3>Déroulement d'une manche</h3>
   <p><b>1. Élection.</b> La présidence tourne dans l'ordre des places. Le candidat à la présidence propose un chancelier. Le dernier président et le dernier chancelier <i>élus</i> sont inéligibles comme chancelier (s'il ne reste que 5 joueurs ou moins, seul le dernier chancelier l'est).</p>
-  <p>Tout le monde vote <b>Ja !</b> ou <b>Nein</b> ; les votes sont révélés ensemble. Il faut une majorité stricte de Ja ! (égalité = rejet).</p>
+  <p>Tout le monde vote <b>Ja !</b> ou <b>Nein</b>. Dans cette version, le vote est <b>secret</b> : seul le décompte est révélé, jamais qui a voté quoi. Il faut une majorité stricte de Ja ! (égalité = rejet).</p>
   <ul><li>Rejet : le traqueur d'élections avance. Au 3<sup>e</sup> rejet d'affilée, c'est le <b>chaos</b> : la loi du dessus de la pioche est adoptée, son pouvoir est ignoré, le traqueur revient à 0 et les limites de mandat sont oubliées.</li>
   <li>Élection : si 3 lois fascistes ou plus sont déjà adoptées et que le chancelier est Hitler, les fascistes gagnent immédiatement. Sinon, tout le monde sait qu'il n'est pas Hitler.</li></ul>
   <p><b>2. Session législative.</b> Le président pioche 3 lois, en défausse une en secret et passe les deux autres au chancelier, qui en défausse une et adopte la dernière. Pendant la session, président et chancelier ne communiquent pas. Ensuite, chacun peut dire ce qu'il veut… y compris mentir. S'il reste moins de 3 lois dans la pioche, elle est mélangée avec la défausse.</p>
@@ -1838,7 +1839,7 @@ function rulesHTML() {
   <li>Les libéraux gagnent à ralentir et à discuter ; les fascistes, à presser les votes et à semer la confusion.</li></ul>
   <h3>Dans cette version en ligne</h3>
   <ul><li>Le jeu arbitre tout : rôles, pioche, votes, pouvoirs, victoire. Les discussions se font à voix haute (appel vocal conseillé).</li>
-  <li>« Mes infos » garde la trace de ce que vous seul avez vu. « Gouvernements » récapitule tous les votes.</li>
+  <li>« Mes infos » garde la trace de ce que vous seul avez vu. « Gouvernements » récapitule le décompte de chaque vote.</li>
   <li>Le bouton « Mode discret » floute vos informations secrètes à l'écran (survolez pour les voir).</li></ul>
   </div>`;
 }
