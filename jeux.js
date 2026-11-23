@@ -2,6 +2,8 @@
    Pour ajouter un jeu : mettre son dossier dans « jeux/ » (index.html, manifest.webmanifest, icons/),
    puis ajouter une ligne ici avec le nom exact de ce dossier. */
 window.JEUX = [
+  { dossier: 'qui-est-l-imposteur',  nom: 'Qui est l’imposteur ?', phrase: 'Tout le monde a le même Pokémon… sauf un.',               min: 3, max: 16, genre: 'Ambiance' },
+  { dossier: 'avalon',               nom: 'Avalon',               phrase: 'Serviteurs d’Arthur contre sbires de Mordred.',           min: 5, max: 10, genre: 'Rôles cachés' },
   { dossier: 'tag-team',             nom: 'Tag Team',             phrase: 'Un duel de cartes, avec 18 combattants au choix.',        min: 2, max: 2,  genre: 'Combat' },
   { dossier: 'kostky',               nom: 'Kostky',               phrase: 'Le jeu de dés des tavernes de Bohême, tiré de Kingdom Come.', min: 2, max: 6,  genre: 'Dés' },
   { dossier: 'love-letter',          nom: 'Love Letter',          phrase: 'Faites parvenir votre lettre à la Princesse.',            min: 2, max: 6,  genre: 'Cartes' },

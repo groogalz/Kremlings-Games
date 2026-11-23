@@ -1,0 +1,52 @@
+KREMLINGS GAMES — le site qui regroupe tous les jeux
+=====================================================
+
+Ce qu'il y a dans ce dossier
+----------------------------
+  index.html ............ la page d'accueil (le logo et la liste des jeux)
+  jeux.js ............... la liste des jeux affichés : nom, phrase, nombre de joueurs
+  jeux\ ................. un dossier par jeu (index.html, manifest.webmanifest, icons\)
+  retour.js ............. le bouton « Tous les jeux » sur l'écran d'accueil de chaque jeu
+  sw.js, manifest.webmanifest, icons\
+                          ce qui permet d'installer le site comme une appli sur téléphone
+  LISEZ-MOI.txt ......... ce fichier (inutile de le mettre en ligne, mais ça ne gêne pas)
+
+
+Mettre le site en ligne (une seule fois)
+----------------------------------------
+1. Sur github.com : « New repository ». Nom conseillé : kremlings-games.
+   Même réglage de visibilité que ton dépôt TwoRoomAndBoom.
+2. Sur la page du dépôt vide : « uploading an existing file ».
+   Ouvre ce dossier dans l'Explorateur, sélectionne TOUT son contenu (Ctrl+A),
+   et glisse-le dans la page. Les sous-dossiers suivent.
+   Attention : glisse le contenu, pas le dossier lui-même.
+   Puis « Commit changes ».
+3. Settings > Pages > « Deploy from a branch » : branche main, dossier / (root) > Save.
+4. Une ou deux minutes plus tard, le site est à l'adresse :
+       https://groogalz.github.io/kremlings-games/
+   (si tu choisis un autre nom de dépôt, il remplace « kremlings-games »).
+
+Sur téléphone, ouvre cette adresse puis installe-la (la page d'accueil explique comment).
+Les anciennes applis installées jeu par jeu peuvent être supprimées.
+
+
+Mettre à jour un seul jeu
+-------------------------
+1. Sur GitHub, ouvre jeux > le dossier du jeu (par exemple jeux/secret-hitler).
+2. « Add file » > « Upload files », glisse le nouvel index.html (et le dossier icons s'il a changé).
+3. « Commit changes ». Les autres jeux ne bougent pas.
+
+Chaque index.html de jeu contient, juste avant </body>, la ligne :
+    <script src="../../retour.js" data-accueil="#home"></script>
+Elle affiche le bouton de retour vers l'accueil. Si un jeu est modifié ailleurs,
+il faut garder (ou remettre) cette ligne.
+
+GitHub garde les pages en cache environ 10 minutes : une mise à jour peut mettre
+ce temps à apparaître. Évite de mettre à jour un jeu pendant une partie.
+
+
+Ajouter un jeu
+--------------
+1. Dans jeux\, un nouveau dossier au nom simple (minuscules, tirets, sans espace),
+   avec index.html, manifest.webmanifest et icons\ (icon-192.png et icon-512.png au minimum).
+2. Dans jeux.js, une ligne de plus sur le modèle des autres.
