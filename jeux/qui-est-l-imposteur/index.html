@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#173f36">
-<meta name="description" content="Qui est l'imposteur ? Un mot chacun, un intrus parmi vous. Jeu d'ambiance en ligne entre amis, avec des noms de Pokémon.">
+<meta name="description" content="Qui est l'imposteur ? Un mot chacun, un intrus parmi vous. Jeu d'ambiance en ligne entre amis, avec des Pokémon ou des champions de League of Legends.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Imposteur">
@@ -186,7 +186,7 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
 .mycard .lb{font-weight:900;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .mycard .w{font-family:var(--f-title);font-size:clamp(26px,5vw,38px);line-height:1.15;color:var(--ink)}
 .mycard .w.none{color:var(--purple)}
-.mycard .rl{font-weight:800;font-size:13px}
+.mycard .mrole{font-weight:800;font-size:13px}
 .mycard .hide{position:absolute;right:12px;bottom:8px;font-size:12px;font-weight:800;color:var(--ink-3);z-index:1}
 .mycard.spect .b{background:repeating-linear-gradient(45deg,var(--felt-l) 0 12px,var(--felt) 12px 24px)}
 
@@ -260,7 +260,9 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
 #composer.clue input{font-family:var(--f-hand);font-size:21px;font-weight:400;padding:.3em .7em}
 #composer.guess{background:var(--purple-l)}
 #composer.guess .tag{background:var(--purple);color:#fff}
-#composer.mute .line{opacity:.55}
+#composer.idle .line,#composer.dead .line{display:none}
+#composer.idle,#composer.dead{padding:10px 12px}
+#composer .hint{font-weight:700;font-size:13.5px;color:var(--ink-2)}
 
 /* ───────── superpositions ───────── */
 #ov{position:fixed;inset:0;z-index:60;background:rgba(10,24,20,.72);display:grid;place-items:center;padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));overflow-y:auto;backdrop-filter:blur(2px)}
@@ -361,7 +363,7 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
   .mycard .f{grid-template-columns:auto 1fr;justify-items:start;text-align:left;column-gap:10px;align-items:center;padding:6px 14px}
   .mycard .f .lb{grid-row:1 / span 2}
   .mycard .w{font-size:24px}
-  .mycard .rl{font-size:12px}
+  .mycard .mrole{font-size:12px}
   .mycard .hide{display:none}
   .seats{grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:12px 8px}
   .seat{padding:10px 6px 9px;gap:4px;border-radius:13px;box-shadow:0 4px 0 var(--ink)}
@@ -392,7 +394,7 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
   <div class="home-deco" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="home-card card on-card">
     <h1 class="logo"><span class="l1">Qui est</span><span class="l2">l'imposteur<b>?</b></span></h1>
-    <div class="home-sub">Tout le monde a le même Pokémon… sauf un.<br>En ligne, de 3 à 16 joueurs.</div>
+    <div class="home-sub">Tout le monde a le même nom… sauf un.<br>Pokémon ou champions de LoL, de 3 à 16 joueurs.</div>
     <div class="field"><label for="name">Ton nom</label><input id="name" maxlength="18" autocomplete="off" placeholder="Ex. : Tom"></div>
     <div class="field"><span class="lbl">Ton croco</span><div class="croco-pick" id="crocoPick"></div></div>
     <button class="btn btn-red btn-big full" data-act="host">Créer une partie</button>
@@ -402,7 +404,7 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
     </div>
     <div id="resumeBox"></div>
     <div class="row between" style="margin-top:12px"><button class="btn btn-ghost btn-sm" data-act="rules">Règles du jeu</button><span class="hint" id="netState"></span></div>
-    <div class="credit">Jeu d'ambiance façon « Undercover », fait maison pour jouer entre amis. Les noms de Pokémon appartiennent à Nintendo, Creatures, GAME FREAK et The Pokémon Company ; ce jeu non officiel n'a aucun lien avec eux.</div>
+    <div class="credit">Jeu d'ambiance façon « Undercover », fait maison pour jouer entre amis. Les noms de Pokémon appartiennent à Nintendo, Creatures, GAME FREAK et The Pokémon Company, ceux des champions de League of Legends à Riot Games ; ce jeu non officiel n'a aucun lien avec eux.</div>
   </div>
 </div>
 <div id="lobby" class="screen hidden"></div>
@@ -411,7 +413,7 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
   <div id="phasebar"></div>
   <main id="board"><div id="mycardBox"></div><div id="seats" class="seats"></div></main>
   <aside id="chatbox">
-    <div class="chat-h"><span>Le chat</span><small id="chatSub"></small></div>
+    <div class="chat-h"><span>Les indices</span><small id="chatSub"></small></div>
     <div id="chatlog" aria-live="polite"></div>
     <form id="composer" autocomplete="off">
       <div class="mode" id="cmpMode"></div>
@@ -705,7 +707,7 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
 </script>
 <script>
 /* Qui est l'imposteur ? — moteur de jeu (tourne chez l'hôte ; aucune dépendance au navigateur).
-   Règles façon « Undercover » : les civils ont tous le même Pokémon, les imposteurs un Pokémon proche,
+   Règles façon « Undercover » : les civils ont tous le même nom (Pokémon ou champion de LoL), les imposteurs un nom proche,
    l'Amnésique n'en a aucun. Chacun donne un indice à son tour, puis tout le monde vote. */
 (function (root) {
 'use strict';
@@ -764,6 +766,50 @@ const PAIRES = [
   ['Morpeko', 'Pachirisu', 8], ['Poussacha', 'Chaglam', 9], ['Chochodile', 'Crocrodil', 9], ['Coiffeton', 'Psykokwak', 9],
 ];
 
+/* Paires de champions de League of Legends : [nom 1, nom 2, type de lien].
+   'j' = gameplay (même mécanique signature : deux hooks, deux enchanteurs qui protègent, deux ults globales…)
+   'u' = univers (même famille ou même groupe du lore : deux Darkin, deux créatures du Néant, deux frères…)
+   'ju' = les deux à la fois. Les noms sont ceux du client français. */
+const CHAMPIONS = [
+  // gameplay
+  ['Blitzcrank', 'Thresh', 'j'], ['Pyke', 'Nautilus', 'ju'], ['Janna', 'Lulu', 'j'], ['Karma', 'Morgana', 'j'],
+  ['Soraka', 'Yuumi', 'j'], ['Nami', 'Sona', 'j'], ['Seraphine', 'Sona', 'ju'], ['Taric', 'Kayle', 'j'],
+  ['Zilean', 'Kindred', 'j'], ['Shen', 'Twisted Fate', 'j'], ['Karthus', 'Soraka', 'j'], ['Pantheon', 'Galio', 'j'],
+  ['Ashe', 'Jinx', 'j'], ['Ezreal', 'Lux', 'j'], ['Nidalee', 'Elise', 'j'], ['Gnar', 'Shyvana', 'j'],
+  ['Kassadin', 'Kayle', 'j'], ['Malphite', 'Amumu', 'j'], ['Anivia', 'Zac', 'j'], ['Nasus', 'Veigar', 'j'],
+  ['Miss Fortune', 'Katarina', 'j'], ['Fiddlesticks', 'Nocturne', 'j'], ['Caitlyn', 'Jhin', 'j'], ['Zed', 'Talon', 'j'],
+  ['Fiora', 'Camille', 'j'], ['Riven', 'Irelia', 'j'], ['Xerath', "Vel'Koz", 'j'], ['Heimerdinger', 'Zyra', 'j'],
+  ['Yorick', 'Malzahar', 'j'], ['Morgana', 'Lux', 'j'], ['Teemo', 'Shaco', 'j'], ['Evelynn', 'Twitch', 'j'],
+  ['Rengar', "Kha'Zix", 'ju'], ['LeBlanc', 'Shaco', 'j'], ['Neeko', 'Wukong', 'j'], ['Ekko', 'Zilean', 'ju'],
+  ['Garen', 'Darius', 'ju'], ['Lissandra', 'Anivia', 'ju'], ['Braum', 'Taric', 'j'], ['Ahri', 'Evelynn', 'j'],
+  ['Vayne', "Kai'Sa", 'j'], ['Tryndamere', 'Olaf', 'j'], ['Sion', 'Hecarim', 'j'], ["Kog'Maw", 'Twitch', 'j'],
+  ['Ziggs', 'Jinx', 'ju'], ['Gragas', 'Zac', 'j'], ['Swain', 'Vladimir', 'ju'], ['Jax', 'Fiora', 'j'],
+  ['Yasuo', 'Samira', 'j'], ['Viktor', 'Jayce', 'ju'], ['Malzahar', 'Warwick', 'j'],
+  // univers
+  ['Aatrox', 'Varus', 'u'], ['Aatrox', 'Naafiri', 'u'], ['Varus', 'Kayn', 'u'], ["Cho'Gath", "Kog'Maw", 'u'],
+  ["Kha'Zix", "Rek'Sai", 'u'], ["Bel'Veth", "Vel'Koz", 'u'], ["Kai'Sa", 'Kassadin', 'u'], ['Nasus', 'Renekton', 'u'],
+  ['Azir', 'Xerath', 'u'], ['Thresh', 'Hecarim', 'u'], ['Karthus', 'Yorick', 'u'], ['Kalista', 'Hecarim', 'u'],
+  ['Teemo', 'Tristana', 'u'], ['Poppy', 'Kled', 'u'], ['Lulu', 'Veigar', 'u'], ['Corki', 'Heimerdinger', 'u'],
+  ['Leona', 'Diana', 'u'], ['Pantheon', 'Taric', 'u'], ['Aurelion Sol', 'Soraka', 'u'], ['Ashe', 'Sejuani', 'u'],
+  ['Ornn', 'Volibear', 'u'], ['Garen', 'Lux', 'u'], ['Jarvan IV', 'Xin Zhao', 'u'], ['Darius', 'Draven', 'u'],
+  ['Katarina', 'Talon', 'u'], ['Swain', 'LeBlanc', 'u'], ['Yasuo', 'Yone', 'u'], ['Shen', 'Zed', 'u'],
+  ['Akali', 'Kennen', 'u'], ['Jinx', 'Vi', 'u'], ['Vi', 'Caitlyn', 'u'], ['Singed', 'Warwick', 'u'],
+  ['Ekko', 'Jinx', 'u'], ['Gangplank', 'Miss Fortune', 'u'], ['Graves', 'Twisted Fate', 'u'], ['Fizz', 'Nami', 'u'],
+  ['Rakan', 'Xayah', 'u'], ['Lucian', 'Senna', 'u'], ['Ahri', 'Neeko', 'u'],
+];
+// Surnoms courants : acceptés quand l'Amnésique devine, refusés dans un indice.
+const SURNOMS = {
+  'Twisted Fate': ['TF'], 'Miss Fortune': ['MF'], 'Aurelion Sol': ['Aurelion', 'ASol'], 'Jarvan IV': ['Jarvan', 'J4'],
+  'Xin Zhao': ['Xin'], 'Heimerdinger': ['Heimer', 'Donger'], 'Fiddlesticks': ['Fiddle'], 'Blitzcrank': ['Blitz'],
+  'Kassadin': ['Kassa'], 'Malzahar': ['Malz'], 'Seraphine': ['Sera'], 'Tryndamere': ['Trynda', 'Trynd'],
+  'LeBlanc': ['LB'], 'Gangplank': ['GP'], 'Hecarim': ['Heca'], 'Nautilus': ['Naut', 'Nauti'], 'Lissandra': ['Lissa'],
+  'Katarina': ['Kata'], 'Vladimir': ['Vlad'], 'Caitlyn': ['Cait'], 'Renekton': ['Renek'],
+};
+const THEMES = {
+  pokemon: { nom: 'Pokémon', paires: PAIRES },
+  lol: { nom: 'champion', paires: CHAMPIONS },
+};
+
 const MIN_J = 3, MAX_J = 16;
 const ROLES = { civ: 'Civil', imp: 'Imposteur', amn: 'Amnésique' };
 const POINTS = { civ: 2, imp: 10, amn: 6 };
@@ -782,9 +828,19 @@ function lev(a, b) {
   return prev[n];
 }
 // Une réponse de l'Amnésique est juste si elle correspond au nom, à une faute de frappe près pour les noms longs.
-function memeNom(a, b) { a = norm(a); b = norm(b); if (!a || !b) return false; return a === b || (b.length >= 6 && lev(a, b) <= 1); }
+function memeNom(a, b) {
+  const g = norm(a), n = norm(b); if (!g || !n) return false;
+  if (g === n || (n.length >= 6 && lev(g, n) <= 1)) return true;
+  return (SURNOMS[b] || []).some(x => norm(x) === g);
+}
 // Un indice ne doit pas contenir son propre Pokémon.
-function contientNom(txt, nom) { const n = norm(nom); return n.length >= 3 && norm(txt).includes(n); }
+function contientNom(txt, nom) {
+  const n = norm(nom);
+  if (n.length >= 3 && norm(txt).includes(n)) return true;
+  // surnoms (TF, Heimer…) : seulement s'ils forment un mot entier de l'indice
+  const mots = String(txt).split(/[\s,.;:!?'’"()\-]+/).map(norm).filter(Boolean);
+  return (SURNOMS[nom] || []).some(x => mots.includes(norm(x)));
+}
 
 function repartition(n, s) {
   let imp = s.imp === 'auto' ? (n <= 6 ? 1 : n <= 10 ? 2 : 3) : +s.imp;
@@ -803,8 +859,8 @@ function createGame(opts) {
   const onChange = opts.onChange || (() => {});
   const st = opts.state || {
     v: 1, phase: 'lobby', hostId: null, players: [], pidSeq: 0,
-    settings: { imp: 'auto', amn: 'auto', know: false, tours: 1, gens: 4, manches: 0, timer: 0, tpm: 0 },
-    manche: 0, mp: 0, partieFinie: false, deadline: null, used: [], chat: [], seq: 0,
+    settings: { imp: 'auto', amn: 'auto', know: false, tours: 1, gens: 4, manches: 0, timer: 0, tpm: 0, theme: 'pokemon', lien: 'ju' },
+    manche: 0, mp: 0, partieFinie: false, deadline: null, used: [], usedLol: [], chat: [], seq: 0, theme: 'pokemon',
     seats: [], words: null, start: null, cycle: 0, tour: 1, turnList: [], turnPos: 0, clues: {},
     votes: {}, cands: null, lastVote: null, lastElim: null, guesser: null, result: null,
   };
@@ -812,6 +868,11 @@ function createGame(opts) {
   if (st.settings.manches == null) st.settings.manches = 0;
   if (st.settings.timer == null) st.settings.timer = 0;
   if (st.settings.tpm == null) st.settings.tpm = 0;
+  if (!st.settings.theme) st.settings.theme = 'pokemon';
+  if (!st.settings.lien) st.settings.lien = 'ju';
+  if (!st.usedLol) st.usedLol = [];
+  if (!st.theme) st.theme = 'pokemon';
+  const MOT = () => THEMES[(st.phase === 'lobby' ? st.settings.theme : st.theme) || 'pokemon'].nom;
   if (st.mp == null) st.mp = st.manche || 0;
   const P = id => st.players.find(p => p.id === id);
   const nom = id => (P(id) || { name: '?' }).name;
@@ -847,13 +908,16 @@ function createGame(opts) {
     st.mp++;
     const ids = st.players.map(p => p.id);
     const r = repartition(ids.length, st.settings);
-    const lim = st.settings.gens || 4;
-    let pool = PAIRES.map((x, i) => i).filter(i => PAIRES[i][2] <= lim);
-    let libres = pool.filter(i => !st.used.includes(i));
-    if (!libres.length) { st.used = st.used.filter(i => !pool.includes(i)); libres = pool; }
+    st.theme = st.settings.theme === 'lol' ? 'lol' : 'pokemon';
+    const LISTE = THEMES[st.theme].paires, cle = st.theme === 'lol' ? 'usedLol' : 'used';
+    const lim = st.settings.gens || 4, lien = st.settings.lien || 'ju';
+    let pool = LISTE.map((x, i) => i).filter(i => st.theme === 'lol'
+      ? (lien === 'ju' || LISTE[i][2].includes(lien)) : LISTE[i][2] <= lim);
+    let libres = pool.filter(i => !st[cle].includes(i));
+    if (!libres.length) { st[cle] = st[cle].filter(i => !pool.includes(i)); libres = pool; }
     const idx = libres[Math.floor(rnd() * libres.length)];
-    st.used.push(idx);
-    const pr = PAIRES[idx], sens = rnd() < .5;
+    st[cle].push(idx);
+    const pr = LISTE[idx], sens = rnd() < .5;
     st.words = { civ: sens ? pr[0] : pr[1], imp: sens ? pr[1] : pr[0] };
     const melange = shuffle(ids);
     melange.forEach((id, i) => {
@@ -867,7 +931,7 @@ function createGame(opts) {
     st.manche++; st.chat = []; st.cycle = 0; st.result = null; st.lastVote = null; st.lastElim = null; st.guesser = null; st.toursFaits = 0;
     st.start = debut;
     const sur = st.settings.manches ? `/${st.settings.manches}` : '';
-    say('sys', `Manche ${st.mp}${sur} : chacun a reçu son Pokémon.`);
+    say('sys', `Manche ${st.mp}${sur} : chacun a reçu son ${MOT()}.`);
     cycleSuivant(true);
   }
   function cycleSuivant(premier) {
@@ -934,7 +998,7 @@ function createGame(opts) {
     say('elim', `${p.name} est éliminé·e : ${p.role === 'civ' ? 'c\'était un Civil' : p.role === 'imp' ? 'c\'était un Imposteur' : 'c\'était l\'Amnésique'}.`, pid);
     if (p.role === 'amn') {
       st.phase = 'guess'; st.guesser = pid;
-      say('sys', `${p.name} a une dernière chance : deviner le Pokémon des civils.`);
+      say('sys', `${p.name} a une dernière chance : deviner le ${MOT()} des civils.`);
       return;
     }
     finDeTour();
@@ -962,9 +1026,9 @@ function createGame(opts) {
     st.result = { w, words: Object.assign({}, st.words), gains, manche: st.manche, seulAmn: w === 'imp' && !impVivant, final, mp: st.mp, limite: !!limite };
     st.phase = 'over'; st.deadline = null;
     say('sys', limite ? (w === 'civ' ? 'Fin des tours : les civils ont démasqué l\'imposteur !' : 'Fin des tours : les imposteurs s\'en sortent !')
-      : w === 'civ' ? 'Les civils ont démasqué tout le monde !' : w === 'amn' ? 'L\'Amnésique a deviné le Pokémon des civils !'
+      : w === 'civ' ? 'Les civils ont démasqué tout le monde !' : w === 'amn' ? `L'Amnésique a deviné le ${MOT()} des civils !`
       : impVivant ? 'Les imposteurs ont tenu jusqu\'au bout !' : 'L\'Amnésique a tenu jusqu\'au bout !');
-    say('sys', `Pokémon des civils : ${st.words.civ} · des imposteurs : ${st.words.imp}.`);
+    const M = MOT(); say('sys', `${M[0].toUpperCase() + M.slice(1)} des civils : ${st.words.civ} · des imposteurs : ${st.words.imp}.`);
     if (final) say('sys', 'Dernière manche jouée : la partie est terminée !');
   }
 
@@ -987,6 +1051,8 @@ function createGame(opts) {
         if ([0, 3, 5, 10].includes(+s.manches)) S.manches = +s.manches;
         if ([0, 30, 45, 60, 90].includes(+s.timer)) S.timer = +s.timer;
         if ([0, 1, 2, 3].includes(+s.tpm)) S.tpm = +s.tpm;
+        if (['pokemon', 'lol'].includes(s.theme)) S.theme = s.theme;
+        if (['j', 'u', 'ju'].includes(s.lien)) S.lien = s.lien;
         break;
       }
       case 'kick': {
@@ -1020,7 +1086,7 @@ function createGame(opts) {
         const t = txt();
         if (!t) return 'Écris un indice.';
         if (t.length > 40) return 'Un indice tient en quelques mots (40 caractères au plus).';
-        if (p.word && contientNom(t, p.word)) return 'Ton indice contient le nom de ton Pokémon !';
+        if (p.word && contientNom(t, p.word)) return `Ton indice contient le nom de ton ${MOT()} !`;
         say('clue', t, pid);
         st.clues[pid] = (st.clues[pid] || []).concat(t);
         avancer();
@@ -1031,15 +1097,6 @@ function createGame(opts) {
         if (st.phase !== 'clues') return null;
         say('sys', `${nom(orateur())} passe son tour.`);
         avancer();
-        break;
-      }
-      case 'chat': {
-        const t = txt();
-        if (!t) return null;
-        if (t.length > 240) return 'Message trop long.';
-        if (st.phase === 'guess') return 'Silence : l\'Amnésique réfléchit !';
-        if (['clues', 'vote'].includes(st.phase) && !p.alive) return 'Tu es éliminé·e : tu regardes la suite en silence.';
-        say('msg', t, pid);
         break;
       }
       case 'vote': {
@@ -1062,7 +1119,7 @@ function createGame(opts) {
       }
       case 'guess': {
         if (st.phase !== 'guess' || st.guesser !== pid) return 'Ce n\'est pas à toi de deviner.';
-        const t = txt(); if (!t) return 'Écris un nom de Pokémon.';
+        const t = txt(); if (!t) return `Écris un nom de ${MOT()}.`;
         const ok = memeNom(t, st.words.civ);
         say('guess', t, pid); st.chat[st.chat.length - 1].ok = ok;
         if (ok) finir('amn');
@@ -1102,6 +1159,7 @@ function createGame(opts) {
       speaker: orateur(), turnList: st.turnList.slice(), turnPos: st.turnPos, tour: st.tour, cycle: st.cycle,
       turnLeft: st.phase === 'clues' && st.deadline ? Math.max(0, st.deadline - now()) : null,
       mp: st.mp || 0, partieFinie: !!st.partieFinie, toursFaits: st.toursFaits || 0,
+      theme: st.phase === 'lobby' ? st.settings.theme : st.theme, mot: MOT(),
       cands: st.cands, myVote: st.phase === 'vote' ? (st.votes[pid] || null) : null,
       nVotes: Object.keys(st.votes).length, nVoters: st.phase === 'vote' ? vivants().length : 0,
       lastVote: st.lastVote, lastElim: st.lastElim, guesser: st.guesser,
@@ -1115,7 +1173,7 @@ function createGame(opts) {
   };
 }
 
-const API = { createGame, PAIRES, ROLES, POINTS, MIN_J, MAX_J, norm, memeNom, contientNom, repartition };
+const API = { createGame, PAIRES, CHAMPIONS, SURNOMS, THEMES, ROLES, POINTS, MIN_J, MAX_J, norm, memeNom, contientNom, repartition };
 root.QIEngine = API;
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -1176,12 +1234,15 @@ const med = (p, cls) => `<span class="med ${cls || ''}"><img alt="" src="${croco
 const NET = { role: null, peer: null, conns: new Map(), engine: null, me: null, code: null, name: null, conn: null, closed: false, joined: false, lastMsg: 0, retryT: null, hb: null };
 let V = null;
 const UI = {
-  cardUp: false, chatMax: 0, chatManche: -1, forceChat: false, lastSent: null, sound: LS.get('qi-sound') !== '0',
+  cardUp: false, chatMax: 0, chatManche: -1, lastSent: null, sound: LS.get('qi-sound') !== '0',
   cardShown: null, voteShown: 0, overShown: null, queue: [], ovKind: null, lastSpeaker: null, lastPhase: null,
 };
 
 // ───────── petites aides d'affichage ─────────
 const PL = id => (V && V.players.find(p => p.id === id)) || { name: '?', id };
+// le mot secret : « Pokémon » ou « champion » selon le thème de la manche
+const MOT = () => (V && V.mot) || 'Pokémon';
+const Cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const NM = id => esc(PL(id).name);
 const waitDots = '<span class="wait"><i></i><i></i><i></i></span>';
 function toast(msg, err, ms) {
@@ -1544,12 +1605,15 @@ function renderLobbyHtml() {
       <button class="btn btn-sm" data-act="share" title="Copier le lien d'invitation">Inviter</button></div></div>
     <div class="plist">${pl}</div>
     <div class="settings">
+      <div class="set"><div class="t">Thème<small>Les noms à faire deviner</small></div>${seg('theme', [['pokemon', 'Pokémon'], ['lol', 'League of Legends']], S.theme, ro)}</div>
+      ${S.theme === 'lol'
+        ? `<div class="set"><div class="t">Paires de champions<small>Gameplay : même mécanique (deux hooks…) · Univers : même lore (deux Darkin…)</small></div>${seg('lien', [['j', 'Gameplay'], ['u', 'Univers'], ['ju', 'Les deux']], S.lien, ro)}</div>`
+        : `<div class="set"><div class="t">Pokémon<small>Générations utilisées</small></div>${seg('gens', [[1, '1re génération'], [4, '1re à 4e'], [9, 'Toutes']], S.gens, ro)}</div>`}
       <div class="set"><div class="t">Imposteurs</div>${seg('imp', [['auto', `Auto (${autoImp})`], [1, '1'], [2, '2'], [3, '3']], S.imp, ro)}</div>
-      <div class="set"><div class="t">Amnésique<small>Sans Pokémon, il bluffe</small></div>${seg('amn', [['auto', 'Auto (dès 5)'], ['on', 'Oui'], ['off', 'Non']], S.amn, ro)}</div>
+      <div class="set"><div class="t">Amnésique<small>Il n'a rien, il bluffe</small></div>${seg('amn', [['auto', 'Auto (dès 5)'], ['on', 'Oui'], ['off', 'Non']], S.amn, ro)}</div>
       <div class="set"><div class="t">Les imposteurs le savent<small>Sinon, chacun ignore son camp</small></div>${seg('know', [[false, 'Non'], [true, 'Oui']], S.know, ro)}</div>
       <div class="set"><div class="t">Tours par manche<small>Un tour = des indices puis un vote</small></div>${seg('tpm', [[1, '1'], [2, '2'], [3, '3'], [0, 'Jusqu\'au bout']], S.tpm, ro)}</div>
       <div class="set"><div class="t">Indices avant chaque vote</div>${seg('tours', [[1, '1 chacun'], [2, '2 chacun']], S.tours, ro)}</div>
-      <div class="set"><div class="t">Pokémon<small>Générations utilisées</small></div>${seg('gens', [[1, '1re génération'], [4, '1re à 4e'], [9, 'Toutes']], S.gens, ro)}</div>
       <div class="set"><div class="t">Manches<small>Classement final à la fin</small></div>${seg('manches', [[0, 'Libre'], [3, '3'], [5, '5'], [10, '10']], S.manches, ro)}</div>
       <div class="set"><div class="t">Chrono des indices<small>Temps passé : le tour passe</small></div>${seg('timer', [[0, 'Sans'], [30, '30 s'], [45, '45 s'], [60, '1 min'], [90, '1 min 30']], S.timer, ro)}</div>
       <div class="recap">${nb(recap)} ${nb(tpmTxt)}${partie ? '<br>' + nb(partie) : ''}</div>
@@ -1580,7 +1644,7 @@ function renderPhase() {
   else if (V.phase === 'clues') {
     const sp = V.speaker, tours = (V.settings.tours > 1 ? ` · indice ${V.tour}/${V.settings.tours}` : '')
       + (V.settings.tpm ? ` · tour ${V.toursFaits + 1}/${V.settings.tpm}` : '');
-    if (sp === V.me) { cls = 'me'; ic = '!'; tx = `À toi ! Écris un indice sur ton Pokémon dans le chat.<small>Un mot ou une courte expression, sans le nommer${tours}.</small>`; }
+    if (sp === V.me) { cls = 'me'; ic = '!'; tx = `À toi ! Écris un indice sur ton ${MOT()} dans la zone jaune.<small>Un mot ou une courte expression, sans le nommer${tours}.</small>`; }
     else {
       ic = String(V.turnPos + 1); tx = `Indices : au tour de <b>${NM(sp)}</b>${waitDots}<small>${V.turnPos + 1}/${V.turnList.length}${tours}</small>`;
       if (isHost) extra = `<button class="btn btn-sm" data-act="skip">Passer son tour</button>`;
@@ -1597,8 +1661,8 @@ function renderPhase() {
     if (isHost && V.nVotes > 0 && absents) extra = `<button class="btn btn-sm" data-act="closeVote">Clore le vote</button>`;
   } else if (V.phase === 'guess') {
     cls = 'guess'; ic = '?';
-    if (V.guesser === V.me) tx = `Dernière chance ! Devine le Pokémon des civils.<small>Écris ta réponse dans le chat. Si tu trouves, tu gagnes seul·e.</small>`;
-    else tx = `<b>${NM(V.guesser)}</b> tente de deviner le Pokémon des civils${waitDots}<small>Silence dans le chat !</small>`;
+    if (V.guesser === V.me) tx = `Dernière chance ! Devine le ${MOT()} des civils.<small>Écris ta réponse dans la zone violette. Si tu trouves, tu gagnes seul·e.</small>`;
+    else tx = `<b>${NM(V.guesser)}</b> tente de deviner le ${MOT()} des civils${waitDots}<small>Laissez-le réfléchir !</small>`;
     if (isHost && !PL(V.guesser).connected) extra = `<button class="btn btn-sm" data-act="giveUp">Continuer sans lui</button>`;
   } else if (V.phase === 'over') {
     const fini = V.partieFinie;
@@ -1610,9 +1674,9 @@ function renderPhase() {
 function cardFace(big) {
   const w = V.myWord, role = V.myRole;
   const rl = role ? `<span class="roletag ${role}">${ROLE_NOM[role]}</span>` : '';
-  if (big) return w ? `<span class="lb">Ton Pokémon</span><span class="w fit">${esc(w)}</span>${rl}<p>${role === 'imp' ? 'Les autres ont un Pokémon proche du tien. Fonds-toi dans la masse !' : role ? '' : 'Les autres ont presque tous le même… mais pas tous. Toi peut-être ?'}</p>`
-    : `<span class="lb">Ton Pokémon</span><span class="w none">Aucun</span>${rl}<p>Tu es l'Amnésique : écoute les indices, devine le Pokémon des autres et bluffe !</p>`;
-  return `<span class="lb">Ton Pokémon</span><span class="w fit ${w ? '' : 'none'}">${w ? esc(w) : 'Aucun'}</span>${role ? `<span class="rl"><span class="roletag ${role}" style="font-size:12px;padding:0 6px;border-width:2px">${ROLE_NOM[role]}</span></span>` : ''}`;
+  if (big) return w ? `<span class="lb">Ton ${MOT()}</span><span class="w fit">${esc(w)}</span>${rl}<p>${role === 'imp' ? `Les autres ont un ${MOT()} proche du tien. Fonds-toi dans la masse !` : role ? '' : 'Les autres ont presque tous le même… mais pas tous. Toi peut-être ?'}</p>`
+    : `<span class="lb">Ton ${MOT()}</span><span class="w none">Aucun</span>${rl}<p>Tu es l'Amnésique : écoute les indices, devine le ${MOT()} des autres et bluffe !</p>`;
+  return `<span class="lb">Ton ${MOT()}</span><span class="w fit ${w ? '' : 'none'}">${w ? esc(w) : 'Aucun'}</span>${role ? `<span class="mrole"><span class="roletag ${role}" style="font-size:12px;padding:0 6px;border-width:2px">${ROLE_NOM[role]}</span></span>` : ''}`;
 }
 function renderCard() {
   const box = $('#mycardBox');
@@ -1675,7 +1739,7 @@ function renderChat() {
     log.insertAdjacentHTML('beforeend', html);
     while (log.children.length > 220) log.firstElementChild.remove();
     if (nearBottom || (nouveau && nouveau.p === V.me)) log.scrollTop = log.scrollHeight;
-    if (nouveau && nouveau.p !== V.me && UI.lastPhase === V.phase) sfx(nouveau.k === 'clue' ? 'pop' : nouveau.k === 'elim' ? 'stamp' : 'msg');
+    if (nouveau && nouveau.p !== V.me && UI.lastPhase === V.phase) sfx(nouveau.k === 'clue' ? 'pop' : nouveau.k === 'elim' ? 'stamp' : null);
   }
   UI.lastPhase = V.phase;
   const alive = V.players.filter(p => p.inGame && p.alive).length;
@@ -1683,48 +1747,51 @@ function renderChat() {
 }
 function composerMode() {
   const me = PL(V.me);
-  if (V.phase === 'guess') return V.guesser === V.me ? 'guess' : 'mute';
+  if (V.phase === 'guess') return V.guesser === V.me ? 'guess' : 'idle';
+  if (V.phase === 'clues' && V.speaker === V.me) return 'clue';
   if (['clues', 'vote'].includes(V.phase) && V.amIn && !me.alive) return 'dead';
-  if (V.phase === 'clues' && V.speaker === V.me && !UI.forceChat) return 'clue';
-  return 'chat';
+  return 'idle';
+}
+// Pas de chat : la zone de saisie ne sert qu'à poser son indice (et à l'Amnésique pour deviner).
+function composerHint() {
+  if (!V.amIn) return 'Tu joueras à la prochaine manche.';
+  if (V.phase === 'clues') return `À ton tour, tu écriras ton indice ici${V.speaker ? ` · au tour de ${NM(V.speaker)}` : ''}.`;
+  if (V.phase === 'vote') return 'Vote : touche le joueur que tu soupçonnes, sur la table.';
+  if (V.phase === 'guess') return `${NM(V.guesser)} cherche le ${MOT()} des civils…`;
+  if (V.phase === 'over') return 'Manche terminée.';
+  return '';
 }
 function renderComposer() {
   const f = $('#composer'), inp = $('#cmpIn'), btn = $('#cmpBtn'), md = $('#cmpMode');
-  // Le tour arrive pendant qu'on tapait un message : ce texte part comme message, pas comme indice.
-  if (V.phase === 'clues' && V.speaker === V.me && f.dataset.sp !== 'true' && inp.value.trim() && f.dataset.mode === 'chat') UI.forceChat = true;
-  const mode = composerMode();
-  if (f.dataset.mode === mode && f.dataset.sp === String(V.speaker === V.me)) return;
-  f.dataset.mode = mode; f.dataset.sp = String(V.speaker === V.me);
-  f.className = mode === 'clue' ? 'clue' : mode === 'guess' ? 'guess' : (mode === 'mute' || mode === 'dead') ? 'mute' : '';
-  const enabled = !['mute', 'dead'].includes(mode);
-  inp.disabled = !enabled; btn.disabled = !enabled;
+  const mode = composerMode(), key = mode + '|' + V.phase + '|' + V.speaker + '|' + V.turnPos + '|' + V.cycle;
+  if (f.dataset.key === key) return;
+  f.dataset.key = key;
+  f.className = mode;
+  const actif = mode === 'clue' || mode === 'guess';
+  inp.disabled = !actif; btn.disabled = !actif;
   if (mode === 'clue') {
-    md.innerHTML = `<span class="tag">Ton indice</span>${UI.deadline ? `<span class="clock">${fmtClock()}</span>` : ''}<a data-act="asChat">écrire un message à la place</a>`;
+    md.innerHTML = `<span class="tag">Ton indice</span>${UI.deadline ? `<span class="clock">${fmtClock()}</span>` : ''}`;
     inp.placeholder = 'Ton indice…'; inp.maxLength = 40; btn.textContent = 'Poser'; btn.className = 'btn btn-red';
     setTimeout(() => { if (window.innerWidth > 820) inp.focus(); }, 50);
   } else if (mode === 'guess') {
     md.innerHTML = '<span class="tag">Ta réponse</span>';
-    inp.placeholder = 'Le Pokémon des civils, c\'est…'; inp.maxLength = 40; btn.textContent = 'Deviner'; btn.className = 'btn btn-purple';
+    inp.placeholder = `Le ${MOT()} des civils, c'est…`; inp.maxLength = 40; btn.textContent = 'Deviner'; btn.className = 'btn btn-purple';
     setTimeout(() => inp.focus(), 50);
   } else {
-    const back = V.phase === 'clues' && V.speaker === V.me ? '<a data-act="asClue">revenir à mon indice</a>' : '';
-    md.innerHTML = mode === 'dead' ? '<span class="tag">Éliminé·e</span><span class="hint">Tu regardes la suite en silence.</span>'
-      : mode === 'mute' ? '<span class="tag">Silence</span><span class="hint">L\'Amnésique réfléchit…</span>'
-      : `<span class="tag">Message</span>${back}`;
-    inp.placeholder = enabled ? 'Discutez, accusez, défendez-vous…' : ''; inp.maxLength = 240; btn.textContent = 'Envoyer'; btn.className = 'btn';
+    inp.value = '';
+    md.innerHTML = mode === 'dead' ? '<span class="tag">Éliminé·e</span><span class="hint">Tu regardes la suite.</span>'
+      : `<span class="hint">${nb(composerHint())}</span>`;
   }
-  md.style.display = md.innerHTML ? '' : 'none';
 }
 $('#composer').addEventListener('submit', e => {
   e.preventDefault();
   if (!V) return;
   const inp = $('#cmpIn'), text = inp.value.trim(); if (!text) return;
   const mode = composerMode();
-  if (!['clue', 'guess', 'chat'].includes(mode)) return;
-  // gardé de côté : si l'hôte refuse (indice qui contient son Pokémon…), le texte revient dans le champ
+  if (mode !== 'clue' && mode !== 'guess') return;
+  // gardé de côté : si l'hôte refuse (indice qui contient son nom secret…), le texte revient dans le champ
   UI.lastSent = text; inp.value = '';
   send({ type: mode, text });
-  if (mode === 'chat' && UI.forceChat) { UI.forceChat = false; renderComposer(); }
 });
 
 // ───── superpositions ─────
@@ -1787,12 +1854,12 @@ function overHtml() {
   const isHost = V.me === V.hostId;
   const ban = R.limite ? (R.w === 'civ' ? ['civ', 'Les civils gagnent !', 'L\'imposteur est démasqué avant la fin des tours.'] : ['imp', 'Les imposteurs gagnent !', 'Ils ont tenu jusqu\'à la fin des tours.'])
     : R.w === 'civ' ? ['civ', 'Les civils gagnent !', 'Tous les intrus sont démasqués.']
-    : R.w === 'amn' ? ['amn', 'L\'Amnésique gagne !', 'Il a deviné le Pokémon des civils.']
+    : R.w === 'amn' ? ['amn', 'L\'Amnésique gagne !', `Il a deviné le ${MOT()} des civils.`]
     : R.seulAmn ? ['amn', 'L\'Amnésique gagne !', 'Il a tenu jusqu\'au bout sans rien savoir.']
     : ['imp', 'Les imposteurs gagnent !', 'Ils ont tenu jusqu\'au bout.'];
   const ordre = { civ: 1, imp: 0, amn: 0 };
   const rl = V.players.filter(p => p.inGame).sort((a, b) => ordre[a.role] - ordre[b.role]).map(p => `<div class="rl ${p.alive ? '' : 'dead'}">${med(p)}
-    <div><div class="nm">${esc(p.name)}${p.id === V.me ? ' <span class="hint">(toi)</span>' : ''}</div><div class="w">${p.word ? esc(p.word) : 'aucun Pokémon'}</div></div>
+    <div><div class="nm">${esc(p.name)}${p.id === V.me ? ' <span class="hint">(toi)</span>' : ''}</div><div class="w">${p.word ? esc(p.word) : 'aucun ' + MOT()}</div></div>
     <span class="roletag ${p.role}">${ROLE_NOM[p.role]}</span><span class="g">${R.gains[p.id] ? '+' + R.gains[p.id] : ''}</span></div>`).join('');
   const classes = V.players.slice().sort((a, b) => b.score - a.score);
   const sc = classes.map(p => `<span>${esc(p.name)} <b>${p.score}</b></span>`).join('');
@@ -1817,7 +1884,7 @@ function overHtml() {
       <div class="ranks">${lignes}</div></div>`;
   }
   return `<div class="card ovc wide on-card"><div class="banner ${ban[0]}">${nb(ban[1])}<small>${nb(ban[2])}</small></div>
-    <div class="words"><div class="wcard civ"><span>Pokémon des civils</span><b class="fit">${esc(R.words.civ)}</b></div><div class="wcard imp"><span>Pokémon des imposteurs</span><b class="fit">${esc(R.words.imp)}</b></div></div>
+    <div class="words"><div class="wcard civ"><span>${Cap(MOT())} des civils</span><b class="fit">${esc(R.words.civ)}</b></div><div class="wcard imp"><span>${Cap(MOT())} des imposteurs</span><b class="fit">${esc(R.words.imp)}</b></div></div>
     ${fin ? `<p class="finline">${nb(fin)}</p>` : ''}${classement}
     <div class="rlist">${rl}</div>
     ${R.final ? '' : `<div class="lbl" style="text-align:center">Scores${V.settings.manches ? ` après ${R.mp} manche${R.mp > 1 ? 's' : ''} sur ${V.settings.manches}` : ''}</div><div class="scores">${sc}</div>`}
@@ -1826,12 +1893,13 @@ function overHtml() {
 }
 function rulesHtml() {
   return `<div class="card ovc wide on-card"><h2>Règles du jeu</h2><div class="rules">
-    <h3>Le principe</h3><p>Chacun reçoit en secret un nom de Pokémon. Les <b style="color:var(--blue)">civils</b> ont tous le même. Les <b style="color:var(--red)">imposteurs</b> en ont un autre, très proche (par exemple Salamèche contre Ouisticram). Sauf réglage contraire, personne ne sait dans quel camp il est : à toi de deviner, en écoutant les autres, si ton Pokémon est celui de la majorité.</p>
-    <p>À partir de 5 joueurs, il peut y avoir un <b style="color:var(--purple)">Amnésique</b> : il n'a aucun Pokémon et doit bluffer.</p>
-    <h3>Les indices</h3><p>Chacun à son tour écrit un indice dans le chat : un mot ou une courte expression qui évoque son Pokémon, sans le nommer. Trop précis, tu aides l'imposteur à comprendre ; trop vague, tu deviens suspect.</p>
-    <h3>Le vote</h3><p>Quand tout le monde a parlé, on débat dans le chat, puis chacun vote contre le joueur qu'il soupçonne (on peut changer d'avis jusqu'au dernier vote). Le plus désigné est éliminé et son rôle est révélé. En cas d'égalité, on revote entre les ex æquo ; si l'égalité persiste, personne ne part.</p>
+    <h3>Le principe</h3><p>Chacun reçoit en secret un nom : un Pokémon ou un champion de League of Legends, selon le thème choisi par l'hôte. Les <b style="color:var(--blue)">civils</b> ont tous le même. Les <b style="color:var(--red)">imposteurs</b> en ont un autre, proche (par exemple Pikachu contre Sabelette, ou Blitzcrank contre Thresh). Sauf réglage contraire, personne ne sait dans quel camp il est : à toi de deviner, en écoutant les autres, si ton nom est celui de la majorité.</p>
+    <p>À partir de 5 joueurs, il peut y avoir un <b style="color:var(--purple)">Amnésique</b> : il n'a aucun nom et doit bluffer.</p>
+    <h3>Les thèmes</h3><p><b>Pokémon</b> : deux Pokémon de familles différentes, mais du même type et de la même allure. <b>League of Legends</b> : deux champions liés par le gameplay (même mécanique : deux hooks, deux enchanteurs qui protègent, deux ultimes globaux…) ou par l'univers (deux Darkin, deux créatures du Néant, deux frères…). L'hôte choisit l'un, l'autre ou les deux.</p>
+    <h3>Les indices</h3><p>Chacun à son tour écrit un indice (la zone de saisie n'apparaît qu'à son tour) : un mot ou une courte expression qui évoque son nom secret, sans le donner (les surnoms comme « TF » ou « Heimer » comptent comme le nom). Trop précis, tu aides l'imposteur à comprendre ; trop vague, tu deviens suspect.</p>
+    <h3>Le vote</h3><p>Quand tout le monde a donné son indice, on débat à voix haute, puis chacun vote contre le joueur qu'il soupçonne (on peut changer d'avis jusqu'au dernier vote). Le plus désigné est éliminé et son rôle est révélé. En cas d'égalité, on revote entre les ex æquo ; si l'égalité persiste, personne ne part.</p>
     <p>Les éliminés regardent la suite sans parler.</p>
-    <h3>L'Amnésique</h3><p>S'il est éliminé, il a une dernière chance : deviner le Pokémon des civils. S'il trouve, il gagne seul.</p>
+    <h3>L'Amnésique</h3><p>S'il est éliminé, il a une dernière chance : deviner le nom des civils (un surnom courant suffit pour un champion). S'il trouve, il gagne seul.</p>
     <h3>La fin</h3><p>Les civils gagnent quand tous les imposteurs et l'Amnésique sont éliminés. Les imposteurs gagnent s'il ne reste plus qu'un seul civil en jeu (l'Amnésique encore en jeu gagne avec eux).</p>
     <p>L'hôte peut aussi limiter la manche à 1, 2 ou 3 tours (un tour = des indices puis un vote). Après le dernier vote, les civils gagnent si tous les imposteurs sont éliminés (l'Amnésique peut rester) ; sinon, les imposteurs gagnent.</p>
     <h3>Les points</h3><p>Civils gagnants : 2 points chacun. Imposteur encore en jeu à la victoire : 10 points. Amnésique gagnant : 6 points.</p>
@@ -1904,8 +1972,6 @@ document.addEventListener('click', e => {
     case 'closeVote': confirmBox('Clore le vote ?', 'Les joueurs déconnectés ne voteront pas ce tour-ci.', 'Clore', () => send({ type: 'closeVote' })); break;
     case 'giveUp': send({ type: 'giveUp' }); break;
     case 'results': openOverlay('over'); break;
-    case 'asChat': UI.forceChat = true; renderComposer(); $('#cmpIn').focus(); break;
-    case 'asClue': UI.forceChat = false; renderComposer(); break;
   }
 });
 document.addEventListener('keydown', e => {
@@ -1914,7 +1980,6 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && UI.ovKind && UI.ovKind !== 'card') closeOverlay();
 });
 // le mode « message » pendant son tour s'arrête quand le tour passe
-setInterval(() => { if (UI.forceChat && V && V.speaker !== V.me) { UI.forceChat = false; renderComposer(); } }, 500);
 function fmtClock() {
   const s = Math.ceil(Math.max(0, (UI.deadline || 0) - Date.now()) / 1000);
   return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
