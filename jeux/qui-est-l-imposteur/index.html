@@ -788,6 +788,7 @@ function contientNom(txt, nom) { const n = norm(nom); return n.length >= 3 && no
 
 function repartition(n, s) {
   let imp = s.imp === 'auto' ? (n <= 6 ? 1 : n <= 10 ? 2 : 3) : +s.imp;
+  if (s.imp === 'auto' && +s.tpm > 0) imp = Math.min(imp, +s.tpm); // chaque tour n'élimine qu'un joueur
   let amn = s.amn === 'auto' ? (n >= 5 ? 1 : 0) : (s.amn === 'on' ? 1 : 0);
   const maxMechants = Math.max(1, Math.floor((n - 1) / 2));
   while (imp + amn > maxMechants) { if (amn) amn = 0; else imp--; }
@@ -802,7 +803,7 @@ function createGame(opts) {
   const onChange = opts.onChange || (() => {});
   const st = opts.state || {
     v: 1, phase: 'lobby', hostId: null, players: [], pidSeq: 0,
-    settings: { imp: 'auto', amn: 'auto', know: false, tours: 1, gens: 4, manches: 0, timer: 0 },
+    settings: { imp: 'auto', amn: 'auto', know: false, tours: 1, gens: 4, manches: 0, timer: 0, tpm: 0 },
     manche: 0, mp: 0, partieFinie: false, deadline: null, used: [], chat: [], seq: 0,
     seats: [], words: null, start: null, cycle: 0, tour: 1, turnList: [], turnPos: 0, clues: {},
     votes: {}, cands: null, lastVote: null, lastElim: null, guesser: null, result: null,
@@ -810,6 +811,7 @@ function createGame(opts) {
 
   if (st.settings.manches == null) st.settings.manches = 0;
   if (st.settings.timer == null) st.settings.timer = 0;
+  if (st.settings.tpm == null) st.settings.tpm = 0;
   if (st.mp == null) st.mp = st.manche || 0;
   const P = id => st.players.find(p => p.id === id);
   const nom = id => (P(id) || { name: '?' }).name;
@@ -862,7 +864,7 @@ function createGame(opts) {
     });
     st.seats = ids;                      // ordre de la table : ordre d'arrivée
     const debut = shuffle(ids.filter(id => P(id).role !== 'amn'))[0]; // l'Amnésique ne commence jamais
-    st.manche++; st.chat = []; st.cycle = 0; st.result = null; st.lastVote = null; st.lastElim = null; st.guesser = null;
+    st.manche++; st.chat = []; st.cycle = 0; st.result = null; st.lastVote = null; st.lastElim = null; st.guesser = null; st.toursFaits = 0;
     st.start = debut;
     const sur = st.settings.manches ? `/${st.settings.manches}` : '';
     say('sys', `Manche ${st.mp}${sur} : chacun a reçu son Pokémon.`);
@@ -886,7 +888,7 @@ function createGame(opts) {
   function avancer() {
     st.turnPos++;
     if (st.turnPos < st.turnList.length) return armer();
-    if (st.tour < (st.settings.tours || 1)) { st.tour++; st.turnPos = 0; say('sys', 'Deuxième tour d\'indices.'); return armer(); }
+    if (st.tour < (st.settings.tours || 1)) { st.tour++; st.turnPos = 0; say('sys', 'Deuxième indice pour chacun.'); return armer(); }
     st.deadline = null;
     ouvrirVote(null);
   }
@@ -912,6 +914,17 @@ function createGame(opts) {
     if (top.length === 1) return eliminer(top[0]);
     if (!st.cands) return ouvrirVote(top);
     say('sys', 'Nouvelle égalité : personne n\'est éliminé ce tour-ci.');
+    finDeTour();
+  }
+  function finDeTour() {
+    st.toursFaits = (st.toursFaits || 0) + 1;
+    if (verifierFin()) return;
+    const L = +st.settings.tpm || 0;
+    if (L && st.toursFaits >= L) {
+      // dernier tour joué : les civils gagnent s'ils ont éliminé tous les imposteurs (l'Amnésique peut rester)
+      finir(st.players.some(p => p.alive && p.role === 'imp') ? 'imp' : 'civ', true);
+      return;
+    }
     cycleSuivant(false);
   }
   function eliminer(pid) {
@@ -924,7 +937,7 @@ function createGame(opts) {
       say('sys', `${p.name} a une dernière chance : deviner le Pokémon des civils.`);
       return;
     }
-    if (!verifierFin()) cycleSuivant(false);
+    finDeTour();
   }
   function verifierFin() {
     const civ = st.players.filter(p => p.alive && p.role === 'civ').length;
@@ -933,7 +946,7 @@ function createGame(opts) {
     if (civ <= 1) { finir('imp'); return true; }
     return false;
   }
-  function finir(w) {
+  function finir(w, limite) {
     const gains = {};
     for (const p of st.players) {
       let g = 0;
@@ -946,9 +959,10 @@ function createGame(opts) {
     const impVivant = st.players.some(p => p.alive && p.role === 'imp');
     const final = !!st.settings.manches && st.mp >= st.settings.manches;
     st.partieFinie = final;
-    st.result = { w, words: Object.assign({}, st.words), gains, manche: st.manche, seulAmn: w === 'imp' && !impVivant, final, mp: st.mp };
+    st.result = { w, words: Object.assign({}, st.words), gains, manche: st.manche, seulAmn: w === 'imp' && !impVivant, final, mp: st.mp, limite: !!limite };
     st.phase = 'over'; st.deadline = null;
-    say('sys', w === 'civ' ? 'Les civils ont démasqué tout le monde !' : w === 'amn' ? 'L\'Amnésique a deviné le Pokémon des civils !'
+    say('sys', limite ? (w === 'civ' ? 'Fin des tours : les civils ont démasqué l\'imposteur !' : 'Fin des tours : les imposteurs s\'en sortent !')
+      : w === 'civ' ? 'Les civils ont démasqué tout le monde !' : w === 'amn' ? 'L\'Amnésique a deviné le Pokémon des civils !'
       : impVivant ? 'Les imposteurs ont tenu jusqu\'au bout !' : 'L\'Amnésique a tenu jusqu\'au bout !');
     say('sys', `Pokémon des civils : ${st.words.civ} · des imposteurs : ${st.words.imp}.`);
     if (final) say('sys', 'Dernière manche jouée : la partie est terminée !');
@@ -972,6 +986,7 @@ function createGame(opts) {
         if (GENS.includes(+s.gens)) S.gens = +s.gens;
         if ([0, 3, 5, 10].includes(+s.manches)) S.manches = +s.manches;
         if ([0, 30, 45, 60, 90].includes(+s.timer)) S.timer = +s.timer;
+        if ([0, 1, 2, 3].includes(+s.tpm)) S.tpm = +s.tpm;
         break;
       }
       case 'kick': {
@@ -1051,13 +1066,13 @@ function createGame(opts) {
         const ok = memeNom(t, st.words.civ);
         say('guess', t, pid); st.chat[st.chat.length - 1].ok = ok;
         if (ok) finir('amn');
-        else { say('sys', 'Raté ! La partie continue.'); if (!verifierFin()) cycleSuivant(false); }
+        else { say('sys', 'Raté !'); finDeTour(); }
         break;
       }
       case 'giveUp': { // l'hôte débloque une devinette si l'Amnésique a quitté
         if (!hote || st.phase !== 'guess') return null;
-        say('sys', `${nom(st.guesser)} ne devine pas. La partie continue.`);
-        if (!verifierFin()) cycleSuivant(false);
+        say('sys', `${nom(st.guesser)} ne devine pas.`);
+        finDeTour();
         break;
       }
       default: return 'Action inconnue.';
@@ -1086,7 +1101,7 @@ function createGame(opts) {
       amIn: !!(me && enJeu && me.role),
       speaker: orateur(), turnList: st.turnList.slice(), turnPos: st.turnPos, tour: st.tour, cycle: st.cycle,
       turnLeft: st.phase === 'clues' && st.deadline ? Math.max(0, st.deadline - now()) : null,
-      mp: st.mp || 0, partieFinie: !!st.partieFinie,
+      mp: st.mp || 0, partieFinie: !!st.partieFinie, toursFaits: st.toursFaits || 0,
       cands: st.cands, myVote: st.phase === 'vote' ? (st.votes[pid] || null) : null,
       nVotes: Object.keys(st.votes).length, nVoters: st.phase === 'vote' ? vivants().length : 0,
       lastVote: st.lastVote, lastElim: st.lastElim, guesser: st.guesser,
@@ -1516,6 +1531,9 @@ function renderLobbyHtml() {
   const recap = n >= 3 ? `À ${n} : <span class="c">${r.civ} civil${r.civ > 1 ? 's' : ''}</span>, <span class="i">${r.imp} imposteur${r.imp > 1 ? 's' : ''}</span>${r.amn ? ', <span class="a">1 amnésique</span>' : ''}.`
     : 'Il faut au moins 3 joueurs.';
   const enCours = V.mp > 0 && !V.partieFinie;
+  const tpmTxt = !S.tpm ? 'On joue jusqu\'à ce qu\'un camp gagne.'
+    : `${S.tpm} tour${S.tpm > 1 ? 's' : ''} par manche : ${S.tpm > 1 ? 'après le dernier vote' : 'après le vote'}, les civils gagnent si tous les imposteurs sont éliminés.`
+      + (n >= 3 && r.imp > S.tpm ? ` Attention : avec ${r.imp} imposteurs, les civils ne pourront pas tous les trouver.` : '');
   const partie = V.partieFinie ? 'Partie terminée : la prochaine repart de zéro.'
     : S.manches ? `Partie en ${S.manches} manches${enCours ? ` (${V.mp} jouée${V.mp > 1 ? 's' : ''})` : ''}.`
     : enCours ? `${V.mp} manche${V.mp > 1 ? 's' : ''} jouée${V.mp > 1 ? 's' : ''}.` : '';
@@ -1529,11 +1547,12 @@ function renderLobbyHtml() {
       <div class="set"><div class="t">Imposteurs</div>${seg('imp', [['auto', `Auto (${autoImp})`], [1, '1'], [2, '2'], [3, '3']], S.imp, ro)}</div>
       <div class="set"><div class="t">Amnésique<small>Sans Pokémon, il bluffe</small></div>${seg('amn', [['auto', 'Auto (dès 5)'], ['on', 'Oui'], ['off', 'Non']], S.amn, ro)}</div>
       <div class="set"><div class="t">Les imposteurs le savent<small>Sinon, chacun ignore son camp</small></div>${seg('know', [[false, 'Non'], [true, 'Oui']], S.know, ro)}</div>
+      <div class="set"><div class="t">Tours par manche<small>Un tour = des indices puis un vote</small></div>${seg('tpm', [[1, '1'], [2, '2'], [3, '3'], [0, 'Jusqu\'au bout']], S.tpm, ro)}</div>
       <div class="set"><div class="t">Indices avant chaque vote</div>${seg('tours', [[1, '1 chacun'], [2, '2 chacun']], S.tours, ro)}</div>
       <div class="set"><div class="t">Pokémon<small>Générations utilisées</small></div>${seg('gens', [[1, '1re génération'], [4, '1re à 4e'], [9, 'Toutes']], S.gens, ro)}</div>
       <div class="set"><div class="t">Manches<small>Classement final à la fin</small></div>${seg('manches', [[0, 'Libre'], [3, '3'], [5, '5'], [10, '10']], S.manches, ro)}</div>
       <div class="set"><div class="t">Chrono des indices<small>Temps passé : le tour passe</small></div>${seg('timer', [[0, 'Sans'], [30, '30 s'], [45, '45 s'], [60, '1 min'], [90, '1 min 30']], S.timer, ro)}</div>
-      <div class="recap">${nb(recap)}${partie ? '<br>' + nb(partie) : ''}</div>
+      <div class="recap">${nb(recap)} ${nb(tpmTxt)}${partie ? '<br>' + nb(partie) : ''}</div>
     </div>
     <div class="lobby-foot">
       <div class="row wrap"><button class="btn btn-ghost btn-sm" data-act="rules">Règles</button><button class="btn btn-ghost btn-sm" data-act="quit">Quitter</button></div>
@@ -1559,7 +1578,8 @@ function renderPhase() {
   let cls = '', ic = '?', tx = '', extra = '';
   if (!V.amIn && V.phase !== 'over') { ic = '…'; tx = `Tu rejoindras la prochaine manche.<small>En attendant, tu regardes la partie.</small>`; }
   else if (V.phase === 'clues') {
-    const sp = V.speaker, tours = V.settings.tours > 1 ? ` · tour ${V.tour}/${V.settings.tours}` : '';
+    const sp = V.speaker, tours = (V.settings.tours > 1 ? ` · indice ${V.tour}/${V.settings.tours}` : '')
+      + (V.settings.tpm ? ` · tour ${V.toursFaits + 1}/${V.settings.tpm}` : '');
     if (sp === V.me) { cls = 'me'; ic = '!'; tx = `À toi ! Écris un indice sur ton Pokémon dans le chat.<small>Un mot ou une courte expression, sans le nommer${tours}.</small>`; }
     else {
       ic = String(V.turnPos + 1); tx = `Indices : au tour de <b>${NM(sp)}</b>${waitDots}<small>${V.turnPos + 1}/${V.turnList.length}${tours}</small>`;
@@ -1569,9 +1589,10 @@ function renderPhase() {
   } else if (V.phase === 'vote') {
     cls = 'vote'; ic = '✓';
     const cand = V.cands ? `Égalité : nouveau vote entre ${V.cands.map(NM).join(' et ')}. ` : '';
-    if (!alive) tx = `${cand}Vote en cours${waitDots}<small>${V.nVotes}/${V.nVoters} ont voté</small>`;
-    else if (!V.myVote) tx = `${cand}Vote ! Touche le joueur que tu soupçonnes.<small>${V.nVotes}/${V.nVoters} ont voté</small>`;
-    else tx = `${cand}Tu votes contre <b>${NM(V.myVote)}</b>. Tu peux changer d'avis.<small>${V.nVotes}/${V.nVoters} ont voté${waitDots}</small>`;
+    const dernier = V.settings.tpm && V.toursFaits + 1 >= V.settings.tpm ? ' · dernier vote de la manche' : V.settings.tpm ? ` · tour ${V.toursFaits + 1}/${V.settings.tpm}` : '';
+    if (!alive) tx = `${cand}Vote en cours${waitDots}<small>${V.nVotes}/${V.nVoters} ont voté${dernier}</small>`;
+    else if (!V.myVote) tx = `${cand}Vote ! Touche le joueur que tu soupçonnes.<small>${V.nVotes}/${V.nVoters} ont voté${dernier}</small>`;
+    else tx = `${cand}Tu votes contre <b>${NM(V.myVote)}</b>. Tu peux changer d'avis.<small>${V.nVotes}/${V.nVoters} ont voté${dernier}${waitDots}</small>`;
     const absents = V.players.some(p => p.alive && p.inGame && !p.voted && !p.connected);
     if (isHost && V.nVotes > 0 && absents) extra = `<button class="btn btn-sm" data-act="closeVote">Clore le vote</button>`;
   } else if (V.phase === 'guess') {
@@ -1764,7 +1785,8 @@ function voteHtml() {
 function overHtml() {
   const R = V.result; if (!R) return '';
   const isHost = V.me === V.hostId;
-  const ban = R.w === 'civ' ? ['civ', 'Les civils gagnent !', 'Tous les intrus sont démasqués.']
+  const ban = R.limite ? (R.w === 'civ' ? ['civ', 'Les civils gagnent !', 'L\'imposteur est démasqué avant la fin des tours.'] : ['imp', 'Les imposteurs gagnent !', 'Ils ont tenu jusqu\'à la fin des tours.'])
+    : R.w === 'civ' ? ['civ', 'Les civils gagnent !', 'Tous les intrus sont démasqués.']
     : R.w === 'amn' ? ['amn', 'L\'Amnésique gagne !', 'Il a deviné le Pokémon des civils.']
     : R.seulAmn ? ['amn', 'L\'Amnésique gagne !', 'Il a tenu jusqu\'au bout sans rien savoir.']
     : ['imp', 'Les imposteurs gagnent !', 'Ils ont tenu jusqu\'au bout.'];
@@ -1811,6 +1833,7 @@ function rulesHtml() {
     <p>Les éliminés regardent la suite sans parler.</p>
     <h3>L'Amnésique</h3><p>S'il est éliminé, il a une dernière chance : deviner le Pokémon des civils. S'il trouve, il gagne seul.</p>
     <h3>La fin</h3><p>Les civils gagnent quand tous les imposteurs et l'Amnésique sont éliminés. Les imposteurs gagnent s'il ne reste plus qu'un seul civil en jeu (l'Amnésique encore en jeu gagne avec eux).</p>
+    <p>L'hôte peut aussi limiter la manche à 1, 2 ou 3 tours (un tour = des indices puis un vote). Après le dernier vote, les civils gagnent si tous les imposteurs sont éliminés (l'Amnésique peut rester) ; sinon, les imposteurs gagnent.</p>
     <h3>Les points</h3><p>Civils gagnants : 2 points chacun. Imposteur encore en jeu à la victoire : 10 points. Amnésique gagnant : 6 points.</p>
     <h3>Les manches et le chrono</h3><p>L'hôte peut fixer une partie en 3, 5 ou 10 manches : les points s'additionnent et un classement final s'affiche après la dernière. Il peut aussi ajouter un chrono pour les indices : quand le temps est écoulé, le joueur passe son tour.</p>
   </div><div class="acts"><button class="btn btn-red" data-act="close">Compris</button></div></div>`;
@@ -1853,7 +1876,7 @@ document.addEventListener('click', e => {
     case 'reroll': myCroco.g = Math.floor(Math.random() * 1e9); LS.set('qi-croco', JSON.stringify(myCroco)); renderCrocoPick(); break;
     case 'set': {
       let v = t.dataset.v; const k = t.dataset.k;
-      if (k === 'know') v = v === 'true'; else if (['tours', 'gens', 'manches', 'timer'].includes(k) || (k === 'imp' && v !== 'auto')) v = +v;
+      if (k === 'know') v = v === 'true'; else if (['tours', 'gens', 'manches', 'timer', 'tpm'].includes(k) || (k === 'imp' && v !== 'auto')) v = +v;
       send({ type: 'settings', s: { [k]: v } }); break;
     }
     case 'kick': { const id = t.dataset.id; confirmBox('Retirer ce joueur ?', `${NM(id)} sera retiré·e de la partie.`, 'Retirer', () => send({ type: 'kick', target: id })); break; }
