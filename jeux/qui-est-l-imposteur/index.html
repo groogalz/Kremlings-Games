@@ -115,13 +115,21 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
 .med img{width:100%;height:100%;display:block}
 
 /* ───────── salon ───────── */
-#lobby{display:grid;place-items:start center;padding:calc(64px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))}
-.lobby-card{width:min(760px,100%);padding:22px 22px 20px}
-.lobby-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+#lobby{display:grid;grid-template-columns:minmax(0,760px);justify-content:center;align-items:start;padding:calc(64px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))}
+.lobby-card{width:100%;min-width:0;padding:22px 22px 20px}
+.lobby-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;min-width:0}
 .lobby-head h2{margin:0;font-family:var(--f-title);font-size:28px;color:var(--ink);line-height:1}
-.ticket{display:flex;align-items:center;gap:10px;background:var(--yel);border:2.5px solid var(--ink);border-radius:12px;padding:6px 8px 6px 14px;box-shadow:0 4px 0 var(--ink)}
-.ticket .k{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;line-height:1.1}
-.ticket b{font-family:var(--f-title);font-size:28px;letter-spacing:.14em;line-height:1}
+.ticket{display:flex;align-items:center;gap:10px;background:var(--yel);border:2.5px solid var(--ink);border-radius:12px;padding:6px 8px 6px 14px;box-shadow:0 4px 0 var(--ink);max-width:100%;min-width:0}
+.ticket .k{flex:none;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;line-height:1.1}
+.ticket b{flex:1 1 auto;min-width:0;font-family:var(--f-title);font-size:28px;letter-spacing:.14em;line-height:1.1;text-align:center}
+.ticket .btn{flex:none}
+@media (max-width:560px){
+  .lobby-head{display:grid;grid-template-columns:minmax(0,1fr)}
+  .ticket{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k k" "c b";gap:2px 10px;padding:8px 10px 10px 14px}
+  .ticket .k{grid-area:k}.ticket .k br{display:none}
+  .ticket b{grid-area:c;text-align:left;font-size:30px}
+  .ticket .btn{grid-area:b}
+}
 .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:12px;margin:0 0 18px}
 .pl{position:relative;display:grid;justify-items:center;gap:6px;padding:12px 8px 10px;border-radius:14px;background:#fffaee;border:2.5px solid var(--ink);box-shadow:0 3px 0 var(--ink)}
 .pl .med{width:68px;height:68px}
@@ -305,6 +313,24 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
 .scores{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .scores span{background:var(--card-2);border:2px solid var(--ink);border-radius:999px;padding:2px 10px;font-weight:800;font-size:13.5px}
 .scores span b{font-weight:900}
+
+/* chrono */
+.clock{flex:none;display:inline-block;font-family:var(--f-title);font-size:17px;line-height:1;background:var(--card);color:var(--ink);border:2.5px solid var(--ink);border-radius:10px;padding:5px 8px 4px;box-shadow:0 2px 0 var(--ink);font-variant-numeric:tabular-nums;min-width:58px;text-align:center}
+.clock.urgent{background:var(--red);color:#fff;animation:tic 1s steps(1) infinite}
+@keyframes tic{50%{transform:scale(1.08)}}
+#composer .mode .clock{font-size:14px;padding:3px 6px 2px;min-width:48px}
+/* fin de manche / de partie */
+.finline{margin:-4px 0 12px;text-align:center;font-weight:800;color:var(--ink-2)}
+.final{margin:4px 0 16px;padding:14px 14px 12px;border:3px solid var(--ink);border-radius:16px;background:var(--yel-l);box-shadow:0 4px 0 var(--ink)}
+.final-h{font-family:var(--f-title);font-size:28px;line-height:1;text-align:center;color:var(--ink)}
+.final-w{text-align:center;font-weight:900;margin:6px 0 10px;color:var(--ink-2)}
+.ranks{display:grid;gap:6px}
+.rk{display:grid;grid-template-columns:28px 36px minmax(0,1fr) auto;gap:10px;align-items:center;background:#fffaee;border:2px solid var(--card-3);border-radius:12px;padding:5px 12px 5px 8px;font-weight:800}
+.rk .med{width:36px;height:36px;border-width:2px;box-shadow:none}
+.rk .pos{font-family:var(--f-title);font-size:18px;text-align:center;color:var(--ink-2)}
+.rk .pts{font-weight:900}
+.rk.first{background:var(--yel);border-color:var(--ink)}
+.rk.first .pos{color:var(--ink)}
 
 /* toasts, bandeau réseau */
 #toasts{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;display:grid;gap:8px;width:min(440px,92vw);pointer-events:none}
@@ -685,51 +711,57 @@ label,.lbl{display:block;font-weight:900;font-size:13px;letter-spacing:.06em;tex
 'use strict';
 
 /* Paires de Pokémon proches : [nom 1, nom 2, génération la plus récente des deux].
+   Critère : deux familles d'évolution DIFFÉRENTES (jamais un Pokémon et son évolution), mais
+   même type et même silhouette ou même « rôle » (starters du même type, légendaires d'un même
+   trio, même animal…) : assez proches pour que les indices des civils collent souvent aussi au
+   Pokémon de l'imposteur, assez différents pour qu'on finisse par le démasquer.
    Au début d'une manche, l'un des deux va aux civils, l'autre aux imposteurs (au hasard). */
 const PAIRES = [
   // 1re génération
-  ['Évoli', 'Goupix', 1], ['Rondoudou', 'Mélofée', 1], ['Grodoudou', 'Mélodelfe', 1], ['Mewtwo', 'Mew', 1],
-  ['Dracaufeu', 'Dracolosse', 1], ['Ectoplasma', 'Spectrum', 1], ['Arcanin', 'Feunard', 1], ['Goupix', 'Ponyta', 1],
-  ['Racaillou', 'Gravalanch', 1], ['Voltorbe', 'Électrode', 1], ['Taupiqueur', 'Triopikeur', 1], ['Smogo', 'Tadmorv', 1],
-  ['Stari', 'Staross', 1], ['Artikodin', 'Électhor', 1], ['Voltali', 'Pyroli', 1], ['Ramoloss', 'Flagadoss', 1],
-  ['Kabuto', 'Amonita', 1], ['Lippoutou', 'M. Mime', 1], ['Magmar', 'Élektek', 1], ['Kicklee', 'Tygnon', 1],
-  ['Hypotrempe', 'Hypocéan', 1], ['Poissirène', 'Poissoroy', 1], ['Krabby', 'Krabboss', 1], ['Ponyta', 'Galopa', 1],
-  ['Chenipan', 'Aspicot', 1], ['Nidoking', 'Nidoqueen', 1], ['Machopeur', 'Mackogneur', 1], ['Mystherbe', 'Chétiflor', 1],
-  ['Tentacool', 'Tentacruel', 1], ['Otaria', 'Lamantine', 1], ['Magnéti', 'Magnéton', 1], ['Doduo', 'Dodrio', 1],
-  ['Soporifik', 'Hypnomade', 1], ['Osselait', 'Ossatueur', 1], ['Rhinocorne', 'Rhinoféros', 1], ['Psykokwak', 'Akwakwak', 1],
-  ['Miaouss', 'Persian', 1], ['Pikachu', 'Raichu', 1], ['Ptéra', 'Rapasdepic', 1], ['Léviator', 'Magicarpe', 1],
-  ['Bulbizarre', 'Mystherbe', 1], ['Salamèche', 'Goupix', 1], ['Carapuce', 'Psykokwak', 1], ['Ronflex', 'Leveinard', 1],
+  ['Rondoudou', 'Mélofée', 1], ['Grodoudou', 'Mélodelfe', 1], ['Évoli', 'Goupix', 1], ['Goupix', 'Caninos', 1],
+  ['Feunard', 'Arcanin', 1], ['Salamèche', 'Goupix', 1], ['Pyroli', 'Caninos', 1], ['Dracaufeu', 'Dracolosse', 1],
+  ['Carapuce', 'Psykokwak', 1], ['Pikachu', 'Sabelette', 1], ['Voltali', 'Pikachu', 1], ['Rattata', 'Nidoran♂', 1],
+  ['Roucool', 'Piafabec', 1], ['Roucarnage', 'Rapasdepic', 1], ['Doduo', 'Canarticho', 1], ['Psykokwak', 'Canarticho', 1],
+  ['Nosferapti', 'Aéromite', 1], ['Papilusion', 'Aéromite', 1], ['Chenipan', 'Aspicot', 1], ['Abo', 'Minidraco', 1],
+  ['Arbok', 'Onix', 1], ['Nidoking', 'Rhinoféros', 1], ['Nidoqueen', 'Kangourex', 1], ['Osselait', 'Kangourex', 1],
+  ['Leveinard', 'Excelangue', 1], ['Ronflex', 'Ramoloss', 1], ['Mackogneur', 'Tygnon', 1], ['Machopeur', 'Kicklee', 1],
+  ['Magmar', 'Élektek', 1], ['Lippoutou', 'M. Mime', 1], ['Alakazam', 'Hypnomade', 1], ['Fantominus', 'Smogo', 1],
+  ['Tadmorv', 'Smogogo', 1], ['Voltorbe', 'Magnéti', 1], ['Racaillou', 'Onix', 1], ['Taupiqueur', 'Sabelette', 1],
+  ['Krabby', 'Kabuto', 1], ['Tentacool', 'Stari', 1], ['Hypotrempe', 'Poissirène', 1], ['Magicarpe', 'Poissirène', 1],
+  ['Léviator', 'Lokhlass', 1], ['Otaria', 'Lokhlass', 1], ['Draco', 'Léviator', 1], ['Artikodin', 'Électhor', 1],
+  ['Sulfura', 'Électhor', 1], ['Mewtwo', 'Mew', 1], ['Métamorph', 'Mew', 1], ['Kabutops', 'Insécateur', 1],
+  ['Amonita', 'Kokiyas', 1], ['Tauros', 'Rhinocorne', 1], ['Chétiflor', 'Mystherbe', 1], ['Bulbizarre', 'Mystherbe', 1],
   // jusqu'à la 2e
-  ['Bulbizarre', 'Germignon', 2], ['Onix', 'Steelix', 2], ['Insécateur', 'Cizayox', 2], ['Caninos', 'Malosse', 2],
-  ['Noeunoeuf', 'Togepi', 2], ['Rattata', 'Fouinette', 2], ['Nosferapti', 'Nostenfer', 2], ['Sulfura', 'Entei', 2],
-  ['Lugia', 'Ho-Oh', 2], ['Raikou', 'Électhor', 2], ['Suicune', 'Artikodin', 2], ['Mentali', 'Noctali', 2],
-  ['Tauros', 'Écrémeuh', 2], ['Leveinard', 'Leuphorie', 2], ['Porygon', 'Porygon2', 2], ['Snubbull', 'Granbull', 2],
-  ['Wattouat', 'Lainergie', 2], ['Teddiursa', 'Ursaring', 2], ['Marcacrin', 'Cochignon', 2], ['Rafflesia', 'Joliflor', 2],
-  ['Coxy', 'Mimigal', 2], ['Scarhino', 'Scarabrute', 2], ['Florizarre', 'Méganium', 2], ['Dracaufeu', 'Typhlosion', 2],
-  ['Nosferalto', 'Noarfang', 2], ['Mélofée', 'Togepi', 2], ['Kaiminus', 'Carapuce', 2], ['Pikachu', 'Pichu', 2],
+  ['Bulbizarre', 'Germignon', 2], ['Salamèche', 'Héricendre', 2], ['Carapuce', 'Kaiminus', 2], ['Florizarre', 'Méganium', 2],
+  ['Dracaufeu', 'Typhlosion', 2], ['Tortank', 'Aligatueur', 2], ['Scarabrute', 'Scarhino', 2], ['Caninos', 'Malosse', 2],
+  ['Arcanin', 'Entei', 2], ['Noeunoeuf', 'Togepi', 2], ['Rattata', 'Fouinette', 2], ['Roucool', 'Hoothoot', 2],
+  ['Entei', 'Raikou', 2], ['Suicune', 'Raikou', 2], ['Lugia', 'Ho-Oh', 2], ['Sulfura', 'Ho-Oh', 2],
+  ['Suicune', 'Aquali', 2], ['Raikou', 'Voltali', 2], ['Noctali', 'Démolosse', 2], ['Tauros', 'Écrémeuh', 2],
+  ['Leuphorie', 'Mélodelfe', 2], ['Mélo', 'Toudoudou', 2], ['Tyranocif', 'Rhinoféros', 2], ['Celebi', 'Mew', 2],
+  ['Farfuret', 'Miaouss', 2], ['Donphan', 'Rhinocorne', 2],
   // jusqu'à la 3e
-  ['Magicarpe', 'Barpau', 3], ['Léviator', 'Rayquaza', 3], ['Lokhlass', 'Wailord', 3], ['Abra', 'Tarsal', 3],
-  ['Kokiyas', 'Coquiperl', 3], ['Kyogre', 'Groudon', 3], ['Latias', 'Latios', 3], ['Regirock', 'Regice', 3],
-  ['Celebi', 'Jirachi', 3], ['Minidraco', 'Draby', 3], ['Tyranocif', 'Drattak', 3], ['Papilusion', 'Charmillon', 3],
-  ['Abo', 'Séviper', 3], ['Héricendre', 'Poussifeu', 3], ['Kaiminus', 'Gobou', 3], ['Marill', 'Azurill', 3],
-  ['Absol', 'Démolosse', 3], ['Zigzaton', 'Linéon', 3], ['Tylton', 'Altaria', 3], ['Mangriff', 'Fouinar', 3],
-  ['Ninjask', 'Insécateur', 3], ['Munja', 'Spectrum', 3], ['Méditikka', 'Charmina', 3], ['Dynavolt', 'Élecsprint', 3],
-  ['Posipi', 'Négapi', 3], ['Séléroc', 'Solaroc', 3], ['Muciole', 'Lumivole', 3], ['Kraknoix', 'Libégon', 3],
-  ['Sharpedo', 'Carvanha', 3], ['Qulbutoké', 'Okéoké', 3],
+  ['Arcko', 'Germignon', 3], ['Poussifeu', 'Héricendre', 3], ['Gobou', 'Kaiminus', 3], ['Magicarpe', 'Barpau', 3],
+  ['Carvanha', 'Magicarpe', 3], ['Léviator', 'Rayquaza', 3], ['Lokhlass', 'Wailord', 3], ['Kyogre', 'Groudon', 3],
+  ['Regirock', 'Regice', 3], ['Celebi', 'Jirachi', 3], ['Dracolosse', 'Drattak', 3], ['Papilusion', 'Charmillon', 3],
+  ['Abo', 'Séviper', 3], ['Absol', 'Démolosse', 3], ['Medhyèna', 'Malosse', 3], ['Zigzaton', 'Fouinette', 3],
+  ['Mangriff', 'Fouinar', 3], ['Ninjask', 'Insécateur', 3], ['Élecsprint', 'Voltali', 3], ['Séléroc', 'Solaroc', 3],
+  ['Muciole', 'Lumivole', 3], ['Kokiyas', 'Coquiperl', 3], ['Gardevoir', 'Lippoutou', 3], ['Nirondelle', 'Roucool', 3],
+  ['Makuhita', 'Machoc', 3], ['Skitty', 'Miaouss', 3], ['Galeking', 'Tyranocif', 3], ['Deoxys', 'Mewtwo', 3],
+  ['Kecleon', 'Métamorph', 3],
   // jusqu'à la 4e
-  ['Salamèche', 'Ouisticram', 4], ['Carapuce', 'Tiplouf', 4], ['Pikachu', 'Pachirisu', 4], ['Ronflex', 'Goinfrex', 4],
-  ['Miaouss', 'Chaglam', 4], ['Machoc', 'Riolu', 4], ['Roucool', 'Étourmi', 4], ['Dialga', 'Palkia', 4],
-  ['Aquali', 'Phyllali', 4], ['Excelangue', 'Coudlangue', 4], ['Saquedeneu', 'Bouldeneu', 4], ['Dardargnan', 'Apireine', 4],
-  ['Farfuret', 'Dimoret', 4], ['Gardevoir', 'Gallame', 4], ['Lixy', 'Luxray', 4], ['Spiritomb', 'Polichombr', 4],
-  ['Kranidos', 'Dinoclier', 4], ['Blizzi', 'Blizzaroi', 4], ['Créhelf', 'Créfollet', 4], ['Mustébouée', 'Mustéflott', 4],
-  ['Hippopotas', 'Hippodocus', 4], ['Cradopaud', 'Coatox', 4], ['Tortank', 'Torterra', 4], ['Carchacrok', 'Dracolosse', 4],
-  ['Roucarnage', 'Étouraptor', 4],
+  ['Salamèche', 'Ouisticram', 4], ['Carapuce', 'Tiplouf', 4], ['Bulbizarre', 'Tortipouss', 4], ['Pikachu', 'Pachirisu', 4],
+  ['Miaouss', 'Chaglam', 4], ['Chaffreux', 'Persian', 4], ['Roucool', 'Étourmi', 4], ['Roucarnage', 'Étouraptor', 4],
+  ['Dialga', 'Palkia', 4], ['Giratina', 'Dialga', 4], ['Phyllali', 'Germignon', 4], ['Dardargnan', 'Apireine', 4],
+  ['Luxray', 'Élecsprint', 4], ['Kranidos', 'Dinoclier', 4], ['Mustébouée', 'Fouinette', 4], ['Coatox', 'Tartard', 4],
+  ['Tortank', 'Torterra', 4], ['Chartor', 'Torterra', 4], ['Carchacrok', 'Dracolosse', 4], ['Yanmega', 'Libégon', 4],
+  ['Tiplouf', 'Psykokwak', 4], ['Laporeille', 'Évoli', 4], ['Simiabraz', 'Colossinge', 4], ['Maganon', 'Élekable', 4],
+  ['Motisma', 'Fantominus', 4], ['Darkrai', 'Cresselia', 4], ['Shaymin', 'Celebi', 4],
   // générations suivantes
   ['Lucario', 'Zoroark', 5], ['Vipélierre', 'Arcko', 5], ['Gruikui', 'Marcacrin', 5], ['Zorua', 'Évoli', 5],
-  ['Grenousse', 'Amphinobi', 6], ['Feunnec', 'Goupix', 6], ['Nymphali', 'Givrali', 6], ['Pikachu', 'Dedenne', 6],
+  ['Grenousse', 'Cradopaud', 6], ['Feunnec', 'Goupix', 6], ['Pikachu', 'Dedenne', 6],
   ['Brindibou', 'Hoothoot', 7], ['Flamiaou', 'Chaglam', 7], ['Otaquin', 'Moustillon', 7], ['Mimiqui', 'Pikachu', 7],
-  ['Ouistempo', 'Ouisticram', 8], ['Flambino', 'Laporeille', 8], ['Larméléon', 'Kaiminus', 8], ['Morpeko', 'Pachirisu', 8],
-  ['Poussacha', 'Chaglam', 9], ['Chochodile', 'Crocrodil', 9], ['Coiffeton', 'Psykokwak', 9],
+  ['Branette', 'Mimiqui', 7], ['Ouistempo', 'Ouisticram', 8], ['Flambino', 'Laporeille', 8], ['Larméléon', 'Kaiminus', 8],
+  ['Morpeko', 'Pachirisu', 8], ['Poussacha', 'Chaglam', 9], ['Chochodile', 'Crocrodil', 9], ['Coiffeton', 'Psykokwak', 9],
 ];
 
 const MIN_J = 3, MAX_J = 16;
@@ -766,15 +798,19 @@ function repartition(n, s) {
 function createGame(opts) {
   opts = opts || {};
   const rnd = opts.random || Math.random;
+  const now = opts.now || (() => Date.now());
   const onChange = opts.onChange || (() => {});
   const st = opts.state || {
     v: 1, phase: 'lobby', hostId: null, players: [], pidSeq: 0,
-    settings: { imp: 'auto', amn: 'auto', know: false, tours: 1, gens: 4 },
-    manche: 0, used: [], chat: [], seq: 0,
+    settings: { imp: 'auto', amn: 'auto', know: false, tours: 1, gens: 4, manches: 0, timer: 0 },
+    manche: 0, mp: 0, partieFinie: false, deadline: null, used: [], chat: [], seq: 0,
     seats: [], words: null, start: null, cycle: 0, tour: 1, turnList: [], turnPos: 0, clues: {},
     votes: {}, cands: null, lastVote: null, lastElim: null, guesser: null, result: null,
   };
 
+  if (st.settings.manches == null) st.settings.manches = 0;
+  if (st.settings.timer == null) st.settings.timer = 0;
+  if (st.mp == null) st.mp = st.manche || 0;
   const P = id => st.players.find(p => p.id === id);
   const nom = id => (P(id) || { name: '?' }).name;
   const vivants = () => st.seats.filter(id => P(id) && P(id).alive);
@@ -805,6 +841,8 @@ function createGame(opts) {
 
   // ───── déroulement ─────
   function startManche() {
+    if (st.partieFinie || st.mp == null) { st.mp = 0; st.partieFinie = false; for (const p of st.players) p.score = 0; }
+    st.mp++;
     const ids = st.players.map(p => p.id);
     const r = repartition(ids.length, st.settings);
     const lim = st.settings.gens || 4;
@@ -826,7 +864,8 @@ function createGame(opts) {
     const debut = shuffle(ids.filter(id => P(id).role !== 'amn'))[0]; // l'Amnésique ne commence jamais
     st.manche++; st.chat = []; st.cycle = 0; st.result = null; st.lastVote = null; st.lastElim = null; st.guesser = null;
     st.start = debut;
-    say('sys', `Manche ${st.manche} : chacun a reçu son Pokémon.`);
+    const sur = st.settings.manches ? `/${st.settings.manches}` : '';
+    say('sys', `Manche ${st.mp}${sur} : chacun a reçu son Pokémon.`);
     cycleSuivant(true);
   }
   function cycleSuivant(premier) {
@@ -839,15 +878,24 @@ function createGame(opts) {
     const s = v.indexOf(st.start);
     st.turnList = v.slice(s).concat(v.slice(0, s));
     st.turnPos = 0; st.tour = 1; st.cycle++; st.clues = {}; st.votes = {}; st.cands = null;
-    st.phase = 'clues';
+    st.phase = 'clues'; armer();
     say('sys', premier ? `${nom(st.start)} commence.` : `Nouveau tour d'indices : ${nom(st.start)} commence.`);
   }
   const orateur = () => (st.phase === 'clues' ? st.turnList[st.turnPos] : null);
+  function armer() { st.deadline = st.settings.timer ? now() + st.settings.timer * 1000 : null; }
   function avancer() {
     st.turnPos++;
-    if (st.turnPos < st.turnList.length) return;
-    if (st.tour < (st.settings.tours || 1)) { st.tour++; st.turnPos = 0; say('sys', 'Deuxième tour d\'indices.'); return; }
+    if (st.turnPos < st.turnList.length) return armer();
+    if (st.tour < (st.settings.tours || 1)) { st.tour++; st.turnPos = 0; say('sys', 'Deuxième tour d\'indices.'); return armer(); }
+    st.deadline = null;
     ouvrirVote(null);
+  }
+  // Appelé régulièrement par l'hôte : le temps écoulé fait passer le tour.
+  function tick() {
+    if (st.phase !== 'clues' || !st.deadline || now() < st.deadline) return false;
+    say('sys', `Temps écoulé : ${nom(orateur())} passe son tour.`);
+    avancer(); onChange();
+    return true;
   }
   function ouvrirVote(cands) {
     st.phase = 'vote'; st.votes = {}; st.cands = cands;
@@ -896,10 +944,14 @@ function createGame(opts) {
       if (g) { gains[p.id] = g; p.score += g; }
     }
     const impVivant = st.players.some(p => p.alive && p.role === 'imp');
-    st.result = { w, words: Object.assign({}, st.words), gains, manche: st.manche, seulAmn: w === 'imp' && !impVivant };
-    st.phase = 'over';
+    const final = !!st.settings.manches && st.mp >= st.settings.manches;
+    st.partieFinie = final;
+    st.result = { w, words: Object.assign({}, st.words), gains, manche: st.manche, seulAmn: w === 'imp' && !impVivant, final, mp: st.mp };
+    st.phase = 'over'; st.deadline = null;
     say('sys', w === 'civ' ? 'Les civils ont démasqué tout le monde !' : w === 'amn' ? 'L\'Amnésique a deviné le Pokémon des civils !'
       : impVivant ? 'Les imposteurs ont tenu jusqu\'au bout !' : 'L\'Amnésique a tenu jusqu\'au bout !');
+    say('sys', `Pokémon des civils : ${st.words.civ} · des imposteurs : ${st.words.imp}.`);
+    if (final) say('sys', 'Dernière manche jouée : la partie est terminée !');
   }
 
   // ───── actions ─────
@@ -918,6 +970,8 @@ function createGame(opts) {
         if (typeof s.know === 'boolean') S.know = s.know;
         if ([1, 2].includes(+s.tours)) S.tours = +s.tours;
         if (GENS.includes(+s.gens)) S.gens = +s.gens;
+        if ([0, 3, 5, 10].includes(+s.manches)) S.manches = +s.manches;
+        if ([0, 30, 45, 60, 90].includes(+s.timer)) S.timer = +s.timer;
         break;
       }
       case 'kick': {
@@ -1031,6 +1085,8 @@ function createGame(opts) {
       myRole: me && enJeu && me.role && (me.role === 'amn' || st.settings.know || !me.alive || fin) ? me.role : null,
       amIn: !!(me && enJeu && me.role),
       speaker: orateur(), turnList: st.turnList.slice(), turnPos: st.turnPos, tour: st.tour, cycle: st.cycle,
+      turnLeft: st.phase === 'clues' && st.deadline ? Math.max(0, st.deadline - now()) : null,
+      mp: st.mp || 0, partieFinie: !!st.partieFinie,
       cands: st.cands, myVote: st.phase === 'vote' ? (st.votes[pid] || null) : null,
       nVotes: Object.keys(st.votes).length, nVoters: st.phase === 'vote' ? vivants().length : 0,
       lastVote: st.lastVote, lastElim: st.lastElim, guesser: st.guesser,
@@ -1039,7 +1095,7 @@ function createGame(opts) {
   }
 
   return {
-    state: st, addPlayer, setConnected, handle, viewFor,
+    state: st, addPlayer, setConnected, handle, viewFor, tick,
     player: P, save: () => JSON.parse(JSON.stringify(st)),
   };
 }
@@ -1148,6 +1204,7 @@ const SFX = {
   turn: () => { tone(784, 0, 0.18, 'triangle', 0.1); tone(1175, 0.12, 0.35, 'triangle', 0.09); },
   pop: () => tone(520, 0, 0.12, 'sine', 0.08, 820),
   msg: () => tone(900, 0, 0.06, 'sine', 0.035),
+  tick: () => tone(1500, 0, 0.035, 'square', 0.03),
   vote: () => { tone(330, 0, 0.3, 'square', 0.04); tone(247, 0.18, 0.45, 'square', 0.04); },
   stamp: () => { thud(0, .8); tone(110, 0, 0.3, 'sine', 0.2, 60); },
   win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.11, 0.5, 'triangle', 0.09)),
@@ -1398,6 +1455,7 @@ function quit() {
 // ════════════════════ RÉCEPTION D'UN ÉTAT ════════════════════
 function receive(v) {
   const prev = V; V = v;
+  UI.deadline = v.turnLeft != null ? Date.now() + v.turnLeft : null;
   // sons et enchaînements
   if (prev) {
     if (v.speaker === v.me && prev.speaker !== v.me) sfx('turn');
@@ -1414,7 +1472,9 @@ function receive(v) {
     UI.cardShown = v.manche; UI.cardUp = false; UI.voteShown = v.lastVote ? v.lastVote.id : 0;
     queueOverlay('card');
   }
-  if (v.lastVote && v.lastVote.id !== UI.voteShown && v.manche === UI.cardShown) { UI.voteShown = v.lastVote.id; queueOverlay('vote'); }
+  // Fin de manche : les résultats (avec les Pokémon de chacun) s'ouvrent tout de suite, sans l'écran du vote.
+  if (v.phase === 'over') { UI.queue = UI.queue.filter(k => k !== 'vote'); if (UI.ovKind === 'vote') closeOverlay(true); }
+  if (v.lastVote && v.lastVote.id !== UI.voteShown && v.manche === UI.cardShown) { UI.voteShown = v.lastVote.id; if (v.phase !== 'over') queueOverlay('vote'); }
   if (v.phase === 'over' && v.result && UI.overShown !== v.manche) { UI.overShown = v.manche; queueOverlay('over'); }
   render();
 }
@@ -1442,6 +1502,9 @@ function seg(key, opts, cur, ro) {
   return `<div class="seg ${ro ? 'ro' : ''}">${opts.map(([v, l]) => `<button type="button" ${ro ? 'disabled' : `data-act="set" data-k="${key}" data-v="${v}"`} aria-pressed="${String(cur) === String(v)}">${l}</button>`).join('')}</div>`;
 }
 function renderLobby() {
+  renderLobbyHtml(); fit($('#lobby'));
+}
+function renderLobbyHtml() {
   const isHost = V.me === V.hostId, S = V.settings, n = V.players.length, r = V.rep;
   const pl = V.players.map(p => `<div class="pl ${p.connected ? '' : 'off'}">
       ${p.id === V.hostId ? '<span class="crown">Hôte</span>' : ''}
@@ -1452,10 +1515,14 @@ function renderLobby() {
   const autoImp = ENG.repartition(n, Object.assign({}, S, { imp: 'auto' })).imp;
   const recap = n >= 3 ? `À ${n} : <span class="c">${r.civ} civil${r.civ > 1 ? 's' : ''}</span>, <span class="i">${r.imp} imposteur${r.imp > 1 ? 's' : ''}</span>${r.amn ? ', <span class="a">1 amnésique</span>' : ''}.`
     : 'Il faut au moins 3 joueurs.';
+  const enCours = V.mp > 0 && !V.partieFinie;
+  const partie = V.partieFinie ? 'Partie terminée : la prochaine repart de zéro.'
+    : S.manches ? `Partie en ${S.manches} manches${enCours ? ` (${V.mp} jouée${V.mp > 1 ? 's' : ''})` : ''}.`
+    : enCours ? `${V.mp} manche${V.mp > 1 ? 's' : ''} jouée${V.mp > 1 ? 's' : ''}.` : '';
   const ro = !isHost;
   $('#lobby').innerHTML = `<div class="card lobby-card on-card">
     <div class="lobby-head"><h2>Le salon</h2>
-      <div class="ticket"><div class="k">Code<br>de la partie</div><b>${esc(V.code || NET.code)}</b>
+      <div class="ticket"><div class="k">Code<br> de la partie</div><b class="fit">${esc(V.code || NET.code)}</b>
       <button class="btn btn-sm" data-act="share" title="Copier le lien d'invitation">Inviter</button></div></div>
     <div class="plist">${pl}</div>
     <div class="settings">
@@ -1464,12 +1531,14 @@ function renderLobby() {
       <div class="set"><div class="t">Les imposteurs le savent<small>Sinon, chacun ignore son camp</small></div>${seg('know', [[false, 'Non'], [true, 'Oui']], S.know, ro)}</div>
       <div class="set"><div class="t">Indices avant chaque vote</div>${seg('tours', [[1, '1 chacun'], [2, '2 chacun']], S.tours, ro)}</div>
       <div class="set"><div class="t">Pokémon<small>Générations utilisées</small></div>${seg('gens', [[1, '1re génération'], [4, '1re à 4e'], [9, 'Toutes']], S.gens, ro)}</div>
-      <div class="recap">${nb(recap)}</div>
+      <div class="set"><div class="t">Manches<small>Classement final à la fin</small></div>${seg('manches', [[0, 'Libre'], [3, '3'], [5, '5'], [10, '10']], S.manches, ro)}</div>
+      <div class="set"><div class="t">Chrono des indices<small>Temps passé : le tour passe</small></div>${seg('timer', [[0, 'Sans'], [30, '30 s'], [45, '45 s'], [60, '1 min'], [90, '1 min 30']], S.timer, ro)}</div>
+      <div class="recap">${nb(recap)}${partie ? '<br>' + nb(partie) : ''}</div>
     </div>
     <div class="lobby-foot">
       <div class="row wrap"><button class="btn btn-ghost btn-sm" data-act="rules">Règles</button><button class="btn btn-ghost btn-sm" data-act="quit">Quitter</button></div>
-      ${isHost ? `<button class="btn btn-red btn-big" data-act="start" ${n < 3 ? 'disabled' : ''}>Lancer la manche</button>`
-        : `<div class="hint" style="font-weight:800">L'hôte va lancer la manche${waitDots}</div>`}
+      ${isHost ? `<button class="btn btn-red btn-big" data-act="start" ${n < 3 ? 'disabled' : ''}>${enCours ? 'Manche suivante' : 'Lancer la partie'}</button>`
+        : `<div class="hint" style="font-weight:800">L'hôte va lancer la partie${waitDots}</div>`}
     </div>
   </div>`;
 }
@@ -1478,7 +1547,7 @@ function renderLobby() {
 function renderTop() {
   const me = PL(V.me);
   $('#topbar').innerHTML = `<div class="tl"><span class="t1">Qui est </span>l'imposteur\u00a0<b>?</b></div>
-    <span class="chip">Manche ${V.manche}</span><span class="chip m">Code ${esc(NET.code || '')}</span>
+    <span class="chip">Manche ${V.mp}${V.settings.manches ? '/' + V.settings.manches : ''}</span><span class="chip m">Code ${esc(NET.code || '')}</span>
     ${me.score ? `<span class="chip m">${me.score} pt${me.score > 1 ? 's' : ''}</span>` : ''}
     <span class="sp"></span>
     <button class="btn btn-ico" data-act="sound" title="${UI.sound ? 'Couper le son' : 'Activer le son'}" aria-label="Son">${UI.sound ? ICON.sound : ICON.mute}</button>
@@ -1496,6 +1565,7 @@ function renderPhase() {
       ic = String(V.turnPos + 1); tx = `Indices : au tour de <b>${NM(sp)}</b>${waitDots}<small>${V.turnPos + 1}/${V.turnList.length}${tours}</small>`;
       if (isHost) extra = `<button class="btn btn-sm" data-act="skip">Passer son tour</button>`;
     }
+    if (UI.deadline) extra = `<span class="clock" title="Temps restant">${fmtClock()}</span>` + extra;
   } else if (V.phase === 'vote') {
     cls = 'vote'; ic = '✓';
     const cand = V.cands ? `Égalité : nouveau vote entre ${V.cands.map(NM).join(' et ')}. ` : '';
@@ -1510,8 +1580,9 @@ function renderPhase() {
     else tx = `<b>${NM(V.guesser)}</b> tente de deviner le Pokémon des civils${waitDots}<small>Silence dans le chat !</small>`;
     if (isHost && !PL(V.guesser).connected) extra = `<button class="btn btn-sm" data-act="giveUp">Continuer sans lui</button>`;
   } else if (V.phase === 'over') {
-    ic = '★'; tx = `Manche terminée.<small>${isHost ? 'Lance la suivante quand tout le monde est prêt.' : 'L\'hôte va lancer la suite.'}</small>`;
-    extra = `<button class="btn btn-sm" data-act="results">Résultats</button>${isHost ? '<button class="btn btn-sm btn-red" data-act="start">Nouvelle manche</button>' : ''}`;
+    const fini = V.partieFinie;
+    ic = '★'; tx = `${fini ? 'Partie terminée !' : 'Manche terminée.'}<small>${isHost ? (fini ? 'Une nouvelle partie remet les scores à zéro.' : 'Lance la suivante quand tout le monde est prêt.') : 'L\'hôte va lancer la suite.'}</small>`;
+    extra = `<button class="btn btn-sm" data-act="results">Résultats</button>${isHost ? `<button class="btn btn-sm btn-red" data-act="start">${fini ? 'Nouvelle partie' : 'Manche suivante'}</button>` : ''}`;
   }
   $('#phasebar').innerHTML = `<div class="phase ${cls}"><span class="ic">${ic}</span><div class="tx">${nb(tx)}</div>${extra ? `<div class="row">${extra}</div>` : ''}</div>`;
 }
@@ -1607,7 +1678,7 @@ function renderComposer() {
   const enabled = !['mute', 'dead'].includes(mode);
   inp.disabled = !enabled; btn.disabled = !enabled;
   if (mode === 'clue') {
-    md.innerHTML = '<span class="tag">Ton indice</span><a data-act="asChat">écrire un message à la place</a>';
+    md.innerHTML = `<span class="tag">Ton indice</span>${UI.deadline ? `<span class="clock">${fmtClock()}</span>` : ''}<a data-act="asChat">écrire un message à la place</a>`;
     inp.placeholder = 'Ton indice…'; inp.maxLength = 40; btn.textContent = 'Poser'; btn.className = 'btn btn-red';
     setTimeout(() => { if (window.innerWidth > 820) inp.focus(); }, 50);
   } else if (mode === 'guess') {
@@ -1701,13 +1772,35 @@ function overHtml() {
   const rl = V.players.filter(p => p.inGame).sort((a, b) => ordre[a.role] - ordre[b.role]).map(p => `<div class="rl ${p.alive ? '' : 'dead'}">${med(p)}
     <div><div class="nm">${esc(p.name)}${p.id === V.me ? ' <span class="hint">(toi)</span>' : ''}</div><div class="w">${p.word ? esc(p.word) : 'aucun Pokémon'}</div></div>
     <span class="roletag ${p.role}">${ROLE_NOM[p.role]}</span><span class="g">${R.gains[p.id] ? '+' + R.gains[p.id] : ''}</span></div>`).join('');
-  const sc = V.players.slice().sort((a, b) => b.score - a.score).map(p => `<span>${esc(p.name)} <b>${p.score}</b></span>`).join('');
+  const classes = V.players.slice().sort((a, b) => b.score - a.score);
+  const sc = classes.map(p => `<span>${esc(p.name)} <b>${p.score}</b></span>`).join('');
+  // comment la manche s'est terminée
+  let fin = '';
+  if (R.w === 'amn') {
+    const g = (V.chat || []).filter(m => m.k === 'guess').pop();
+    if (g) fin = `${esc(PL(g.p).name)} a répondu « ${esc(g.x)} » : gagné !`;
+  } else if (V.lastVote && V.lastVote.elim) {
+    const p = PL(V.lastVote.elim);
+    fin = `Dernier vote : ${esc(p.name)} éliminé·e, c'était ${p.role === 'civ' ? 'un Civil' : p.role === 'imp' ? 'un Imposteur' : 'l\'Amnésique'}.`;
+  }
+  // classement final (dernière manche d'une partie en N manches)
+  let classement = '';
+  if (R.final) {
+    const top = classes.length ? classes[0].score : 0, gagnants = classes.filter(p => p.score === top);
+    let rang = 0, prec = null;
+    const lignes = classes.map((p, i) => { if (p.score !== prec) { rang = i + 1; prec = p.score; }
+      return `<div class="rk ${rang === 1 ? 'first' : ''}"><span class="pos">${rang}</span>${med(p)}<span class="nm">${esc(p.name)}${p.id === V.me ? ' <span class="hint">(toi)</span>' : ''}</span><span class="pts">${p.score} pt${p.score > 1 ? 's' : ''}</span></div>`; }).join('');
+    classement = `<div class="final"><div class="final-h">Fin de la partie</div>
+      <div class="final-w">${gagnants.length > 1 ? `Égalité entre ${gagnants.map(p => esc(p.name)).join(' et ')}` : `${esc(gagnants[0].name)} remporte la partie`} avec ${top} point${top > 1 ? 's' : ''} !</div>
+      <div class="ranks">${lignes}</div></div>`;
+  }
   return `<div class="card ovc wide on-card"><div class="banner ${ban[0]}">${nb(ban[1])}<small>${nb(ban[2])}</small></div>
     <div class="words"><div class="wcard civ"><span>Pokémon des civils</span><b class="fit">${esc(R.words.civ)}</b></div><div class="wcard imp"><span>Pokémon des imposteurs</span><b class="fit">${esc(R.words.imp)}</b></div></div>
+    ${fin ? `<p class="finline">${nb(fin)}</p>` : ''}${classement}
     <div class="rlist">${rl}</div>
-    <div class="lbl" style="text-align:center">Scores</div><div class="scores">${sc}</div>
+    ${R.final ? '' : `<div class="lbl" style="text-align:center">Scores${V.settings.manches ? ` après ${R.mp} manche${R.mp > 1 ? 's' : ''} sur ${V.settings.manches}` : ''}</div><div class="scores">${sc}</div>`}
     <div class="acts"><button class="btn" data-act="close">Voir la table</button>
-      ${isHost ? '<button class="btn" data-act="toLobby">Réglages</button><button class="btn btn-red" data-act="start">Nouvelle manche</button>' : `<span class="hint" style="font-weight:800;align-self:center">L'hôte va lancer la suite${waitDots}</span>`}</div></div>`;
+      ${isHost ? `<button class="btn" data-act="toLobby">Réglages</button><button class="btn btn-red" data-act="start">${R.final ? 'Nouvelle partie' : 'Manche suivante'}</button>` : `<span class="hint" style="font-weight:800;align-self:center">L'hôte va lancer la suite${waitDots}</span>`}</div></div>`;
 }
 function rulesHtml() {
   return `<div class="card ovc wide on-card"><h2>Règles du jeu</h2><div class="rules">
@@ -1719,6 +1812,7 @@ function rulesHtml() {
     <h3>L'Amnésique</h3><p>S'il est éliminé, il a une dernière chance : deviner le Pokémon des civils. S'il trouve, il gagne seul.</p>
     <h3>La fin</h3><p>Les civils gagnent quand tous les imposteurs et l'Amnésique sont éliminés. Les imposteurs gagnent s'il ne reste plus qu'un seul civil en jeu (l'Amnésique encore en jeu gagne avec eux).</p>
     <h3>Les points</h3><p>Civils gagnants : 2 points chacun. Imposteur encore en jeu à la victoire : 10 points. Amnésique gagnant : 6 points.</p>
+    <h3>Les manches et le chrono</h3><p>L'hôte peut fixer une partie en 3, 5 ou 10 manches : les points s'additionnent et un classement final s'affiche après la dernière. Il peut aussi ajouter un chrono pour les indices : quand le temps est écoulé, le joueur passe son tour.</p>
   </div><div class="acts"><button class="btn btn-red" data-act="close">Compris</button></div></div>`;
 }
 function confirmBox(title, text, ok, fn) { UI.confirmFn = fn; openOverlay('confirm', { title, text, ok }); }
@@ -1759,7 +1853,7 @@ document.addEventListener('click', e => {
     case 'reroll': myCroco.g = Math.floor(Math.random() * 1e9); LS.set('qi-croco', JSON.stringify(myCroco)); renderCrocoPick(); break;
     case 'set': {
       let v = t.dataset.v; const k = t.dataset.k;
-      if (k === 'know') v = v === 'true'; else if (['tours', 'gens'].includes(k) || (k === 'imp' && v !== 'auto')) v = +v;
+      if (k === 'know') v = v === 'true'; else if (['tours', 'gens', 'manches', 'timer'].includes(k) || (k === 'imp' && v !== 'auto')) v = +v;
       send({ type: 'settings', s: { [k]: v } }); break;
     }
     case 'kick': { const id = t.dataset.id; confirmBox('Retirer ce joueur ?', `${NM(id)} sera retiré·e de la partie.`, 'Retirer', () => send({ type: 'kick', target: id })); break; }
@@ -1798,6 +1892,20 @@ document.addEventListener('keydown', e => {
 });
 // le mode « message » pendant son tour s'arrête quand le tour passe
 setInterval(() => { if (UI.forceChat && V && V.speaker !== V.me) { UI.forceChat = false; renderComposer(); } }, 500);
+function fmtClock() {
+  const s = Math.ceil(Math.max(0, (UI.deadline || 0) - Date.now()) / 1000);
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+setInterval(() => {
+  // l'hôte fait passer le tour quand le temps est écoulé
+  if (NET.role === 'host' && NET.engine && !NET.closed && NET.engine.tick) NET.engine.tick();
+  if (!UI.deadline || !V || V.phase !== 'clues') return;
+  const left = UI.deadline - Date.now(), txt = fmtClock();
+  document.querySelectorAll('.clock').forEach(c => { c.textContent = txt; c.classList.toggle('urgent', left <= 10000); });
+  const sec = Math.ceil(left / 1000);
+  if (V.speaker === V.me && sec !== UI.lastTick && sec > 0 && sec <= 5) sfx('tick');
+  UI.lastTick = sec;
+}, 250);
 $('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('[data-act="join"]').click(); });
 $('#name').addEventListener('keydown', e => { if (e.key === 'Enter') ($('#joinCode').value.trim() ? $('[data-act="join"]') : $('[data-act="host"]')).click(); });
 
@@ -1887,7 +1995,11 @@ function installRoom() {
       if (ch.joined.length) onEngineChange();
     });
     // l'état est renvoyé régulièrement : un invité qui a raté un message se remet à jour tout seul
-    clearInterval(NET.hb); NET.hb = setInterval(() => { if (NET.role === 'host' && !NET.closed && NET.lastPayload) emitBig('st', NET.lastPayload); }, 3500);
+    clearInterval(NET.hb); NET.hb = setInterval(() => {
+      if (NET.role !== 'host' || NET.closed || !NET.lastPayload) return;
+      NET.lastPayload.pub.turnLeft = NET.engine.viewFor(NET.me).turnLeft;
+      emitBig('st', NET.lastPayload);
+    }, 3500);
     onEngineChange();
   };
   broadcast = function () {
