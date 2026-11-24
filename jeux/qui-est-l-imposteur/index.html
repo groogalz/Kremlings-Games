@@ -845,9 +845,9 @@ function contientNom(txt, nom) {
 function repartition(n, s) {
   let imp = s.imp === 'auto' ? (n <= 6 ? 1 : n <= 10 ? 2 : 3) : +s.imp;
   if (s.imp === 'auto' && +s.tpm > 0) imp = Math.min(imp, +s.tpm); // chaque tour n'élimine qu'un joueur
-  let amn = s.amn === 'auto' ? (n >= 5 ? 1 : 0) : (s.amn === 'on' ? 1 : 0);
+  const amn = 0; // l'Amnésique est retiré du jeu : il n'y en a jamais
   const maxMechants = Math.max(1, Math.floor((n - 1) / 2));
-  while (imp + amn > maxMechants) { if (amn) amn = 0; else imp--; }
+  while (imp + amn > maxMechants) imp--;
   imp = Math.max(1, imp);
   return { imp, amn, civ: Math.max(0, n - imp - amn) };
 }
@@ -859,7 +859,7 @@ function createGame(opts) {
   const onChange = opts.onChange || (() => {});
   const st = opts.state || {
     v: 1, phase: 'lobby', hostId: null, players: [], pidSeq: 0,
-    settings: { imp: 'auto', amn: 'auto', know: false, tours: 1, gens: 4, manches: 0, timer: 0, tpm: 0, theme: 'pokemon', lien: 'ju' },
+    settings: { imp: 1, amn: 'off', know: false, tours: 2, gens: 4, manches: 0, timer: 0, tpm: 0, theme: 'pokemon', lien: 'ju' },
     manche: 0, mp: 0, partieFinie: false, deadline: null, used: [], usedLol: [], chat: [], seq: 0, theme: 'pokemon',
     seats: [], words: null, start: null, cycle: 0, tour: 1, turnList: [], turnPos: 0, clues: {},
     votes: {}, cands: null, lastVote: null, lastElim: null, guesser: null, result: null,
@@ -870,6 +870,9 @@ function createGame(opts) {
   if (st.settings.tpm == null) st.settings.tpm = 0;
   if (!st.settings.theme) st.settings.theme = 'pokemon';
   if (!st.settings.lien) st.settings.lien = 'ju';
+  // Réglages retirés du salon : valeurs fixes (aussi pour une partie reprise après rechargement)
+  Object.assign(st.settings, { know: false, tours: 2, manches: 0, amn: 'off' });
+  if (![1, 2, 3, 4].includes(+st.settings.imp)) st.settings.imp = 1; else st.settings.imp = +st.settings.imp;
   if (!st.usedLol) st.usedLol = [];
   if (!st.theme) st.theme = 'pokemon';
   const MOT = () => THEMES[(st.phase === 'lobby' ? st.settings.theme : st.theme) || 'pokemon'].nom;
@@ -1043,8 +1046,7 @@ function createGame(opts) {
         if (!hote) return 'Seul l\'hôte règle la partie.';
         if (!['lobby', 'over'].includes(st.phase)) return 'Les réglages se changent entre deux manches.';
         const s = a.s || {}, S = st.settings;
-        if (['auto', 1, 2, 3, 4].includes(s.imp) || ['1', '2', '3', '4'].includes(s.imp)) S.imp = s.imp === 'auto' ? 'auto' : +s.imp;
-        if (['auto', 'on', 'off'].includes(s.amn)) S.amn = s.amn;
+        if (s.imp != null && [1, 2, 3, 4].includes(+s.imp)) S.imp = +s.imp;
         if (typeof s.know === 'boolean') S.know = s.know;
         if ([1, 2].includes(+s.tours)) S.tours = +s.tours;
         if (GENS.includes(+s.gens)) S.gens = +s.gens;
@@ -1588,8 +1590,7 @@ function renderLobbyHtml() {
       ${med(p)}<div class="nm">${esc(p.name)}${p.id === V.me ? ' <span class="hint">(toi)</span>' : ''}</div>
       ${p.score ? `<div class="sc">${p.score} pt${p.score > 1 ? 's' : ''}</div>` : ''}${p.connected ? '' : '<div class="sc">déconnecté·e</div>'}
     </div>`).join('') + (n < 3 ? `<div class="pl empty">En attente d'au moins ${3 - n} joueur${3 - n > 1 ? 's' : ''}${waitDots}</div>` : '');
-  const autoImp = ENG.repartition(n, Object.assign({}, S, { imp: 'auto' })).imp;
-  const recap = n >= 3 ? `À ${n} : <span class="c">${r.civ} civil${r.civ > 1 ? 's' : ''}</span>, <span class="i">${r.imp} imposteur${r.imp > 1 ? 's' : ''}</span>${r.amn ? ', <span class="a">1 amnésique</span>' : ''}.`
+  const recap = n >= 3 ? `À ${n} : <span class="c">${r.civ} civil${r.civ > 1 ? 's' : ''}</span>, <span class="i">${r.imp} imposteur${r.imp > 1 ? 's' : ''}</span>.${r.imp < S.imp ? ` (${S.imp} imposteurs demandés : pas assez de joueurs.)` : ''}`
     : 'Il faut au moins 3 joueurs.';
   const enCours = V.mp > 0 && !V.partieFinie;
   const tpmTxt = !S.tpm ? 'On joue jusqu\'à ce qu\'un camp gagne.'
@@ -1609,12 +1610,8 @@ function renderLobbyHtml() {
       ${S.theme === 'lol'
         ? `<div class="set"><div class="t">Paires de champions<small>Gameplay : même mécanique (deux hooks…) · Univers : même lore (deux Darkin…)</small></div>${seg('lien', [['j', 'Gameplay'], ['u', 'Univers'], ['ju', 'Les deux']], S.lien, ro)}</div>`
         : `<div class="set"><div class="t">Pokémon<small>Générations utilisées</small></div>${seg('gens', [[1, '1re génération'], [4, '1re à 4e'], [9, 'Toutes']], S.gens, ro)}</div>`}
-      <div class="set"><div class="t">Imposteurs</div>${seg('imp', [['auto', `Auto (${autoImp})`], [1, '1'], [2, '2'], [3, '3']], S.imp, ro)}</div>
-      <div class="set"><div class="t">Amnésique<small>Il n'a rien, il bluffe</small></div>${seg('amn', [['auto', 'Auto (dès 5)'], ['on', 'Oui'], ['off', 'Non']], S.amn, ro)}</div>
-      <div class="set"><div class="t">Les imposteurs le savent<small>Sinon, chacun ignore son camp</small></div>${seg('know', [[false, 'Non'], [true, 'Oui']], S.know, ro)}</div>
+      <div class="set"><div class="t">Imposteurs</div>${seg('imp', [[1, '1'], [2, '2'], [3, '3']], S.imp, ro)}</div>
       <div class="set"><div class="t">Tours par manche<small>Un tour = des indices puis un vote</small></div>${seg('tpm', [[1, '1'], [2, '2'], [3, '3'], [0, 'Jusqu\'au bout']], S.tpm, ro)}</div>
-      <div class="set"><div class="t">Indices avant chaque vote</div>${seg('tours', [[1, '1 chacun'], [2, '2 chacun']], S.tours, ro)}</div>
-      <div class="set"><div class="t">Manches<small>Classement final à la fin</small></div>${seg('manches', [[0, 'Libre'], [3, '3'], [5, '5'], [10, '10']], S.manches, ro)}</div>
       <div class="set"><div class="t">Chrono des indices<small>Temps passé : le tour passe</small></div>${seg('timer', [[0, 'Sans'], [30, '30 s'], [45, '45 s'], [60, '1 min'], [90, '1 min 30']], S.timer, ro)}</div>
       <div class="recap">${nb(recap)} ${nb(tpmTxt)}${partie ? '<br>' + nb(partie) : ''}</div>
     </div>
@@ -1893,17 +1890,15 @@ function overHtml() {
 }
 function rulesHtml() {
   return `<div class="card ovc wide on-card"><h2>Règles du jeu</h2><div class="rules">
-    <h3>Le principe</h3><p>Chacun reçoit en secret un nom : un Pokémon ou un champion de League of Legends, selon le thème choisi par l'hôte. Les <b style="color:var(--blue)">civils</b> ont tous le même. Les <b style="color:var(--red)">imposteurs</b> en ont un autre, proche (par exemple Pikachu contre Sabelette, ou Blitzcrank contre Thresh). Sauf réglage contraire, personne ne sait dans quel camp il est : à toi de deviner, en écoutant les autres, si ton nom est celui de la majorité.</p>
-    <p>À partir de 5 joueurs, il peut y avoir un <b style="color:var(--purple)">Amnésique</b> : il n'a aucun nom et doit bluffer.</p>
+    <h3>Le principe</h3><p>Chacun reçoit en secret un nom : un Pokémon ou un champion de League of Legends, selon le thème choisi par l'hôte. Les <b style="color:var(--blue)">civils</b> ont tous le même. Les <b style="color:var(--red)">imposteurs</b> en ont un autre, proche (par exemple Pikachu contre Sabelette, ou Blitzcrank contre Thresh). Personne ne sait dans quel camp il est : à toi de deviner, en écoutant les autres, si ton nom est celui de la majorité.</p>
     <h3>Les thèmes</h3><p><b>Pokémon</b> : deux Pokémon de familles différentes, mais du même type et de la même allure. <b>League of Legends</b> : deux champions liés par le gameplay (même mécanique : deux hooks, deux enchanteurs qui protègent, deux ultimes globaux…) ou par l'univers (deux Darkin, deux créatures du Néant, deux frères…). L'hôte choisit l'un, l'autre ou les deux.</p>
-    <h3>Les indices</h3><p>Chacun à son tour écrit un indice (la zone de saisie n'apparaît qu'à son tour) : un mot ou une courte expression qui évoque son nom secret, sans le donner (les surnoms comme « TF » ou « Heimer » comptent comme le nom). Trop précis, tu aides l'imposteur à comprendre ; trop vague, tu deviens suspect.</p>
+    <h3>Les indices</h3><p>Chacun à son tour écrit un indice (la zone de saisie n'apparaît qu'à son tour) : un mot ou une courte expression qui évoque son nom secret, sans le donner (les surnoms comme « TF » ou « Heimer » comptent comme le nom). On fait deux tours de table : chacun donne donc deux indices avant le vote. Trop précis, tu aides l'imposteur à comprendre ; trop vague, tu deviens suspect.</p>
     <h3>Le vote</h3><p>Quand tout le monde a donné son indice, on débat à voix haute, puis chacun vote contre le joueur qu'il soupçonne (on peut changer d'avis jusqu'au dernier vote). Le plus désigné est éliminé et son rôle est révélé. En cas d'égalité, on revote entre les ex æquo ; si l'égalité persiste, personne ne part.</p>
     <p>Les éliminés regardent la suite sans parler.</p>
-    <h3>L'Amnésique</h3><p>S'il est éliminé, il a une dernière chance : deviner le nom des civils (un surnom courant suffit pour un champion). S'il trouve, il gagne seul.</p>
-    <h3>La fin</h3><p>Les civils gagnent quand tous les imposteurs et l'Amnésique sont éliminés. Les imposteurs gagnent s'il ne reste plus qu'un seul civil en jeu (l'Amnésique encore en jeu gagne avec eux).</p>
-    <p>L'hôte peut aussi limiter la manche à 1, 2 ou 3 tours (un tour = des indices puis un vote). Après le dernier vote, les civils gagnent si tous les imposteurs sont éliminés (l'Amnésique peut rester) ; sinon, les imposteurs gagnent.</p>
-    <h3>Les points</h3><p>Civils gagnants : 2 points chacun. Imposteur encore en jeu à la victoire : 10 points. Amnésique gagnant : 6 points.</p>
-    <h3>Les manches et le chrono</h3><p>L'hôte peut fixer une partie en 3, 5 ou 10 manches : les points s'additionnent et un classement final s'affiche après la dernière. Il peut aussi ajouter un chrono pour les indices : quand le temps est écoulé, le joueur passe son tour.</p>
+    <h3>La fin</h3><p>Les civils gagnent quand tous les imposteurs sont éliminés. Les imposteurs gagnent s'il ne reste plus qu'un seul civil en jeu.</p>
+    <p>L'hôte peut aussi limiter la manche à 1, 2 ou 3 tours (un tour = des indices puis un vote). Après le dernier vote, les civils gagnent si tous les imposteurs sont éliminés ; sinon, les imposteurs gagnent.</p>
+    <h3>Les points</h3><p>Civils gagnants : 2 points chacun. Imposteur encore en jeu à la victoire : 10 points. Les points s'additionnent d'une manche à l'autre.</p>
+    <h3>Le chrono</h3><p>L'hôte peut ajouter un chrono pour les indices : quand le temps est écoulé, le joueur passe son tour.</p>
   </div><div class="acts"><button class="btn btn-red" data-act="close">Compris</button></div></div>`;
 }
 function confirmBox(title, text, ok, fn) { UI.confirmFn = fn; openOverlay('confirm', { title, text, ok }); }
